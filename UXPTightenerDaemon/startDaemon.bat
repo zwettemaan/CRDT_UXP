@@ -8,4 +8,4 @@ IF "%PROCESSOR_ARCHITECTURE%" == "ARM64" (
     SET DAEMON_APP_ROOT=%DAEMON_ROOT%Windows\
 )
 
-START /B CMD /C "%DAEMON_APP_ROOT%\Tightener.exe" -t n -N daemon -s -l 18888
+START /B CMD /C "%DAEMON_APP_ROOT%Tightener.exe" -t n -N daemon -s -l 18888
