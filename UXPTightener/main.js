@@ -17,8 +17,16 @@ async function showAlert() {
   try {
     const dialog = app.dialogs.add();
     const col = dialog.dialogColumns.add();
-    const colText = col.staticTexts.add();
-    colText.staticLabel = "MachineGUID =  " + await tightener.machineGUID();
+
+    var input = "Hello world";
+    var password = "password";
+    var encrypted = await tightener.encrypt(input, password);
+    var decrypted = await tightener.decrypt(encrypted, password);
+    const colText1 = col.staticTexts.add();
+    colText1.staticLabel = "Encrypted =  " + encrypted;
+
+    const colText2 = col.staticTexts.add();
+    colText2.staticLabel = "Decrypted =  " + decrypted;
 
     dialog.canCancel = false;
     dialog.show();

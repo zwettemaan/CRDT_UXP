@@ -20,11 +20,27 @@ const TQL_SCOPE_NAME_DEFAULT = "defaultScope";
 // UXP internally caches responses from the server - we need to avoid this as each script
 // run can return different results
 //
-var cacheBuster = Math.random();
+var cacheBuster = Math.floor(Math.random() * 1000000);
 
 if (! module.exports) {
     module.exports = {};
 }
+
+async function decrypt(s, aesKey, aesIV) {
+    var retVal;
+
+    if (! aesIV) {
+        aesIV = "";
+    }
+
+    var response = await evalTQL("decrypt(" + dQ(s) + ", " + dQ(aesKey) + ", " + dQ(aesIV) + ")");
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+}
+module.exports.decrypt = decrypt;
 
 //
 // dQ: Wrap a string in double quotes, properly escaping as needed
@@ -33,6 +49,22 @@ function dQ(s) {
     return enQuote__(s, "\"");
 }
 module.exports.dQ = dQ;
+
+async function encrypt(s, aesKey, aesIV) {
+    var retVal;
+
+    if (! aesIV) {
+        aesIV = "";
+    }
+
+    var response = await evalTQL("encrypt(" + dQ(s) + ", "+ dQ(aesKey) + ", " + dQ(aesIV) + ")");
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+}
+module.exports.encrypt = encrypt;
 
 //
 // enQuote__: Helper function. Escape and wrap a string in quotes
@@ -164,9 +196,12 @@ async function evalTQL(tqlScript, tqlScopeName) {
         const response = await fetch(LOCALHOST_URL + "/" + tqlScopeName + "?" + cacheBuster, init);
         cacheBuster = cacheBuster + 1;
         
+        const responseText = await response.text();
+        const responseTextUnwrapped = eval(responseText);
+        
         retVal = {
             error: false,
-            text: await response.text()
+            text: responseTextUnwrapped
         };
 
     } catch (e) {
