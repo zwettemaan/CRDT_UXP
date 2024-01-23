@@ -26,7 +26,33 @@ if (! module.exports) {
     module.exports = {};
 }
 
-async function decrypt(s, aesKey, aesIV) {
+async function base64decode(base64Str) {
+
+    var retVal;
+
+    var response = await evalTQL("base64decode(" + dQ(base64Str) + ")");
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+}
+module.exports.base64decode = base64decode;
+
+async function base64encode(s_or_BinArr) {
+
+    var retVal;
+
+    var response = await evalTQL("base64encode(" + dQ(s_or_BinArr) + ")");
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+}
+module.exports.base64encode = base64encode;
+
+async function decrypt(s_or_BinArr, aesKey, aesIV) {
 
     var retVal;
 
@@ -34,7 +60,7 @@ async function decrypt(s, aesKey, aesIV) {
         aesIV = "";
     }
 
-    var response = await evalTQL("decrypt(" + dQ(s) + ", " + dQ(aesKey) + ", " + dQ(aesIV) + ")");
+    var response = await evalTQL("decrypt(" + dQ(s_or_BinArr) + ", " + dQ(aesKey) + ", " + dQ(aesIV) + ")");
     if (response && ! response.error) {
         retVal = response.text;
     }
@@ -59,19 +85,19 @@ module.exports.dirExists = dirExists;
 //
 // dQ: Wrap a string in double quotes, properly escaping as needed
 //
-function dQ(s) {
-    return enQuote__(s, "\"");
+function dQ(s_or_BinArr) {
+    return enQuote__(s_or_BinArr, "\"");
 }
 module.exports.dQ = dQ;
 
-async function encrypt(s, aesKey, aesIV) {
+async function encrypt(s_or_BinArr, aesKey, aesIV) {
     var retVal;
 
     if (! aesIV) {
         aesIV = "";
     }
 
-    var response = await evalTQL("encrypt(" + dQ(s) + ", "+ dQ(aesKey) + ", " + dQ(aesIV) + ")");
+    var response = await evalTQL("encrypt(" + dQ(s_or_BinArr) + ", "+ dQ(aesKey) + ", " + dQ(aesIV) + ")");
     if (response && ! response.error) {
         retVal = response.text;
     }
@@ -83,41 +109,47 @@ module.exports.encrypt = encrypt;
 //
 // enQuote__: Helper function. Escape and wrap a string in quotes
 //
-function enQuote__(s, quoteChar) {
+function enQuote__(s_or_BinArr, quoteChar) {
 
     var retVal = "";
 
+    var quoteCharCode = quoteChar.charCodeAt(0);
+
+    var isString = "string" == typeof s_or_BinArr;
     var escapedS = "";
-    var sLen = s.length;
+    var sLen = s_or_BinArr.length;
     for (var charIdx = 0; charIdx < sLen; charIdx++) {
-        var c = s.charAt(charIdx);
-        if (c == '\\') {
+        var cCode;
+        if (isString) {
+            var c = s_or_BinArr.charAt(charIdx);
+            cCode = c.charCodeAt(0);
+        }
+        else {
+            cCode = s_or_BinArr[charIdx];
+        }
+        if (cCode == 0x5C) {
             escapedS += '\\\\';
         }
-        else if (c == quoteChar) {
+        else if (cCode == quoteCharCode) {
             escapedS += '\\' + quoteChar;
         }
-        else if (c == '\n') {
+        else if (cCode == 0x0A) {
             escapedS += '\\n';
         }
-        else if (c == '\r') {
+        else if (cCode == 0x0D) {
             escapedS += '\\r';
         }
-        else if (c == '\t') {
+        else if (cCode == 0x09) {
             escapedS += '\\t';
         }
-        else 
-        {
-            var cCode = c.charCodeAt(0)
-            if (cCode < 32) {
-                escapedS += "\\u" + toHex(cCode, 4);
-            }
-            else if (cCode >= 127) {
-                escapedS += "\\u" + toHex(cCode, 4);
-            }
-            else {
-                escapedS += c;
-            }
+        else if (cCode < 32 || (cCode >= 0x7F && cCode <= 0xFF)) {
+            escapedS += "\\x" + toHex(cCode, 2);
+        }
+        else if (cCode > 0xFF) {
+            escapedS += "\\u" + toHex(cCode, 4);
+        }
+        else {
+            escapedS += String.fromCharCode(cCode);
         }
 
     }
@@ -126,6 +158,195 @@ function enQuote__(s, quoteChar) {
 
     return retVal;
 }
+
+//
+// deQuote__: Helper function. Unescape and remove quotes, return buffer array
+//
+function deQuote__(quotedString) {
+
+    var retVal = "";
+
+    do {
+
+        var qLen = quotedString.length;
+        if (qLen < 2) {
+            break;
+        }
+        
+        var quoteChar = quotedString.charAt(0);
+        qLen -= 1;
+        if (quoteChar != quotedString.charAt(qLen)) {
+            break;
+        }
+
+        if (quoteChar != '"' && quoteChar != '"') {
+            break;
+        }
+
+        var buffer = [];
+        var state = 0;
+        var cCode = 0;
+        for (charIdx = 1; charIdx < qLen; charIdx++) {
+
+            if (state == -1) {
+                break;
+            }
+
+            var c = quotedString.charAt(charIdx);
+            switch (state) {
+            case 0:
+                if (c == '\\') {
+                    state = 1;
+                }
+                else {
+                    buffer.push(c.charCodeAt(0));
+                }
+                break;
+            case 1:
+                if (c == 'x') {
+                    state = 2;
+                }
+                else if (c == 't') {
+                    buffer.push(0x09);
+                    state = 0;
+                }
+                else if (c == 'r') {
+                    buffer.push(0x0D);
+                    state = 0;
+                }
+                else if (c == 'n') {
+                    buffer.push(0x0A);
+                    state = 0;
+                }
+                else {
+                    buffer.push(c.charCodeAt(0));
+                    state = 0;
+                }
+                break;
+            case 2:
+                if (c >= '0' && c <= '9') {
+                    cCode = c.charCodeAt(0) - 0x30;
+                    state = 3;
+                }
+                else if (c >= 'A' && c <= 'F') {
+                    cCode = c.charCodeAt(0) + 10 - 0x41;
+                    state = 3;
+                }
+                else if (c >= 'a' && c <= 'f') {
+                    cCode = c.charCodeAt(0) + 10 - 0x61;
+                    state = 3;
+                }
+                else {
+                    state = -1;
+                }
+                break;
+            case 3:
+                if (c >= '0' && c <= '9') {
+                    cCode = (cCode << 4) + c.charCodeAt(0) - 0x30;
+                    buffer.push(cCode);
+                    state = 0;
+                }
+                else if (c >= 'A' && c <= 'F') {
+                    cCode = (cCode << 4) + c.charCodeAt(0) + 10 - 0x41;
+                    buffer.push(cCode);
+                    state = 0;
+                }
+                else if (c >= 'a' && c <= 'f') {
+                    cCode = (cCode << 4) + c.charCodeAt(0) + 10 - 0x61;
+                    buffer.push(cCode);
+                    state = 0;
+                }
+                else {
+                    state = -1;
+                }
+                break;
+            }
+        }
+    }
+    while (false);
+
+    if (state == 0) {
+        retVal = buffer;
+    }
+
+    return retVal;
+}
+
+async function fileClose(fileHandle) {
+
+    var retVal;
+
+    var response;
+    response = await evalTQL("fileClose(" + fileHandle + ")");
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+}
+module.exports.fileClose = fileClose;
+
+//
+// fileOpen: open a file and return a handle for it. Use fileWrite/fileRead/fileClose with
+// that handle
+//
+async function fileOpen(fileName, mode) {
+
+    var retVal;
+
+    var response;
+    if (mode) {
+        response = await evalTQL("fileOpen(" + dQ(fileName) + "," + dQ(mode) + ")");
+    }
+    else {
+        response = await evalTQL("fileOpen(" + dQ(fileName) + ")");
+    }
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+}
+module.exports.fileOpen = fileOpen;
+
+//
+// fileRead: read from a file handle obtained from fileOpen
+//
+async function fileRead(fileHandle, isBinary) {
+
+    var retVal;
+
+    var response;
+    response = await evalTQL("fileRead(" + fileHandle + ")", undefined, true);
+    if (response && ! response.error) {
+        if (! isBinary) {
+            retVal = eval(response.text);
+        }
+        else {
+            retVal = deQuote__(response.text);
+        }
+    }
+
+    return retVal;
+}
+module.exports.fileRead = fileRead;
+
+//
+// fileWrite: write to a file handle obtained from fileOpen
+//
+async function fileWrite(fileHandle, s_or_BinArr) {
+
+    var retVal;
+
+    var response;
+    response = await evalTQL("fileWrite(" + fileHandle + "," + dQ(s_or_BinArr) + ")");
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+}
+module.exports.fileWrite = fileWrite;
 
 //
 // intPow: calculate a power by multiplication
@@ -180,8 +401,8 @@ module.exports.intPow = intPow;
 //
 // sQ: Escape and wrap a string in single quotes
 //
-function sQ(s) {
-    return enQuote__(s, "'");
+function sQ(s_or_BinArr) {
+    return enQuote__(s_or_BinArr, "'");
 }
 module.exports.sQ = sQ;
 
@@ -190,7 +411,7 @@ module.exports.sQ = sQ;
 // the named TQL scope. TQL scopes are persistent and globals are retained between
 // consecutive calls to evalTQL
 //
-async function evalTQL(tqlScript, tqlScopeName) {
+async function evalTQL(tqlScript, tqlScopeName, raw) {
 
     var retVal = {
         error: true
@@ -211,7 +432,13 @@ async function evalTQL(tqlScript, tqlScopeName) {
         cacheBuster = cacheBuster + 1;
         
         const responseText = await response.text();
-        const responseTextUnwrapped = eval(responseText);
+        var responseTextUnwrapped;
+        if (raw) {
+            responseTextUnwrapped = responseText;
+        }
+        else {
+            responseTextUnwrapped = eval(responseText);
+        }
         
         retVal = {
             error: false,
