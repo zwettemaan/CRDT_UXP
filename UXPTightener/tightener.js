@@ -27,6 +27,7 @@ if (! module.exports) {
 }
 
 async function decrypt(s, aesKey, aesIV) {
+
     var retVal;
 
     if (! aesIV) {
@@ -41,6 +42,19 @@ async function decrypt(s, aesKey, aesIV) {
     return retVal;
 }
 module.exports.decrypt = decrypt;
+
+async function dirExists(dirName) {
+
+    var retVal;
+
+    var response = await evalTQL("dirExists(" + dQ(dirName) + ")");
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+}
+module.exports.dirExists = dirExists;
 
 //
 // dQ: Wrap a string in double quotes, properly escaping as needed
