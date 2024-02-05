@@ -1,7 +1,7 @@
 {
-  "id": "UXPTightenerSample",
-  "name": "UXPTightenerSample",
-  "version": "1.0.0",
+  "id": "CreativeDeveloperTools_UXP_Sample",
+  "name": "CreativeDeveloperTools_UXP_Sample",
+  "version": "0.0.1",
   "main": "index.html",
   "host": {
     "app": "ID",

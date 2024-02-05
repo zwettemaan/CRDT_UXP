@@ -1,4 +1,6 @@
-echo "makerelease CreativeDeveloperTools_UXP (UXPTightener) started"
+export EXTENSION_DIR=CreativeDeveloperTools_UXP
+
+echo "makerelease ${EXTENSION_DIR} (UXPTightener) started"
 
 if [ `uname` != "Darwin" ]; then
     echo Needs to run on Mac
@@ -18,7 +20,11 @@ fi
 
 export CREATIVEDEVTOOLS_UXP_VERSION=`head -n 1 "Version.txt"`
 
-export RELEASE_DIR_NAME=CreativeDeveloperTools_UXP.${CREATIVEDEVTOOLS_UXP_VERSION}
+sed -E "s/\"version\":\s*\"[^\"]*\"/\"version\": \"${CREATIVEDEVTOOLS_UXP_VERSION}\"/" "${scriptDir}/${EXTENSION_DIR}/manifest.json" > "${scriptDir}/${EXTENSION_DIR}/manifest.json.new"
+
+mv "${scriptDir}/${EXTENSION_DIR}/manifest.json.new" "${scriptDir}/${EXTENSION_DIR}/manifest.json"
+
+export RELEASE_DIR_NAME=${EXTENSION_DIR}.${CREATIVEDEVTOOLS_UXP_VERSION}
 export RELEASE_DIR="${scriptDir}${RELEASE_DIR_NAME}/"
 rm -rf ${RELEASE_DIR_NAME}.zip
 
@@ -58,8 +64,8 @@ rm -rf LicenseManager
 
 cd "${scriptDir}"
 
-cp -R CreativeDeveloperTools_UXP           "${RELEASE_DIR}"
-cp README.md                               "${RELEASE_DIR}"
+cp -R ${EXTENSION_DIR} "${RELEASE_DIR}"
+cp README.md           "${RELEASE_DIR}"
 
 find . -name ".DS_Store" | while read a; do rm "$a"; done
 
@@ -67,4 +73,4 @@ zip -r ${RELEASE_DIR_NAME}.zip ${RELEASE_DIR_NAME} > /dev/null
 
 rm -rf ${RELEASE_DIR_NAME}
 
-echo "makerelease CreativeDeveloperTools_UXP (UXPTightener) done"
+echo "makerelease ${EXTENSION_DIR} (UXPTightener) done"
