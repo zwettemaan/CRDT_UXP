@@ -485,6 +485,32 @@ async function machineGUID() {
 }  
 module.exports.machineGUID = machineGUID;  
 
+async function setIssuer(issuerGUID, issuerEmail) {
+
+    var retVal;
+
+    var response = await evalTQL("setIssuer(" + dQ(issuerGUID) + "," + dQ(issuerEmail) + ")");
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+}
+module.exports.setIssuer = setIssuer;
+
+async function sublicense(key, activation) {
+
+    var retVal;
+
+    var response = await evalTQL("sublicense(" + dQ(key) + "," + dQ(activation) + ")");
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+}
+module.exports.sublicense = sublicense;
+
 //
 // toHex: convert int to fixed length hex; default length is 4.
 //
