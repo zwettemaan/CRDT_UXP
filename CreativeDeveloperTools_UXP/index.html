@@ -4,8 +4,16 @@
 <head>
   <script src="main.js"></script>
 </head>
+
 <style>
-  .wrapper {
+body {
+  background-color: var(--uxp-host-background-color);
+  color: var(--uxp-host-text-color);
+  border-color: var(--uxp-host-border-color);
+  font-size: var(--uxp-host-font-size);
+}
+
+.wrapper {
     position: absolute;
     top: 0;
     left: 0;
@@ -16,12 +24,35 @@
     flex-direction: column;
     display: flex;
     padding: 12px;
-  }
+}
+
 </style>
 
-<body>
+<sp-body>
   <div class="wrapper">
-    <p>Creative Developer Tools for UXP Sample Extension</p>
+    <h2>Creative Developer Tools for UXP Sample Extension</h2>
+    <sp-div>
+    <sp-label>cdtuxp.base64encode(in_string)</sp-label>
+    <sp-textfield id="base64encode_in"></sp-textfield>
+    <sp-body id="base64encode_out"></sp-body>
+    </sp-div>
+    <sp-div>
+    <sp-label>cdtuxp.base64decode(in_string)</sp-label>
+    <sp-textfield id="base64decode_in"></sp-textfield>
+    <sp-body id="base64decode_out"></sp-body>
+    </sp-div>
+    <sp-div>
+    <sp-label>cdtuxp.encrypt(in_plainText, in_key)</sp-label>
+    <sp-textfield id="encrypt_plainText_in"></sp-textfield>
+    <sp-textfield id="encrypt_key_in"></sp-textfield>
+    <sp-body id="encrypt_out"></sp-body>
+    </sp-div>
+    <sp-div>
+    <sp-label>cdtuxp.decrypt(in_encrypted, in_key)</sp-label>
+    <sp-textfield id="decrypt_encrypted_in"></sp-textfield>
+    <sp-textfield id="decrypt_key_in"></sp-textfield>
+    <sp-body id="decrypt_out"></sp-body>
+    </sp-div>
   </div>
-</body>
+</sp-body>
 </html>

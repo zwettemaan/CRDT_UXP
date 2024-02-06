@@ -52,6 +52,59 @@ async function base64encode(s_or_BinArr) {
 }
 module.exports.base64encode = base64encode;
 
+function binaryUTF8ToStr(in_byteArray) {
+
+    var retVal = "";
+
+    var idx = 0;
+    var len = in_byteArray.length;
+    var c;
+    while (idx < len) {
+        var byte = in_byteArray[idx];
+        idx++;
+        var bit7 = byte >> 7;
+        if (! bit7) {
+            // U+0000 - U+007F
+            c = String.fromCharCode(byte);
+        }
+        else {
+            var bit6 = (byte & 0x7F) >> 6;
+            if (! bit6) {
+                // Invalid
+                retVal = undefined;
+                break;
+            }
+            else {
+                var byte2 = in_byteArray[idx];
+                idx++;
+                var bit5 = (byte & 0x3F) >> 5;
+                if (! bit5) {
+                    // U+0080 - U+07FF
+                    c = String.fromCharCode(((byte & 0x1F) << 6) | (byte2 & 0x3F));
+                }
+                else {
+                    var byte3 = in_byteArray[idx];
+                    idx++;
+                    var bit4 = (byte & 0x1F) >> 4;
+                    if (! bit4) {
+                        // U+0800 - U+FFFF
+                        c = String.fromCharCode(((byte & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F));
+                    }
+                    else {
+                        // Not handled U+10000 - U+10FFFF
+                        retVal = undefined;
+                        break;
+                    }
+                }
+            }
+        }
+        retVal += c;
+    }
+
+    return retVal;
+}
+module.exports.binaryUTF8ToStr = binaryUTF8ToStr;
+
 async function decrypt(s_or_BinArr, aesKey, aesIV) {
 
     var retVal;
@@ -160,11 +213,11 @@ function enQuote__(s_or_BinArr, quoteChar) {
 }
 
 //
-// deQuote__: Helper function. Unescape and remove quotes, return buffer array
+// deQuote: Unescape and remove quotes, return byte array
 //
-function deQuote__(quotedString) {
+function deQuote(quotedString) {
 
-    var retVal = "";
+    var retVal = [];
 
     do {
 
@@ -319,11 +372,12 @@ async function fileRead(fileHandle, isBinary) {
     var response;
     response = await evalTQL("fileRead(" + fileHandle + ")", undefined, true);
     if (response && ! response.error) {
-        if (! isBinary) {
-            retVal = eval(response.text);
+        var byteArray = deQuote(response.text);
+        if (isBinary) {
+            retVal = byteArray;
         }
         else {
-            retVal = deQuote__(response.text);
+            retVal = binaryUTF8ToStr(byteArray);
         }
     }
 
@@ -437,7 +491,7 @@ async function evalTQL(tqlScript, tqlScopeName, raw) {
             responseTextUnwrapped = responseText;
         }
         else {
-            responseTextUnwrapped = eval(responseText);
+            responseTextUnwrapped = binaryUTF8ToStr(deQuote(responseText));
         }
         
         retVal = {
