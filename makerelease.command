@@ -64,13 +64,14 @@ rm -rf LicenseManager
 
 cd "${scriptDir}"
 cp startDaemon.* "${RELEASE_DIR}LicenseManager"
+cp killDaemon.* "${RELEASE_DIR}LicenseManager"
 
 cp -R ${EXTENSION_DIR} "${RELEASE_DIR}"
 cp README.md           "${RELEASE_DIR}"
 
 find . -name ".DS_Store" | while read a; do rm "$a"; done
 
-zip -r ${RELEASE_DIR_NAME}.zip ${RELEASE_DIR_NAME} > /dev/null
+zip -y -r ${RELEASE_DIR_NAME}.zip ${RELEASE_DIR_NAME} > /dev/null
 
 rm -rf ${RELEASE_DIR_NAME}
 

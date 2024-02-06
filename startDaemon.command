@@ -10,7 +10,7 @@ export LICENSE_MANAGER_ROOT=`pwd`/
 export EMBEDDED_DAEMON="${LICENSE_MANAGER_ROOT}/Mac/LicenseManager.app/Contents/Resources/Tightener_Mac"
 export SYSTEM_DAEMON=~/"Library/Application Support/net.tightener/SysConfig/Tightener"
 if [ ! -f "${SYSTEM_DAEMON}" ]; then
-    if [ ! -f "${EMBEDDED_DAEMON}"; ] then
+    if [ ! -f "${EMBEDDED_DAEMON}" ]; then
         echo "Cannot access License Manager; make sure this script is not moved from being alongside the 'License Manager' folder"
         exit
     fi
