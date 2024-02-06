@@ -4,9 +4,9 @@ This works by way of a daemon. Launching the daemon will start an HTTPS server o
 
 This address resolves to 127.0.0.1
 
-To start the daemon, you can run the License Manager, which will automatically start the daemon and leave it running.
+To start the daemon, you can run the License Manager, which will automatically start the daemon and leave it running even after you quit License Manager, until the next restart of your computer.
 
-Alternatively, run the script `startDaemon.command` (Mac - script is double-clickable), `startDaemon.sh` (Linux), or `startDaemon.bat` (Windows).
+Alternatively, run the script `startDaemon.command` (Mac - script is double-clickable) or `startDaemon.bat` (Windows).
 
-Once the daemon is running, you can call the entry points in the module 'tightener.js' from your UXP Plugin or UXPScript.
+Once the daemon is running, you can call the entry points in the module 'cdtuxp.js' from your UXP Plugin or UXPScript.
 

@@ -63,6 +63,7 @@ cd ..
 rm -rf LicenseManager
 
 cd "${scriptDir}"
+cp startDaemon.* "${RELEASE_DIR}LicenseManager"
 
 cp -R ${EXTENSION_DIR} "${RELEASE_DIR}"
 cp README.md           "${RELEASE_DIR}"
