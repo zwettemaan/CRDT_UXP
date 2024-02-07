@@ -53,11 +53,11 @@ mv    README.md              "${RELEASE_DIR}Helpers/Mac/LicenseManager_README.md
 
 unzip Windows_Intel_x86_64/LicenseManager.zip > /dev/null
 mv    LicenseManager         "${RELEASE_DIR}Helpers/Windows_x86_64"
-sed 's/$/\r/g' < README.md > "${RELEASE_DIR}Helpers/Windows_x86_64/LicenseManager_README.md"
+mv    README.md              "${RELEASE_DIR}Helpers/Windows_x86_64/LicenseManager_README.md"
 
 unzip Windows_ARM64/LicenseManager.zip > /dev/null
 mv    LicenseManager         "${RELEASE_DIR}Helpers/Windows_arm64"
-sed 's/$/\r/g' < README.md > "${RELEASE_DIR}Helpers/Windows_arm64/LicenseManager_README.md"
+mv    README.md              "${RELEASE_DIR}Helpers/Windows_arm64/LicenseManager_README.md"
 
 cd ..
 
