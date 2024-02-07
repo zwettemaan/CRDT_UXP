@@ -41,22 +41,23 @@ Once the daemon is running, you can call the entry points in the module 'cdtuxp.
 
 ## How to activate
 
-The _Tightener License Manager_ is provided in the _Helpers_ subfolder.
+The _License Manager_ is provided in the _Helpers_ subfolder.
 
-No install needed - just double-click the _.exe_ or _.app_ file.
-```
-    https://store.tgrg.net/
-```
+No install needed - just drill down into the folders, and double-click the _LicenseManager.exe_ or _LicenseManager.app_ file.
 
-Create a standard account in the _Tightener License Manager_, choose an unlock code, and make sure to _Register_ the account. 
+Create a standard account in the _License Manager_ by clicking the _New_ button bottom right of the _User Account_ window.
+
+Enter a descriptive name and a valid email address, and choose an unlock code. You need to enter the unlock code twice.
+
+Click OK. Once the account has been created, make sure to _Register_ the account. 
 
 You will receive a confirmation email with a confirmation link. If the email does not arrive, make sure to check your email spam filter!
 
-There is a checkbox _Save Unlock Code_. 
+Note there is a checkbox _Save Unlock Code_. 
 
-If you're on a secure personal computer, you might want to save the unlock code to avoid having to re-enter it each time you launch the _Tightener License Manager_. 
+If you're on a secure personal computer, you might want to save the unlock code to avoid having to re-enter it each time you launch the _License Manager_. 
 
-If you don't save the unlock code, you need to re-enter it each time you restart the _Tightener License Manager_.
+If you don't save the unlock code, you need to re-enter it each time you restart the _License Manager_.
 
 Note: you can create as many accounts as needed.
 
@@ -64,44 +65,42 @@ It is OK to re-use the same email address and unlock code for more than one acco
 
 If you _do_ re-use the same email address for more than one account, make sure to use descriptive names for the accounts, so you can tell them apart.
 
-For example, you might have one account that you use for your own use, and one or more additional accounts (possibly using same email address and unlock code) that you could use for embedding a _Creative Developer Tools_ activation for your customers or colleagues.
+For example, you might have one account that you use for your own personal use, and one or more additional accounts that you could use for ordering embeddable _Creative Developer Tools_ activations for your customers or colleagues.
 
-Download the product catalog entry for _JSXGetURL_ from here:
-```
-	https://www.rorohiko.com/creativedevelopertools
-```
-or
-```
-    https://store.tgrg.net/products/CRDT_Demo.cate
-    https://store.tgrg.net/products/CRDT_2024.cate
-```     
+First make sure your account is unlocked. If you did not save your unlock code, you might need to re-enter it.
 
-Open the downloaded file, `CRDT_2024.cate` or `CRDT_Demo.cate` with the _Tightener License Manager_.
+Now we need to add the product information for the software to be activated into the _License Manager_. 
 
-Fill in your details (select the account, pick a useful order reference, set a number of seats), and click the _Save_ button. 
+Use the _Store_ window in the _License Manager_, and browse into the _Catalog of Rorohiko Licensed Products_.
+
+Click the entry for either `Creative Developer Tools 2024` or `Creative Developer Tools Demo`. 
+
+This will open the _Order a License_ window in the _License Manager_.
+
+If you have multiple accounts available, pick the correct one from the popup menu. Enter the number of seats needed, and type in an order reference that has relevance to you. Then click the _Save_ button. 
 
 This creates a _License Request_ file (`.lirq` file name extension).
 
 Attach this file to an email to mailto:sales@rorohiko.com. 
 
-Make sure to mention any details that might be relevant or useful in your email (e.g. let us know if you prefer us to send you a PayPal invoice).
+Make sure to mention any additional details that might be relevant or useful in your email (e.g. let us know if you prefer us to send you a PayPal invoice).
 
 No payment is needed for `CRDT_Demo`.
 
-If your company is not a small or medium-size business, payment of US$29/seat is required for `CRDT_2024`.
+If your company (or the final end-user) is not a small or medium-size business, payment of US$29/seat is required for `CRDT_2024`.
 
 Payment processing for `CRDT_2024` is not currently automated - you need to manually send payment using PayPal, to `sales@rorohiko.com`. 
 
-With your payment, make sure to mention the same order reference that you used in the _Tightener License Manager_, so we can match your payment to the order info embedded in the _License Request_.
+With your payment, make sure to mention the same order reference that you used in the _License Manager_, so we can match your payment to the order info embedded in the _License Request_.
 ```
     https://www.paypal.com
 ```       
 
-Once we have received your payment (if needed), we will email you an activation file for the order, which will have a `.capb` file name extension. 
+Once we have received the required payment, we will email you an activation file for the order, which will have a `.capb` file name extension. 
 
 Again, make sure to check your email spam filter!
 
-Open this `.capb` file with _Tightener License Manager_. The _Tightener License Manager_ will match this activation file to the outstanding order. 
+Open this `.capb` file with _License Manager_. The _License Manager_ will match this activation file to the outstanding order. 
 
 In the _Licenses, Activations and Pending Orders_ window you can now select the order and click the _Activate_ button to activate your workstation.
 
@@ -121,7 +120,7 @@ Once the order is fullfilled, don't activate the license. Instead, you will be '
 
 In addition to your standard account, which you've used to order the _Creative Developer Tools_ activation, you now also need a separate developer account.
 
-Switch the _Tightener License Manager_ to 'Developer/Publisher' mode via the _File - License Manager Mode_ menu.
+Switch the _License Manager_ to 'Developer/Publisher' mode via the _File - License Manager Mode_ menu.
 
 If you don't have a developer account yet, create and register one. Wait for a confirmation email, and make sure to check your spam filter. 
 
@@ -150,7 +149,7 @@ The software will now auto-activate when your customer runs your UXP script or p
 
 When you need to activate on another computer you can re-use the same data. 
 
-If you did not embed the activation, but instead activate by way of the _Tightener License Manager_ you can export and import all your activation data between computers: there are options for that under the _File_ menu of the _Tightener License Manager_.
+If you did not embed the activation, but instead activate by way of the _License Manager_ you can export and import all your activation data between computers: there are options for that under the _File_ menu of the _License Manager_.
 
 If you did use the sublicensing mechanism, then the actvation will transport automatically. 
 
