@@ -2,22 +2,49 @@
 
 SET LICENSE_MANAGER_ROOT=%~dp0
 
+SET DAEMON_APP_ROOT=%LICENSE_MANAGER_ROOT%LicenseManager\
 IF "%PROCESSOR_ARCHITECTURE%" == "ARM64" (
-    SET DAEMON_APP_ROOT=%LICENSE_MANAGER_ROOT%Windows\ARM64\
     SET EMBEDDED_DAEMON=%DAEMON_APP_ROOT%LicenseManager\LicenseManager Resources\Tightener_Windows_ARM64.exe
 ) ELSE (
-    SET DAEMON_APP_ROOT=%LICENSE_MANAGER_ROOT%Windows\
     SET EMBEDDED_DAEMON=%DAEMON_APP_ROOT%LicenseManager\LicenseManager Resources\Tightener_Windows.exe
 )
 
 SET SYSTEM_DAEMON=%APPDATA%\net.tightener\SysConfig\Tightener.exe
 IF NOT EXIST "%SYSTEM_DAEMON%" (
     IF NOT EXIST "%EMBEDDED_DAEMON%" (
+        ECHO.
+        ECHO.
+        ECHO ---------
+        ECHO.
         ECHO Cannot access License Manager; make sure this script is not moved from being alongside the 'License Manager' folder 
+        ECHO.
+        ECHO ---------
+        ECHO.
+        ECHO.
     ) ELSE (
+        ECHO.
+        ECHO.
+        ECHO ---------
+        ECHO.
         ECHO Installing daemon as %SYSTEM_DAEMON%
-        COPY "%EMBEDDED_DAEMON%" "%SYSTEM_DAEMON%"
+        ECHO.
+        ECHO ---------
+        ECHO.
+        ECHO.
+        COPY "%EMBEDDED_DAEMON%" "%SYSTEM_DAEMON%" >NUL
     )
 )
 
-START /B CMD /C "%SYSTEM_DAEMON%" -t n -N daemon -s -l 18888
+IF EXIST "%SYSTEM_DAEMON%" (
+    ECHO.
+    ECHO.
+    ECHO ---------
+    ECHO.
+    ECHO Starting daemon
+    ECHO.
+    ECHO ---------
+    ECHO.
+    ECHO.
+
+    START /MIN CMD /C "%SYSTEM_DAEMON%" -t n -N daemon -s -l 18888
+)

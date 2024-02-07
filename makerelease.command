@@ -31,40 +31,48 @@ rm -rf ${RELEASE_DIR_NAME}.zip
 rm -rf "${RELEASE_DIR}"
 
 mkdir "${RELEASE_DIR}"
-mkdir "${RELEASE_DIR}LicenseManager"
-mkdir "${RELEASE_DIR}LicenseManager/Mac"
-mkdir "${RELEASE_DIR}LicenseManager/Windows"
-mkdir "${RELEASE_DIR}LicenseManager/Windows/ARM64"
+mkdir "${RELEASE_DIR}Helpers"
+mkdir "${RELEASE_DIR}Helpers/Mac"
+mkdir "${RELEASE_DIR}Helpers/Windows_x86_64"
+mkdir "${RELEASE_DIR}Helpers/Windows_arm64"
 
 # Fetch latest License Manager
 
-cp "${TIGHTENER_RELEASE_ROOT}Apps/LicenseManager.tgz" "${RELEASE_DIR}LicenseManager"
+cp "${TIGHTENER_RELEASE_ROOT}Apps/LicenseManager.tgz" "${RELEASE_DIR}Helpers"
 
-cd "${RELEASE_DIR}LicenseManager"
+cd "${RELEASE_DIR}Helpers"
+
 tar -zxf LicenseManager.tgz > /dev/null
 rm -f LicenseManager.tgz
 
 cd LicenseManager
 
 unzip MacOS_Intel_And_M1/LicenseManager.zip > /dev/null
-mv    LicenseManager.app "${RELEASE_DIR}LicenseManager/Mac"
-mv    README.txt         "${RELEASE_DIR}LicenseManager/Mac"
+mv    LicenseManager.app "${RELEASE_DIR}Helpers/Mac"
+mv    README.md          "${RELEASE_DIR}Helpers/Mac/LicenseManager_README.md"
 
 unzip Windows_Intel_x86_64/LicenseManager.zip > /dev/null
-mv    LicenseManager     "${RELEASE_DIR}LicenseManager/Windows"
-mv    README.txt         "${RELEASE_DIR}LicenseManager/Windows"
+mv    LicenseManager     "${RELEASE_DIR}Helpers/Windows_x86_64"
+mv    README.md          "${RELEASE_DIR}Helpers/Windows_x86_64/LicenseManager_README.md"
 
 unzip Windows_ARM64/LicenseManager.zip > /dev/null
-mv    LicenseManager     "${RELEASE_DIR}LicenseManager/Windows/ARM64"
-mv    README.txt         "${RELEASE_DIR}LicenseManager/Windows/ARM64"
+mv    LicenseManager     "${RELEASE_DIR}Helpers/Windows_arm64"
+mv    README.md          "${RELEASE_DIR}Helpers/Windows_arm64/LicenseManager_README.md"
 
 cd ..
 
 rm -rf LicenseManager
 
 cd "${scriptDir}"
-cp startDaemon.* "${RELEASE_DIR}LicenseManager"
-cp killDaemon.* "${RELEASE_DIR}LicenseManager"
+
+cp startDaemon.command "${RELEASE_DIR}Helpers/Mac"
+cp killDaemon.command "${RELEASE_DIR}Helpers/Mac"
+
+cp startDaemon.bat "${RELEASE_DIR}Helpers/Windows_x86_64"
+cp killDaemon.bat "${RELEASE_DIR}Helpers/Windows_x86_64"
+
+cp startDaemon.bat "${RELEASE_DIR}Helpers/Windows_arm64"
+cp killDaemon.bat "${RELEASE_DIR}Helpers/Windows_arm64"
 
 cp -R ${EXTENSION_DIR} "${RELEASE_DIR}"
 cp README.md           "${RELEASE_DIR}"

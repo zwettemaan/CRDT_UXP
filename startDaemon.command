@@ -7,15 +7,16 @@ export LICENSE_MANAGER_ROOT=`dirname "$0"`/
 cd "$LICENSE_MANAGER_ROOT"
 export LICENSE_MANAGER_ROOT=`pwd`/
 
-export EMBEDDED_DAEMON="${LICENSE_MANAGER_ROOT}/Mac/LicenseManager.app/Contents/Resources/Tightener_Mac"
+export EMBEDDED_DAEMON="${LICENSE_MANAGER_ROOT}/LicenseManager.app/Contents/Resources/Tightener_Mac"
 export SYSTEM_DAEMON=~/"Library/Application Support/net.tightener/SysConfig/Tightener"
 if [ ! -f "${SYSTEM_DAEMON}" ]; then
     if [ ! -f "${EMBEDDED_DAEMON}" ]; then
         echo "Cannot access License Manager; make sure this script is not moved from being alongside the 'License Manager' folder"
         exit
     fi
-    echo "Installing daemon as $SYSTEM_DAEMON"
+    echo "\n\n\n---------\n\nInstalling daemon as ${SYSTEM_DAEMON}\n\n---------\n\n\n"
     cp "${EMBEDDED_DAEMON}" "${SYSTEM_DAEMON}"
 fi
 
+echo "\n\n\n---------\n\\nLaunching ${SYSTEM_DAEMON}\n\n---------\n\n\n"
 nohup "${SYSTEM_DAEMON}" -s -t n -N daemon -l 18888 >/dev/null 2>&1 &
