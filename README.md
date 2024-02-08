@@ -39,7 +39,7 @@ This will automatically start the daemon each time you run the _License Manager_
 
 Alternatively, run the double-clickable scripts `startDaemon.command` (Mac) or `startDaemon.bat` (Windows).
 
-Once the daemon is running, you can call the entry points in the module 'cdtuxp.js' from your UXP Plugin or UXPScript.
+Once the daemon is running, you can call the entry points in the module 'crdtuxp.js' from your UXP Plugin or UXPScript.
 
 You can also terminate the daemon with the scripts `killDaemon.command` (Mac) or `killDaemon.bat` (Windows).
 
@@ -136,20 +136,20 @@ Change the popup menu to _JavaScript_, then click the _Copy_ button.
 
 Switch to your editor with your source code, and _Paste_ right after the line in your source code where you load _Creative Developer Tools_:
 ```
-const cdtuxp = require("./cdtuxp");
+const crdtuxp = require("./crdtuxp");
 ```
 so it looks like
 ```
-const cdtuxp = require("./cdtuxp");
+const crdtuxp = require("./crdtuxp");
 
-cdtuxp.setIssuer("1186cb861234567377c49d7eade","my@email.com");
-cdtuxp.sublicense("hdjshsajdshajdkas..lotsofit...NEmgd0UGH28dbI1RK0GRig==");
+crdtuxp.setIssuer("1186cb861234567377c49d7eade","my@email.com");
+crdtuxp.sublicense("hdjshsajdshajdkas..lotsofit...NEmgd0UGH28dbI1RK0GRig==");
 
 ```
 
 The software will now auto-activate when your customer runs your UXP script or plug-in and the user won't have to deal with activations.
 
-`cdtuxp.sublicense()` returns a boolean - it will return `false` if the activation fails for some reason, so you can verify in code whether the activation succeeded or not.
+`crdtuxp.sublicense()` returns a boolean - it will return `false` if the activation fails for some reason, so you can verify in code whether the activation succeeded or not.
 
 ## Changing computers
 

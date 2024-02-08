@@ -2,15 +2,16 @@ const { entrypoints } = require("uxp");
 
 var app;
 try {
-app = require("indesign").app;
-}
-catch (err) {};
-try {
-app = require("photoshop").app;
+  app = require("indesign").app;
 }
 catch (err) {};
 
-const cdtuxp = require("./cdtuxp");
+try {
+  app = require("photoshop").app;
+}
+catch (err) {};
+
+const crdtuxp = require("./crdtuxp");
 
 entrypoints.setup({
   panels: {
@@ -31,7 +32,7 @@ document.querySelector("#decrypt_key_in").oninput=() => decryptDemo();
 
 async function base64encodeDemo() {
 
-  var encoded = await cdtuxp.base64encode(document.getElementById("base64encode_in").value)
+  var encoded = await crdtuxp.base64encode(document.getElementById("base64encode_in").value)
   document.getElementById("base64encode_out").textContent = encoded;
   document.getElementById("base64decode_in").value = encoded;
 
@@ -39,7 +40,7 @@ async function base64encodeDemo() {
 
 async function base64decodeDemo() {
 
-  var plainText = await cdtuxp.base64decode(document.getElementById("base64decode_in").value)
+  var plainText = await crdtuxp.base64decode(document.getElementById("base64decode_in").value)
   document.getElementById("base64decode_out").textContent = plainText;
 
 }
@@ -47,7 +48,7 @@ async function base64decodeDemo() {
 async function encryptDemo() {
 
   var encrypted = 
-    await cdtuxp.encrypt(
+    await crdtuxp.encrypt(
       document.getElementById("encrypt_plainText_in").value,
       document.getElementById("encrypt_key_in").value);
 
@@ -59,7 +60,7 @@ async function encryptDemo() {
 async function decryptDemo() {
 
   var plainText = 
-    await cdtuxp.decrypt(
+    await crdtuxp.decrypt(
       document.getElementById("decrypt_encrypted_in").value,
       document.getElementById("decrypt_key_in").value);
 
