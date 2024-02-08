@@ -33,19 +33,25 @@ This works by way of a daemon. Launching the daemon will start an HTTPS server o
 
 This address resolves to 127.0.0.1
 
-To start the daemon, you can run the License Manager, which will automatically start the daemon and leave it running even after you quit License Manager, until the next restart of your computer.
+To start the daemon, you can run the _License Manager_, go into the preferences, and tick the checkbox _Launch daemon for Creative Developer Tools when License Manager starts_. 
 
-Alternatively, run the script `startDaemon.command` (Mac - script is double-clickable) or `startDaemon.bat` (Windows).
+This will automatically start the daemon each time you run the _License Manager_. The daemon will continue running after you quit _License Manager_, until the next restart of your computer.
+
+Alternatively, run the double-clickable scripts `startDaemon.command` (Mac) or `startDaemon.bat` (Windows).
 
 Once the daemon is running, you can call the entry points in the module 'cdtuxp.js' from your UXP Plugin or UXPScript.
 
+You can also terminate the daemon with the scripts `killDaemon.command` (Mac) or `killDaemon.bat` (Windows).
+
 ## How to activate
 
-The _License Manager_ is provided in the _Helpers_ subfolder.
+The _License Manager_ is provided in the _Helpers_ subfolder. 
 
-No install needed - just drill down into the folders, and double-click the _LicenseManager.exe_ or _LicenseManager.app_ file.
+You can leave the _License Manager_ where it is, below the _Helpers_ folder. You can also find and move the License Manager folder for your platform from the _Helpers_ folder to some convenient location (e.g. `/Applications` or `C:\Program Files`).
 
-Create a standard account in the _License Manager_ by clicking the _New_ button bottom right of the _User Account_ window.
+The install process is simple: move the License Manager folder to its desired location and then manually launch the _License Manager_ app at least once after you shifted it to a different location.
+
+Create a standard account in the _License Manager_ by clicking the _New_ button bottom right of the _Accounts_ window.
 
 Enter a descriptive name and a valid email address, and choose an unlock code. You need to enter the unlock code twice.
 
@@ -53,21 +59,21 @@ Click OK. Once the account has been created, make sure to _Register_ the account
 
 You will receive a confirmation email with a confirmation link. If the email does not arrive, make sure to check your email spam filter!
 
-Note there is a checkbox _Save Unlock Code_. 
+Note: there is a checkbox _Save Unlock Code_. 
 
 If you're on a secure personal computer, you might want to save the unlock code to avoid having to re-enter it each time you launch the _License Manager_. 
 
-If you don't save the unlock code, you need to re-enter it each time you restart the _License Manager_.
+If you don't save the unlock code, you will need to re-enter it each time you restart the _License Manager_.
 
 Note: you can create as many accounts as needed.
 
-It is OK to re-use the same email address and unlock code for more than one account. 
+It is allowed to re-use the same email address for multiple accounts, as long as they have a different unlock code.
 
-If you _do_ re-use the same email address for more than one account, make sure to use descriptive names for the accounts, so you can tell them apart.
+If you _do_ re-use the same email address for more than one account, make sure to use different unlock codes, and good descriptive names, so you can tell the accounts apart.
 
 For example, you might have one account that you use for your own personal use, and one or more additional accounts that you could use for ordering embeddable _Creative Developer Tools_ activations for your customers or colleagues.
 
-First make sure your account is unlocked. If you did not save your unlock code, you might need to re-enter it.
+Always make sure your account is unlocked. If you did not save your unlock code, you might need to re-enter the code.
 
 Now we need to add the product information for the software to be activated into the _License Manager_. 
 
@@ -147,10 +153,10 @@ The software will now auto-activate when your customer runs your UXP script or p
 
 ## Changing computers
 
-When you need to activate on another computer you can re-use the same data. 
+When you need to activate on another computer you can re-use the same licensing info - the activation can be transferred over. 
 
-If you did not embed the activation, but instead activate by way of the _License Manager_ you can export and import all your activation data between computers: there are options for that under the _File_ menu of the _License Manager_.
+If you activated by way of the _License Manager_: you can export and import all your account and activation data between computers. Use the _File - Export License Info..._ and _File - Import License Info..._ menu items to move the licensing info between computers by way of a transfer file.
 
-If you did use the sublicensing mechanism, then the actvation will transport automatically. 
+If you activated by way of the sublicensing mechanism, then the actvation will transport automatically. 
 
 There is a limitation on how frequently you can re-activate: after you activate a seat on a particular computer, you need to wait at least 10 minutes before you can re-activate the same seat on another computer.

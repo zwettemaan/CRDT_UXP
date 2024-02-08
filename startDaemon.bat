@@ -2,14 +2,15 @@
 
 SET LICENSE_MANAGER_ROOT=%~dp0
 
-SET DAEMON_APP_ROOT=%LICENSE_MANAGER_ROOT%LicenseManager\
+SET DAEMON_APP_ROOT=%LICENSE_MANAGER_ROOT%LicenseManager\LicenseManager Resources\
 IF "%PROCESSOR_ARCHITECTURE%" == "ARM64" (
-    SET EMBEDDED_DAEMON=%DAEMON_APP_ROOT%LicenseManager\LicenseManager Resources\Tightener_Windows_ARM64.exe
+    SET EMBEDDED_DAEMON=%DAEMON_APP_ROOT%Tightener_Windows_ARM64.exe
 ) ELSE (
-    SET EMBEDDED_DAEMON=%DAEMON_APP_ROOT%LicenseManager\LicenseManager Resources\Tightener_Windows.exe
+    SET EMBEDDED_DAEMON=%DAEMON_APP_ROOT%Tightener_Windows.exe
 )
 
 SET SYSTEM_DAEMON=%APPDATA%\net.tightener\SysConfig\Tightener.exe
+
 IF NOT EXIST "%SYSTEM_DAEMON%" (
     IF NOT EXIST "%EMBEDDED_DAEMON%" (
         ECHO.
