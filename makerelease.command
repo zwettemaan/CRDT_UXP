@@ -18,7 +18,7 @@ fi
 
 . "${TIGHTENER_GIT_ROOT}BuildScripts/setEnv"
 
-export CREATIVEDEVTOOLS_UXP_VERSION=`head -n 1 "Version.txt"`
+export CREATIVEDEVTOOLS_UXP_VERSION=`head -n 1 "Version.txt" | tr -d '\r'`
 
 sed -E "s/\"version\":\s*\"[^\"]*\"/\"version\": \"${CREATIVEDEVTOOLS_UXP_VERSION}\"/" "${SCRIPT_DIR}${EXTENSION_DIR_NAME}/manifest.json" > "${SCRIPT_DIR}${EXTENSION_DIR_NAME}/manifest.json.new"
 
