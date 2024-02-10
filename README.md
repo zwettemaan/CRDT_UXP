@@ -6,7 +6,7 @@ Creative Developer Tools is a growing suite of tools aimed at script and plug-in
 
 Currently, it is at an alpha stage: the feature set is not frozen, and new features are added regularly.
 
-The first release, 0.0.1 is functional and stable, and useful.
+The first release, 0.0.1 is meant to be functional and useful.
 
 Features include:
 
@@ -21,19 +21,48 @@ Features include:
 
 This works by way of a daemon. Launching the daemon will start an HTTPS server on https://localhost.tgrg.net
 
-This address resolves to 127.0.0.1
+This DNS name resolves to 127.0.0.1
 
-To start the daemon, you can run the _License Manager_. Go into the Preferences, and tick the checkbox _Launch daemon for Creative Developer Tools when License Manager starts_. 
+Before you can start the daemon you need a valid license - see further for info on how to obtain a trial license.
 
-This will automatically start the daemon each time you run the _License Manager_. The daemon will continue running after you quit _License Manager_, until the next restart of your computer.
+To start the daemon, run the _License Manager_. Go into the Preferences, and tick the checkbox _Launch daemon for Creative Developer Tools when License Manager starts_. 
 
-Alternatively, run the double-clickable scripts `startDaemon.command` (Mac) or `startDaemon.bat` (Windows).
+This will automatically start the daemon each time you run the _License Manager_. 
 
-Once the daemon is running, you can call the entry points in the module 'crdtuxp.js' from your UXP Plugin or UXPScript.
+The daemon will continue running after you quit _License Manager_, until the next restart of your computer.
 
-You can also terminate the daemon with the scripts `killDaemon.command` (Mac) or `killDaemon.bat` (Windows).
+Once the daemon is running, you can use the various endpoints in the module `crdtuxp.js` from your UXP Plugin or UXPScript:
+```
+async crdtuxp.base64decode(base64Str)
+async crdtuxp.base64encode(s_or_ByteArr)
+      crdtuxp.binaryUTF8ToStr(in_byteArray)
+async crdtuxp.decrypt(s_or_ByteArr, aesKey)
+async crdtuxp.dirExists(dirPath)
+async crdtuxp.dQ(s_or_ByteArr)
+async crdtuxp.encrypt(s_or_ByteArr, aesKey)
+      crdtuxp.deQuote(quotedString)
+async crdtuxp.fileClose(fileHandle)
+async crdtuxp.fileOpen(fileName, mode)
+async crdtuxp.fileRead(fileHandle, isBinary)
+async crdtuxp.fileWrite(fileHandle, s_or_ByteArr)
+      crdtuxp.intPow(i, intPower)
+async crdtuxp.sQ(s_or_ByteArr)
+async crdtuxp.getCapability(issuer, productCode, password)
+async crdtuxp.machineGUID()
+async crdtuxp.setIssuer(issuerGUID, issuerEmail)
+async crdtuxp.sublicense(key, activation)
+      crdtuxp.toHex(i, numDigits)
+```
 
-Both on Mac and Windows, the built-in security systems might balk and bring up scary warnings. On Mac, you can run `macDequarantineHelpers.command`. On Windows, you have to click through the warnings and run the `.bat` files despite the complaints.
+To manage the daemon, you can also use double-clickable scripts like `startDaemon` or `killDaemon`.
+
+Both on Mac and Windows, the OS built-in security systems might balk and bring up scary warnings. 
+
+On Mac, you can run `macDequarantineHelpers.command`. 
+
+On Windows, you will have to click through the 'More Info' and other warnings and allow it to run the `.bat` files.
+
+Once a script has been run, there should be no further complaints for that script.
 
 You can configure these scripts as startup items and make the daemon auto-start after a computer restart.
 
@@ -95,7 +124,7 @@ You can create as many accounts as needed.
 
 It is allowed to re-use the same email address and unlock code for multiple accounts.
 
-If you _do_ re-use the same email address for more than one account, make sure to use good descriptive names, so you can tell the accounts apart.
+If you _do_ re-use the same email address for more than one account, they become hard to distinguish. Make sure to use good descriptive names, so you can tell the accounts apart.
 
 For example, you might use one account that you keep for your own personal use, and one or more additional accounts that you could use for ordering embeddable _JSXGetURL_ activations to pass on to your customers or colleagues.
 
@@ -125,13 +154,13 @@ This creates a _License Request_ file (`.lirq` file name extension).
 
 Attach this `.lirq` file to an email to mailto:sales@rorohiko.com. 
 
-In your email, make sure to mention any additional details that might be relevant or useful in your email (e.g. let us know if you prefer us to send you a PayPal invoice).
+In your email, make sure to mention any additional details that might be relevant or useful (e.g. let us know if you prefer us to send you a PayPal invoice).
 
 ### Payment
 
 If you need to pay a license fee, payment processing is not yet automated - you need to manually send payment of US$29/seat using PayPal, to `sales@rorohiko.com`. 
 
-With your payment, make sure to mention the order reference that you also used in the _License Manager_, so we can match your payment to the order info embedded in the _License Request_.
+With your payment, make sure to mention the order reference that you used in the _License Manager_, so we can match your payment to the order info embedded in the _License Request_.
 ```
     https://www.paypal.com
 ```       
@@ -168,9 +197,20 @@ If you don't have a developer account yet, create and register one. Wait for a c
 
 Once you have a registered developer account, go to the _Sublicensing_ window, and select the order.
 
-Select the option _SideCar File_, then click the _Copy_ button. Start your text editor and create a new file, and _Paste_ the activation info (JSON format). Save this file with a `.actv` file name extension (e.g. `MyAutoActivation.actv`).
+Select the option _SideCar File_, then click the _Copy_ button. 
 
-On your end-users computer, you need to copy this file into the folder `%APPDATA%\net.tightener\Licensing\AutoActivations` or `~/Library/Application Support/net.tightener/Licensing/AutoActivations`.
+Start your text editor and create a new file, and _Paste_ the activation info (JSON format). 
+
+Save this file with a `.actv` file name extension (e.g. `MyAutoActivation.actv`).
+
+On your end-users computer, you need to copy this file into the folder 
+```
+%APPDATA%\net.tightener\Licensing\AutoActivations
+```
+or 
+```
+~/Library/Application Support/net.tightener/Licensing/AutoActivations
+```
 
 The software will now auto-activate when your customer runs it and the user won't have to deal with activations.
 

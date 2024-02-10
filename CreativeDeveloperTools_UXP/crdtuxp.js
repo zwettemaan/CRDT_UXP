@@ -39,11 +39,11 @@ async function base64decode(base64Str) {
 }
 module.exports.base64decode = base64decode;
 
-async function base64encode(s_or_BinArr) {
+async function base64encode(s_or_ByteArr) {
 
     var retVal;
 
-    var response = await evalTQL("base64encode(" + dQ(s_or_BinArr) + ")");
+    var response = await evalTQL("base64encode(" + dQ(s_or_ByteArr) + ")");
     if (response && ! response.error) {
         retVal = response.text;
     }
@@ -105,7 +105,7 @@ function binaryUTF8ToStr(in_byteArray) {
 }
 module.exports.binaryUTF8ToStr = binaryUTF8ToStr;
 
-async function decrypt(s_or_BinArr, aesKey, aesIV) {
+async function decrypt(s_or_ByteArr, aesKey, aesIV) {
 
     var retVal;
 
@@ -113,7 +113,7 @@ async function decrypt(s_or_BinArr, aesKey, aesIV) {
         aesIV = "";
     }
 
-    var response = await evalTQL("decrypt(" + dQ(s_or_BinArr) + ", " + dQ(aesKey) + ", " + dQ(aesIV) + ")");
+    var response = await evalTQL("decrypt(" + dQ(s_or_ByteArr) + ", " + dQ(aesKey) + ", " + dQ(aesIV) + ")");
     if (response && ! response.error) {
         retVal = response.text;
     }
@@ -122,11 +122,11 @@ async function decrypt(s_or_BinArr, aesKey, aesIV) {
 }
 module.exports.decrypt = decrypt;
 
-async function dirExists(dirName) {
+async function dirExists(dirPath) {
 
     var retVal;
 
-    var response = await evalTQL("dirExists(" + dQ(dirName) + ")");
+    var response = await evalTQL("dirExists(" + dQ(dirPath) + ")");
     if (response && ! response.error) {
         retVal = response.text;
     }
@@ -138,19 +138,19 @@ module.exports.dirExists = dirExists;
 //
 // dQ: Wrap a string in double quotes, properly escaping as needed
 //
-function dQ(s_or_BinArr) {
-    return enQuote__(s_or_BinArr, "\"");
+function dQ(s_or_ByteArr) {
+    return enQuote__(s_or_ByteArr, "\"");
 }
 module.exports.dQ = dQ;
 
-async function encrypt(s_or_BinArr, aesKey, aesIV) {
+async function encrypt(s_or_ByteArr, aesKey, aesIV) {
     var retVal;
 
     if (! aesIV) {
         aesIV = "";
     }
 
-    var response = await evalTQL("encrypt(" + dQ(s_or_BinArr) + ", "+ dQ(aesKey) + ", " + dQ(aesIV) + ")");
+    var response = await evalTQL("encrypt(" + dQ(s_or_ByteArr) + ", "+ dQ(aesKey) + ", " + dQ(aesIV) + ")");
     if (response && ! response.error) {
         retVal = response.text;
     }
@@ -162,23 +162,23 @@ module.exports.encrypt = encrypt;
 //
 // enQuote__: Helper function. Escape and wrap a string in quotes
 //
-function enQuote__(s_or_BinArr, quoteChar) {
+function enQuote__(s_or_ByteArr, quoteChar) {
 
     var retVal = "";
 
     var quoteCharCode = quoteChar.charCodeAt(0);
 
-    var isString = "string" == typeof s_or_BinArr;
+    var isString = "string" == typeof s_or_ByteArr;
     var escapedS = "";
-    var sLen = s_or_BinArr.length;
+    var sLen = s_or_ByteArr.length;
     for (var charIdx = 0; charIdx < sLen; charIdx++) {
         var cCode;
         if (isString) {
-            var c = s_or_BinArr.charAt(charIdx);
+            var c = s_or_ByteArr.charAt(charIdx);
             cCode = c.charCodeAt(0);
         }
         else {
-            cCode = s_or_BinArr[charIdx];
+            cCode = s_or_ByteArr[charIdx];
         }
         if (cCode == 0x5C) {
             escapedS += '\\\\';
@@ -324,6 +324,7 @@ function deQuote(quotedString) {
 
     return retVal;
 }
+module.exports.deQuote = deQuote;
 
 async function fileClose(fileHandle) {
 
@@ -388,12 +389,12 @@ module.exports.fileRead = fileRead;
 //
 // fileWrite: write to a file handle obtained from fileOpen
 //
-async function fileWrite(fileHandle, s_or_BinArr) {
+async function fileWrite(fileHandle, s_or_ByteArr) {
 
     var retVal;
 
     var response;
-    response = await evalTQL("fileWrite(" + fileHandle + "," + dQ(s_or_BinArr) + ")");
+    response = await evalTQL("fileWrite(" + fileHandle + "," + dQ(s_or_ByteArr) + ")");
     if (response && ! response.error) {
         retVal = response.text;
     }
@@ -455,8 +456,8 @@ module.exports.intPow = intPow;
 //
 // sQ: Escape and wrap a string in single quotes
 //
-function sQ(s_or_BinArr) {
-    return enQuote__(s_or_BinArr, "'");
+function sQ(s_or_ByteArr) {
+    return enQuote__(s_or_ByteArr, "'");
 }
 module.exports.sQ = sQ;
 
