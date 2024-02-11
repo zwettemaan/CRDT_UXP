@@ -60,21 +60,31 @@ Both on Mac and Windows, the OS built-in security systems might balk and bring u
 
 On Mac, you can run `macDequarantineHelpers.command`. 
 
-On Windows, you will have to click through the 'More Info' and other warnings and allow it to run the `.bat` files.
+On Windows, you will have to bear with it, click through the 'More Info' and other warnings and allow it to run the `.bat` files.
 
-Once a script has been run, there should be no further complaints for that script.
+Once a double-clickable script has been allowed to run, there should be no further complaints for that script.
 
 You can configure these scripts as startup items and make the daemon auto-start after a computer restart.
 
 ## Licensing and Trialling
 
-In order to try out or use the Creative Developer Tools you need a valid license.
+Licensing and Trialing
 
-You can request a limited time trial license free of charge by way of the _License Manager_ (see below), and put in an order for 'CRDT_Demo'.
+In order to use the _Creative Developer Tools_ you need a valid license. 
 
-Small and medium sized developer businesses are entitled to free licenses - all you need to do is ask.
+Anyone can request a time-limited trial license, free of charge, by using the _License Manager_ to put in an order for a license for `CRDT_Demo`.
 
-For larger companies, there is a license fee of US$29/seat. 
+Furthermore, small and medium sized developer businesses are entitled to free licenses. 
+
+If you are developing solutions for the Adobe eco-system and your business is two people or less, and the business has a yearly revenue of less than US$2,000,000 then we will provide you with free licenses. 
+
+These free licenses should not be 'passed on' to your customers. The free licenses are only for use within the qualifying business.
+
+Both _Creative Developer Tools for UXP_ and _Creative Developer Tools for ExtendScript_ are covered by the same licenses. A valid license allows you to use one or the other or both.
+
+If you put through an order for `CRDT_2024`, and if your business qualifies for free licenses, let us know. In that case, no payment is needed. For larger companies, there is a license fee of US$29/seat.
+
+Note: if you sell a solution that relies on _CRDT_ to third parties, you can purchase the necessary licenses for _CRDT_ on behalf of your customer. You can then embed the license info into your software solution, and your end-user does not have to deal with activation and licensing. The activation is automatic.
 
 ## Installing License Manager
 
