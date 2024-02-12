@@ -6,7 +6,7 @@ Creative Developer Tools is a growing suite of tools aimed at script and plug-in
 
 Currently, it is at an alpha stage: the feature set is not frozen, and new features are added regularly.
 
-The first release, 0.0.1 is meant to be functional and useful.
+The first release, 0.0.1 is incomplete, yet functional and useful.
 
 Features include:
 
@@ -23,7 +23,7 @@ This works by way of a daemon. Launching the daemon will start an HTTPS server o
 
 This DNS name resolves to 127.0.0.1
 
-Before you can start the daemon you need a valid license - see further for info on how to obtain a trial license.
+Before you can start the daemon you need a valid license. See further below for info on how to obtain a free trial license.
 
 To start the daemon, run the _License Manager_. Go into the Preferences, and tick the checkbox _Launch daemon for Creative Developer Tools when License Manager starts_. 
 
@@ -56,15 +56,15 @@ async crdtuxp.sublicense(key, activation)
 
 To manage the daemon, you can also use double-clickable scripts like `startDaemon` or `killDaemon`.
 
-Both on Mac and Windows, the OS built-in security systems might balk and bring up scary warnings. 
+Both on Mac and Windows, the OS built-in security systems might refuse to run these scripts and bring up scary warnings. 
 
-On Mac, you can run `macDequarantineHelpers.command`. 
+On Mac, you can double-click `macDequarantineHelpers.command`. 
 
 On Windows, you will have to bear with it, click through the 'More Info' and other warnings and allow it to run the `.bat` files.
 
 Once a double-clickable script has been allowed to run, there should be no further complaints for that script.
 
-You can configure these scripts as startup items and make the daemon auto-start after a computer restart.
+You can configure the `startDaemon` script as a startup item and make the daemon auto-start after a computer restart.
 
 ## Licensing and Trialling
 
@@ -72,19 +72,17 @@ Licensing and Trialing
 
 In order to use the _Creative Developer Tools_ you need a valid license. 
 
-Anyone can request a time-limited trial license, free of charge, by using the _License Manager_ to put in an order for a license for `CRDT_Demo`.
+Anyone can request a time-limited trial license, free of charge, by using the _License Manager_ to put in an order for a license for _Creative Developer Tools Demo_.
 
-Furthermore, small and medium sized developer businesses are entitled to free licenses. 
+Furthermore, small and medium sized developer businesses are entitled to free licenses. If you are developing solutions for the Adobe eco-system and your business is two people or less, and the business has a yearly revenue of less than US$2,000,000 then we will provide you with free licenses. 
 
-If you are developing solutions for the Adobe eco-system and your business is two people or less, and the business has a yearly revenue of less than US$2,000,000 then we will provide you with free licenses. 
-
-These free licenses should not be 'passed on' to your customers. The free licenses are only for use within the qualifying business.
+These free licenses should _not_ be 'passed on' to your customers. The free licenses are only for internal use within a qualifying business.
 
 Both _Creative Developer Tools for UXP_ and _Creative Developer Tools for ExtendScript_ are covered by the same licenses. A valid license allows you to use one or the other or both.
 
-If you put through an order for `CRDT_2024`, and if your business qualifies for free licenses, let us know. In that case, no payment is needed. For larger companies, there is a license fee of US$29/seat.
+If you put through an order for _Creative Developer Tools 2024_, and if your business qualifies for free licenses, let us know. In that case, no payment is needed. For larger companies, there is a license fee of US$29/seat/year.
 
-Note: if you sell a solution that relies on _CRDT_ to third parties, you can purchase the necessary licenses for _CRDT_ on behalf of your customer. You can then embed the license info into your software solution, and your end-user does not have to deal with activation and licensing. The activation is automatic.
+Note: if you sell a solution which relies on _CRDT_ to third parties, you can purchase the necessary licenses for _CRDT_ on behalf of your customer. You can then bundle the license with into your software solution, and your end-user does not have to deal with activation and licensing. The activation is automatic.
 
 ## Installing License Manager
 
@@ -112,7 +110,7 @@ Start the _License Manager_.
 
 Create a standard account by clicking the _New_ button, bottom right of the _Accounts_ window.
 
-Enter a descriptive name and a valid email address, and choose an unlock code. You need to enter the same unlock code twice.
+Enter a descriptive name and a valid email address, and choose an unlock code. To avoid typos, you need to enter the same unlock code twice.
 
 Click _OK_. 
 
@@ -126,7 +124,7 @@ If the email does not arrive, make sure to check your email spam filter!
 
 On the _Accounts_ window, there is a checkbox _Save Unlock Code_.
 
-If you're on a secure personal computer, you might want to select your account, then save the unlock code, to avoid having to re-enter the code each time you launch the _License Manager_. 
+If you're on a secure personal computer, you should to select the account, then save the unlock code, to avoid having to re-enter the code each time you launch the _License Manager_. 
 
 If you don't save the unlock code, you will need to re-enter the code each time you restart the _License Manager_.
 
@@ -185,11 +183,13 @@ Start the _License Manager_ and go to the _Licenses, Activations and Pending Ord
 
 Click _Import_ and import the `.capb` file. 
 
-The _License Manager_ will match this activation file to the outstanding order. 
+The _License Manager_ will match this activation file to the outstanding order.
 
 ### Activate
 
-In the _Licenses, Activations and Pending Orders_ window you can now select the order entry and click the _Activate_ button to activate your workstation.
+The license is now available on your computer; the next step is to activate your computer. 
+
+In the _Licenses, Activations and Pending Orders_ window you can now select the order entry and click the _Activate_ button to activate your workstation. If the license has multiple seats, you can use the _Find Seat_ button to find an unused seat.
 
 ## Sublicensing/auto-activation
 

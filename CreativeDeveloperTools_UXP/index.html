@@ -31,27 +31,40 @@ body {
 <sp-body>
   <div class="wrapper">
     <h2>Creative Developer Tools for UXP Sample Extension</h2>
+    <p>If nothing seems to work, please make sure you have activated this computer by way of the License Manager, and verify the daemon is running</p>
     <sp-div>
     <sp-label>crdtuxp.base64encode(in_string)</sp-label>
     <sp-textfield id="base64encode_in"></sp-textfield>
-    <sp-body id="base64encode_out"></sp-body>
+    <span><sp-body id="base64encode_out"></sp-body>
+    <sp-button id="copybase64encoded">Copy output to next test ⬇︎</sp-button></span>
+    <hr>
     </sp-div>
     <sp-div>
     <sp-label>crdtuxp.base64decode(in_string)</sp-label>
     <sp-textfield id="base64decode_in"></sp-textfield>
     <sp-body id="base64decode_out"></sp-body>
+    <hr>
     </sp-div>
     <sp-div>
     <sp-label>crdtuxp.encrypt(in_plainText, in_key)</sp-label>
     <sp-textfield id="encrypt_plainText_in"></sp-textfield>
     <sp-textfield id="encrypt_key_in"></sp-textfield>
     <sp-body id="encrypt_out"></sp-body>
+    <sp-button id="copyencrypted">Copy output to next test ⬇︎</sp-button>
+    <hr>
     </sp-div>
     <sp-div>
     <sp-label>crdtuxp.decrypt(in_encrypted, in_key)</sp-label>
     <sp-textfield id="decrypt_encrypted_in"></sp-textfield>
     <sp-textfield id="decrypt_key_in"></sp-textfield>
     <sp-body id="decrypt_out"></sp-body>
+    <hr>
+    </sp-div>
+    <sp-div>
+    <sp-label>crdtuxp.dQ(s_or_ByteArr)</sp-label>
+    <sp-textfield id="dQ_in"></sp-textfield>
+    <sp-body id="dQ_out"></sp-body>
+    <hr>
     </sp-div>
   </div>
 </sp-body>

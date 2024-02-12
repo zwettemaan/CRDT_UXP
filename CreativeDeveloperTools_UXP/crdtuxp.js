@@ -462,9 +462,10 @@ function sQ(s_or_ByteArr) {
 module.exports.sQ = sQ;
 
 //
-// evalTQL: Async function. Send a tqlScript to the daemon, and evaluate it in
+// evalTQL: Async function. Send a tqlScript to the daemon, which will evaluate it in
 // the named TQL scope. TQL scopes are persistent and globals are retained between
-// consecutive calls to evalTQL
+// consecutive calls to evalTQL. A TQL scope can be used as a go-between to pass data between
+// unconnected environments
 //
 async function evalTQL(tqlScript, tqlScopeName, raw) {
 

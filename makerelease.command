@@ -36,6 +36,14 @@ mkdir "${RELEASE_DIR}Helpers/Mac"
 mkdir "${RELEASE_DIR}Helpers/Windows_x86_64"
 mkdir "${RELEASE_DIR}Helpers/Windows_arm64"
 
+if [ -f creative-developer-tools-uxp-sample_ID.ccx ]; then
+    cp creative-developer-tools-uxp-sample_ID.ccx "${RELEASE_DIR}"
+fi
+
+if [ -f creative-developer-tools-uxp-sample_PS.ccx ]; then
+    cp creative-developer-tools-uxp-sample_PS.ccx "${RELEASE_DIR}"
+fi
+
 # Fetch latest License Manager
 
 cp "${TIGHTENER_RELEASE_ROOT}Apps/LicenseManager.tgz" "${RELEASE_DIR}Helpers"
