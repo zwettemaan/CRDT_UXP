@@ -100,6 +100,8 @@ If desired, move the `LicenseManager` folder for your version of Windows to its 
 
 Navigate into the `LicenseManager` folder and double-click the `LicenseManager.exe` icon to run the app from its new location at least once. 
 
+The _LicenseManager_ folder contains a lot of items, and you'll need to scroll down a bit to see `LicenseManager.exe`.
+
 ## Activating
 
 ### Standard Account

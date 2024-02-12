@@ -74,7 +74,7 @@ cp killDaemon.bat "${RELEASE_DIR}Helpers/Windows_x86_64"
 cp startDaemon.bat "${RELEASE_DIR}Helpers/Windows_arm64"
 cp killDaemon.bat "${RELEASE_DIR}Helpers/Windows_arm64"
 
-cp macDequarantine.command "${RELEASE_DIR}"
+cp macDequarantineHelpers.command "${RELEASE_DIR}"
 
 cp -R ${EXTENSION_DIR_NAME} "${RELEASE_DIR}"
 cp README.md                "${RELEASE_DIR}"
