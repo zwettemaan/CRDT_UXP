@@ -11,6 +11,12 @@ export SCRIPT_DIR=`dirname "$0"`
 cd "$SCRIPT_DIR"
 export SCRIPT_DIR=`pwd`/
 
+#
+# Assume npm and node are installed
+#
+npm install jsdoc
+jsdoc CreativeDeveloperTools_UXP
+
 if [ "${TIGHTENER_RELEASE_ROOT}" = "" -o ! -d "${TIGHTENER_RELEASE_ROOT}" ]; then
     echo "Cannot make release. JSXGetURL repo needs to be installed alongside TightenerDocs repo"
     exit
