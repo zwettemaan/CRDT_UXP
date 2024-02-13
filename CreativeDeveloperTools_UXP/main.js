@@ -13,6 +13,13 @@ catch (err) {};
 
 const crdtuxp = require("./crdtuxp");
 
+// Set to false in production code
+const RUN_CRDT_UXP_TESTS = true;
+if (RUN_CRDT_UXP_TESTS) {
+  const crdtuxp_test = require("./crdtuxp_test");
+  crdtuxp_test.run();
+}
+
 entrypoints.setup({
   panels: {
     showPanel: {
@@ -20,6 +27,7 @@ entrypoints.setup({
     }
   }
 });
+
 
 document.querySelector("#dQ_in").oninput=()                => dQDemo();
 document.querySelector("#base64encode_in").oninput=()      => base64encodeDemo();
@@ -60,6 +68,17 @@ async function copyEncrypted() {
 
 }
 
+async function decryptDemo() {
+
+  var plainText = 
+    await crdtuxp.decrypt(
+      document.getElementById("decrypt_encrypted_in").value,
+      document.getElementById("decrypt_key_in").value);
+
+  document.getElementById("decrypt_out").textContent = plainText;
+
+}
+
 async function dQDemo() {
 
   var quotedText = 
@@ -67,17 +86,6 @@ async function dQDemo() {
       document.getElementById("dQ_in").value);
 
   document.getElementById("dQ_out").textContent = quotedText;
-}
-
-async function encryptDemo() {
-
-  var encrypted = 
-    await crdtuxp.encrypt(
-      document.getElementById("encrypt_plainText_in").value,
-      document.getElementById("encrypt_key_in").value);
-
-  document.getElementById("encrypt_out").textContent = encrypted;
-
 }
 
 async function encryptDemo() {

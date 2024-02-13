@@ -469,14 +469,13 @@ function enQuote__(s_or_ByteArr, quoteChar) {
 
     var quoteCharCode = quoteChar.charCodeAt(0);
 
-    var isString = "string" == typeof s_or_ByteArr;
+    var isString = ("string" == typeof s_or_ByteArr);
     var escapedS = "";
     var sLen = s_or_ByteArr.length;
     for (var charIdx = 0; charIdx < sLen; charIdx++) {
         var cCode;
         if (isString) {
-            var c = s_or_ByteArr.charAt(charIdx);
-            cCode = c.charCodeAt(0);
+            cCode = s_or_ByteArr.charCodeAt(charIdx);
         }
         else {
             cCode = s_or_ByteArr[charIdx];
@@ -496,13 +495,10 @@ function enQuote__(s_or_ByteArr, quoteChar) {
         else if (cCode == 0x09) {
             escapedS += '\\t';
         }
-        else if (cCode < 32 || (cCode >= 0x7F && cCode <= 0x80)) {
+        else if (cCode < 32 || cCode == 0x7F || (! isString && cCode >= 0x80)) {
             escapedS += "\\x" + toHex(cCode, 2);
         }
-        else if (! isString && cCode <= 0xFF) {
-            escapedS += "\\x" + toHex(cCode, 2);
-        }
-        else if (cCode >= 0x80) {
+        else if (isString && cCode >= 0x80) {
             escapedS += "\\u" + toHex(cCode, 4);
         }
         else {
