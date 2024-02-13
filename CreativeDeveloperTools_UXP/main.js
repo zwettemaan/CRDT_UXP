@@ -60,16 +60,6 @@ async function copyEncrypted() {
 
 }
 
-async function encryptDemo() {
-
-  var encrypted = 
-    await crdtuxp.encrypt(
-      document.getElementById("encrypt_plainText_in").value,
-      document.getElementById("encrypt_key_in").value);
-
-  document.getElementById("encrypt_out").textContent = encrypted;
-
-}
 async function dQDemo() {
 
   var quotedText = 
@@ -77,6 +67,16 @@ async function dQDemo() {
       document.getElementById("dQ_in").value);
 
   document.getElementById("dQ_out").textContent = quotedText;
+}
+
+async function encryptDemo() {
+
+  var encrypted = 
+    await crdtuxp.encrypt(
+      document.getElementById("encrypt_plainText_in").value,
+      document.getElementById("encrypt_key_in").value);
+
+  document.getElementById("encrypt_out").textContent = encrypted;
 
 }
 
@@ -89,5 +89,9 @@ async function encryptDemo() {
 
   document.getElementById("encrypt_out").textContent = encrypted;
 
+}
+
+async function init() {
+  document.getElementById("machineGUID").textContent = await crdtuxp.machineGUID();
 }
 
