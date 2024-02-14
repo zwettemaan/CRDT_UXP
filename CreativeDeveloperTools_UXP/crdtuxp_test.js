@@ -1,5 +1,9 @@
 const crdtuxp = require("./crdtuxp");
 
+if (! module.exports) {
+    module.exports = {};
+}
+
 async function testBase64() {
 
     var retVal = true;
@@ -7,6 +11,12 @@ async function testBase64() {
     var s = await crdtuxp.base64encode("Hello World☜✿");
     if (s != "SGVsbG8gV29ybGTimJzinL8=") {
         await crdtuxp.logError(arguments, "failed to crdtuxp.base64encode(\"Hello World☜✿\")");
+        retVal = false;
+    }
+
+    var s = await crdtuxp.base64decode("SGVsbG8gV29ybGTimJzinL8=");
+    if (s != "Hello World☜✿") {
+        await crdtuxp.logError(arguments, "failed to crdtuxp.base64decode(\"SGVsbG8gV29ybGTimJzinL8=\")");
         retVal = false;
     }
 
@@ -68,11 +78,34 @@ async function testQuoteDequote() {
         retVal = false;
     }
 
-    return retVal;
-}
+    s = [];
+    for (var idx = 0; idx < 256; idx++) {
+        s.push(idx);
+    }
 
-if (! module.exports) {
-    module.exports = {};
+    s = crdtuxp.sQ(s);
+    if (s != '') {
+        await crdtuxp.logError(arguments, "failed crdtuxp.sQ byte array with all bytes 0-255");
+        retVal = false;        
+    }
+
+    s = crdtuxp.deQuote(s);
+    var isOK = true;
+    if (s.length != 256) {
+        await crdtuxp.logError(arguments, "crdtuxp.deQuote wrong length");
+        retVal = false;        
+    }
+    else {
+        for (var idx = 0; idx < 256; idx++) {
+            if (s[idx] != idx) {
+                await crdtuxp.logError(arguments, "crdtuxp.deQuote wrong byte #" + idx);
+                retVal = false;        
+                break;
+            }
+        }
+    }
+
+    return retVal;
 }
 
 var tests = [
