@@ -8,15 +8,60 @@ async function testBase64() {
 
     var retVal = true;
 
-    var s = await crdtuxp.base64encode("Hello World☜✿");
-    if (s != "SGVsbG8gV29ybGTimJzinL8=") {
-        await crdtuxp.logError(arguments, "failed to crdtuxp.base64encode(\"Hello World☜✿\")");
+    var s = "Hello World☜✿\x00\x7Féøo";
+    var s64 = await crdtuxp.base64encode(s);
+    if (s64 != "SGVsbG8gV29ybGTimJzinL8Af8Opw7hv") {
+        await crdtuxp.logError(arguments, "failed to crdtuxp.base64encode()");
         retVal = false;
     }
 
-    var s = await crdtuxp.base64decode("SGVsbG8gV29ybGTimJzinL8=");
-    if (s != "Hello World☜✿") {
-        await crdtuxp.logError(arguments, "failed to crdtuxp.base64decode(\"SGVsbG8gV29ybGTimJzinL8=\")");
+    var sRoundTrip = await crdtuxp.base64decode(s64);
+    if (s != sRoundTrip) {
+        await crdtuxp.logError(arguments, "failed to crdtuxp.base64decode()");
+        retVal = false;
+    }
+
+    return retVal;
+}
+
+async function testBaseEncrypt() {
+
+    var retVal = true;
+
+    var key = "my secret key";
+
+    var s = "Hello World☜✿\x00\x7Féøo";
+    var s1 = await crdtuxp.encrypt(s, key);
+    var s2 = await crdtuxp.encrypt(s, key);
+    if (s1 == s2) {
+        await crdtuxp.logError(arguments, "Encrypting the same string twice should give a different result");
+        retVal = false;
+    }
+
+    var sRoundTrip1 = await crdtuxp.decrypt(s1, key);
+    if (sRoundTrip1 != s) {
+        await crdtuxp.logError(arguments, "failed to decrypt s1");
+        retVal = false;
+    }
+
+    var sRoundTrip2 = await crdtuxp.decrypt(s2, key);
+    if (sRoundTrip2 != s) {
+        await crdtuxp.logError(arguments, "failed to decrypt s2");
+        retVal = false;
+    }
+
+    return retVal;
+}
+
+async function testUTFRoundTrip() {
+
+    var retVal = true;
+
+    var s = "Hello World☜✿\x00\x7Féøo";
+    var bytes = crdtuxp.strToUTF8(s);
+    var sRoundTrip = crdtuxp.binaryUTF8ToStr(bytes);
+    if (s != sRoundTrip) {
+        await crdtuxp.logError(arguments, "failed to round trip a string to UTF8 and back");
         retVal = false;
     }
 
@@ -109,8 +154,11 @@ async function testQuoteDequote() {
 }
 
 var tests = [
+    testBase64,
+    testDirs,
+    testEncrypt,
     testQuoteDequote,
-    testBase64
+    testUTFRoundTrip
 ];
 
 async function run() {
