@@ -12,10 +12,12 @@ cd "$SCRIPT_DIR"
 export SCRIPT_DIR=`pwd`/
 
 #
-# Assume npm and node are installed
+# Assume nvm, npm and node are installed
+# Node must be version 20 - version 21 has problems with deprecated 'punycode'
 #
-npm install jsdoc
-jsdoc CreativeDeveloperTools_UXP
+npm install jsdoc-to-markdown
+# https://github.com/jsdoc2md/jsdoc-to-markdown/issues/279
+./node_modules/.bin/jsdoc2md "!(node_modules|coverage)/**/*.js" > docs.md
 
 if [ "${TIGHTENER_RELEASE_ROOT}" = "" -o ! -d "${TIGHTENER_RELEASE_ROOT}" ]; then
     echo "Cannot make release. JSXGetURL repo needs to be installed alongside TightenerDocs repo"
@@ -92,7 +94,7 @@ cp macDequarantineHelpers.command "${RELEASE_DIR}"
 
 cp -R ${EXTENSION_DIR_NAME} "${RELEASE_DIR}"
 cp README.md                "${RELEASE_DIR}"
-mv out                      "${RELEASE_DIR}/docs"
+cp docs.md                  "${RELEASE_DIR}"
 
 find . -name ".DS_Store" | while read a; do rm "$a"; done
 

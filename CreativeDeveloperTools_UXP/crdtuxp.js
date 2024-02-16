@@ -1,8 +1,30 @@
 /**
  *  `crdtuxp` contains a number of useful functions. Some of these functions
- * are part of crdtux.js and are synchronous. Other functions are delegated
- * to a daemon process, and are always asynchronous.
+ * are part of crdtux.js and are synchronous. 
+ * 
+ * Other functions are delegated to a daemon process, and are always asynchronous.
+ * 
+ * `crdtuxp` steps out of the UXP security sandbox - which means that as a developer, 
+ * you need to be judicious when using this. 
+ * 
+ * Every solution operates in a unique context. The UXP security measures are
+ * helpful in keeping things secure, but in many situations, they are a massive overkill.
+ * 
+ * It should be up to the user/developer/IT department to decide how to handle security.
+ * 
+ * Sometimes the whole workflow can be contained inside a sandbox or walled garden, on
+ * a disconnected network, without any contact with the outside world and not allowed to run any
+ * unvetted software. 
+ * 
+ * Sometimes the OS security is safe enough for the workflow at hand.
  *
+ * In those cases, the UXP security measures are counter-productive: they represent 
+ * unnessary hurdles to the software development, or make the user interace clunky and
+ * user-unfriendly.
+ *  
+ * Using the UXP sandboxing should be an option, not an enforced requirement, and it should
+ * be up to the developer and/or the IT department to decide what is appropriate and what not.
+ * 
  * @namespace crdtuxp
  */
 
@@ -477,6 +499,8 @@ module.exports.deQuote = deQuote;
 /**
  * (async) Delete a directory
  * 
+ * Not limited to the UXP security sandbox.
+ * 
  * @function crdtuxp.dirDelete
  * 
  * @param {string} filePath
@@ -498,8 +522,9 @@ async function dirDelete(filePath) {
 module.exports.dirDelete = dirDelete;
 
 /**
- * (async) Verify whether a directory exists. Not limited to the UXP
- * security sandbox.
+ * (async) Verify whether a directory exists. 
+ * 
+ * Not limited to the UXP security sandbox.
  * 
  * @function crdtuxp.dirExists
  * 
@@ -523,6 +548,8 @@ module.exports.dirExists = dirExists;
 /**
  * (async) Create a directory
  * 
+ * Not limited to the UXP security sandbox.
+ * 
  * @function crdtuxp.dirCreate
  * 
  * @param {string} filePath
@@ -544,6 +571,8 @@ module.exports.dirCreate = dirCreate;
 
 /**
  * (async) Scan a directory
+ * 
+ * Not limited to the UXP security sandbox.
  * 
  * @function crdtuxp.dirScan
  * 
@@ -719,6 +748,8 @@ module.exports.evalTQL = evalTQL;
 /**
  * (async) Close a currently open file
  * 
+ * Not limited to the UXP security sandbox.
+ * 
  * @function crdtuxp.fileClose
  * 
  * @param {number} fileHandle - a file handle as returned by fileOpen()
@@ -740,6 +771,8 @@ module.exports.fileClose = fileClose;
 
 /**
  * (async) Delete a file
+ * 
+ * Not limited to the UXP security sandbox.
  * 
  * @function crdtuxp.fileDelete
  * 
@@ -763,6 +796,8 @@ module.exports.fileDelete = fileDelete;
 /**
  * (async) Check if a file exists
  * 
+ * Not limited to the UXP security sandbox.
+ * 
  * @function crdtuxp.fileExists
  * 
  * @param {string} filePath
@@ -784,6 +819,8 @@ module.exports.fileExists = fileExists;
 
 /**
  * (async) Open a binary file and return a handle
+ * 
+ * Not limited to the UXP security sandbox.
  * 
  * @function crdtuxp.fileOpen
  * 
@@ -814,6 +851,8 @@ module.exports.fileOpen = fileOpen;
 /**
  * (async) Read a file into memory
  * 
+ * Not limited to the UXP security sandbox.
+ * 
  * @function crdtuxp.fileRead
  * 
  * @param {number} fileHandle - a file handle as returned by fileOpen()
@@ -841,7 +880,9 @@ async function fileRead(fileHandle, isBinary) {
 module.exports.fileRead = fileRead;
 
 /**
- * (async) Read a file into memory
+ * (async) Binary write to a file. Strings are written as UTF-8
+ * 
+ * Not limited to the UXP security sandbox.
  * 
  * @function crdtuxp.fileWrite
  * 
@@ -896,6 +937,8 @@ module.exports.getCapability = getCapability;
 
 /**
  * (async) Get the path of a system directory
+ * 
+ * Not limited to the UXP security sandbox.
  * 
  * @function crdtuxp.getDir
  * 
