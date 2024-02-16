@@ -8,7 +8,7 @@ if (! module.exports) {
 }
 
 async function testBase64() {
-debugger;
+
     var retVal = true;
 
     var s = "Hello World☜✿\x00\x7Féøo";
