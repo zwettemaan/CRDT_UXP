@@ -102,4 +102,4 @@ async function init() {
   document.getElementById("machineGUID_out").textContent = await crdtuxp.machineGUID();
 }
 
-await init();
+init().then(undefined);

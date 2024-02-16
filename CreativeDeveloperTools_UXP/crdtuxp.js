@@ -375,7 +375,7 @@ function deQuote(quotedString) {
             break;
         }
 
-        if (quoteChar != '"' && quoteChar != '"') {
+        if (quoteChar != '"' && quoteChar != "'") {
             break;
         }
 
