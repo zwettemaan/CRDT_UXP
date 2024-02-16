@@ -38,28 +38,100 @@ if (! module.exports) {
     module.exports = {};
 }
 
+/**
+ * Setting log level to LOG_LEVEL_OFF causes all log output to be suppressed
+ *
+ * @constant {number} LOG_LEVEL_OFF
+ */
 const LOG_LEVEL_OFF = 0;
 module.exports.LOG_LEVEL_OFF = LOG_LEVEL_OFF;
 
+/**
+ * Setting log level to LOG_LEVEL_ERROR causes all log output to be suppressed,
+ * except for errors
+ *
+ * @constant {number} LOG_LEVEL_ERROR
+ */
 const LOG_LEVEL_ERROR = 1;
 module.exports.LOG_LEVEL_ERROR = LOG_LEVEL_ERROR;
 
+/**
+ * Setting log level to LOG_LEVEL_WARNING causes all log output to be suppressed,
+ * except for errors and warnings
+ *
+ * @constant {number} LOG_LEVEL_WARNING
+ */
 const LOG_LEVEL_WARNING = 2;
 module.exports.LOG_LEVEL_WARNING = LOG_LEVEL_WARNING;
 
+/**
+ * Setting log level to LOG_LEVEL_NOTE causes all log output to be suppressed,
+ * except for errors, warnings and notes
+ *
+ * @constant {number} LOG_LEVEL_NOTE
+ */
 const LOG_LEVEL_NOTE = 3;
 module.exports.LOG_LEVEL_NOTE = LOG_LEVEL_NOTE;
 
+/**
+ * Setting log level to LOG_LEVEL_TRACE causes all log output to be output
+ * 
+ * @constant {number} LOG_LEVEL_TRACE
+ */
 const LOG_LEVEL_TRACE = 4;
 module.exports.LOG_LEVEL_TRACE = LOG_LEVEL_TRACE;
 
 // Symbolic params to crdtuxp.getDir()
+
+/**
+ * Pass DESKTOP_DIR into crdtuxp.getDir() to get the path of the user's Desktop folder
+ * 
+ * @constant {string} DESKTOP_DIR
+ */
 module.exports.DESKTOP_DIR    = "DESKTOP_DIR";
+
+/**
+ * Pass DOCUMENTS_DIR into crdtuxp.getDir() to get the path of the user's Documents folder
+ * 
+ * @constant {string} DOCUMENTS_DIR
+ */
 module.exports.DOCUMENTS_DIR  = "DOCUMENTS_DIR";
+
+/**
+ * Pass HOME_DIR into crdtuxp.getDir() to get the path of the user's home folder
+ * 
+ * @constant {string} HOME_DIR
+ */
 module.exports.HOME_DIR       = "HOME_DIR";
+
+/**
+ * Pass LOG_DIR into crdtuxp.getDir() to get the path of the Tightener logging folder folder
+ * 
+ * @constant {string} LOG_DIR
+ */
 module.exports.LOG_DIR        = "LOG_DIR";
+
+/**
+ * Pass SYSTEMDATA_DIR into crdtuxp.getDir() to get the path of the system data folder
+ * (%PROGRAMDATA% or /Library/Application Support)
+ * 
+ * @constant {string} SYSTEMDATA_DIR
+ */
 module.exports.SYSTEMDATA_DIR = "SYSTEMDATA_DIR";
+
+/**
+ * Pass TMP_DIR into crdtuxp.getDir() to get the path of the temporary folder
+ * 
+ * @constant {string} TMP_DIR
+ */
 module.exports.TMP_DIR        = "TMP_DIR";
+
+/**
+ * Pass USERDATA_DIR into crdtuxp.getDir() to get the path to the user data folder
+ * (%APPDATA% or ~/Library/Application Support)
+ * 
+ * @constant {string} USERDATA_DIR
+ */
 module.exports.USERDATA_DIR   = "USERDATA_DIR";
 
 // 
@@ -190,7 +262,7 @@ function binaryUTF8ToStr(in_byteArray) {
 }
 module.exports.binaryUTF8ToStr = binaryUTF8ToStr;
 
-// charCodeToUTF8__: internal function: convert a Unicode character code to a 1 to 3 byte UTF8 byte sequence
+// (sync) charCodeToUTF8__: internal function: convert a Unicode character code to a 1 to 3 byte UTF8 byte sequence
 // returns undefined if invalid in_charCode
 
 function charCodeToUTF8__(in_charCode) {
@@ -222,6 +294,7 @@ function charCodeToUTF8__(in_charCode) {
     }
     catch (err) {
         // anything weird, we return undefined
+        retVal = undefined;
     }
 
     return retVal;
@@ -539,7 +612,7 @@ async function encrypt(s_or_ByteArr, aesKey, aesIV) {
 module.exports.encrypt = encrypt;
 
 //
-// enQuote__: Internal helper function. Escape and wrap a string in quotes
+// (sync) enQuote__: Internal helper function. Escape and wrap a string in quotes
 //
 function enQuote__(s_or_ByteArr, quoteChar) {
 
@@ -824,7 +897,7 @@ module.exports.getCapability = getCapability;
 /**
  * (async) Get the path of a system directory
  * 
- * @function crdtuxp.getDir()
+ * @function crdtuxp.getDir
  * 
  * @param {string} dirTag - a tag representing the dir:
  *    crdtuxp.DESKTOP_DIR
@@ -869,7 +942,10 @@ async function getSysInfo__() {
 }
 
 /**
- * (sync) Calculate an integer power of an int value. Avoids floating-point round-off errors.
+ * (sync) Calculate an integer power of an int value. Avoids using floating point, so 
+ * should not have any floating-point round-off errors. Math.pow() will probably
+ * give the same result, but I am doubtful some implementations might use log and exp 
+ * to handle Math.pow()
  * 
  * @function crdtuxp.intPow
  * 
@@ -1100,7 +1176,7 @@ async function logMessage__(reportingFunctionArguments, levelPrefix, message) {
 }
 
 /**
- * (async) Make a log entry of an note. Pass in the 'arguments' keyword as the first parameter.
+ * (async) Make a log entry of a note. Pass in the 'arguments' keyword as the first parameter.
  * If the error level is below LOG_LEVEL_NOTE nothing happens
  * 
  * @function crdtuxp.logNote
@@ -1368,6 +1444,7 @@ module.exports.sublicense = sublicense;
 
 /**
  * (sync) Convert an integer into a hex representation with a fixed number of digits
+ * Negative numbers are converted using 2-s complement (so -15 results in 0x01)
  * 
  * @function crdtuxp.toHex
  * 

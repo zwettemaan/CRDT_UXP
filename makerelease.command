@@ -92,6 +92,7 @@ cp macDequarantineHelpers.command "${RELEASE_DIR}"
 
 cp -R ${EXTENSION_DIR_NAME} "${RELEASE_DIR}"
 cp README.md                "${RELEASE_DIR}"
+mv out                      "${RELEASE_DIR}/docs"
 
 find . -name ".DS_Store" | while read a; do rm "$a"; done
 

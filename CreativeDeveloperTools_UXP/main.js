@@ -28,7 +28,6 @@ entrypoints.setup({
   }
 });
 
-
 document.querySelector("#dQ_in").oninput=()                => dQDemo();
 document.querySelector("#base64encode_in").oninput=()      => base64encodeDemo();
 document.querySelector("#base64decode_in").oninput=()      => base64decodeDemo();
@@ -100,6 +99,7 @@ async function encryptDemo() {
 }
 
 async function init() {
-  document.getElementById("machineGUID").textContent = await crdtuxp.machineGUID();
+  document.getElementById("machineGUID_out").textContent = await crdtuxp.machineGUID();
 }
 
+await init();
