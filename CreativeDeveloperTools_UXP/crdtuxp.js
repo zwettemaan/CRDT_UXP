@@ -1,6 +1,6 @@
 /**
  *  `crdtuxp` contains a number of useful functions. Some of these functions
- * are part of crdtux.js and are synchronous. 
+ * are part of `crdtux.js` and are synchronous. 
  * 
  * Other functions are delegated to a daemon process, and are always asynchronous.
  * 
@@ -12,17 +12,17 @@
  * 
  * It should be up to the user/developer/IT department to decide how to handle security.
  * 
- * Sometimes the whole workflow can be contained inside a sandbox or walled garden, on
- * a disconnected network, without any contact with the outside world and not allowed to run any
+ * Sometimes the whole workflow can live inside walled garden, on
+ * a disconnected network, without any contact with the outside world and not be allowed to run any
  * unvetted software. 
  * 
- * Sometimes the OS security is safe enough for the workflow at hand.
+ * Or sometimes the OS security is safe enough for the workflow at hand.
  *
  * In those cases, the UXP security measures are counter-productive: they represent 
  * unnessary hurdles to the software development, or make the user interace clunky and
  * user-unfriendly.
  *  
- * Using the UXP sandboxing should be an option, not an enforced requirement, and it should
+ * Using the UXP sandboxing should be a developer-selectable option, not an enforced requirement, and it should
  * be up to the developer and/or the IT department to decide what is appropriate and what not.
  * 
  * @namespace crdtuxp
@@ -39,7 +39,7 @@
 const DNS_NAME_FOR_LOCALHOST = "localhost.tgrg.net";
 
 /**
- * The Tightener daemon listens for HTTPS connections on port 18888. 
+ * The Tightener daemon listens for HTTPS connections on port `18888`. 
  *
  * @constant {number} PORT_TIGHTENER_DAEMON
  */
@@ -61,7 +61,7 @@ if (! module.exports) {
 }
 
 /**
- * Setting log level to LOG_LEVEL_OFF causes all log output to be suppressed
+ * Setting log level to `LOG_LEVEL_OFF` causes all log output to be suppressed
  *
  * @constant {number} LOG_LEVEL_OFF
  */
@@ -69,7 +69,7 @@ const LOG_LEVEL_OFF = 0;
 module.exports.LOG_LEVEL_OFF = LOG_LEVEL_OFF;
 
 /**
- * Setting log level to LOG_LEVEL_ERROR causes all log output to be suppressed,
+ * Setting log level to `LOG_LEVEL_ERROR` causes all log output to be suppressed,
  * except for errors
  *
  * @constant {number} LOG_LEVEL_ERROR
@@ -78,7 +78,7 @@ const LOG_LEVEL_ERROR = 1;
 module.exports.LOG_LEVEL_ERROR = LOG_LEVEL_ERROR;
 
 /**
- * Setting log level to LOG_LEVEL_WARNING causes all log output to be suppressed,
+ * Setting log level to `LOG_LEVEL_WARNING` causes all log output to be suppressed,
  * except for errors and warnings
  *
  * @constant {number} LOG_LEVEL_WARNING
@@ -87,7 +87,7 @@ const LOG_LEVEL_WARNING = 2;
 module.exports.LOG_LEVEL_WARNING = LOG_LEVEL_WARNING;
 
 /**
- * Setting log level to LOG_LEVEL_NOTE causes all log output to be suppressed,
+ * Setting log level to `LOG_LEVEL_NOTE` causes all log output to be suppressed,
  * except for errors, warnings and notes
  *
  * @constant {number} LOG_LEVEL_NOTE
@@ -96,7 +96,7 @@ const LOG_LEVEL_NOTE = 3;
 module.exports.LOG_LEVEL_NOTE = LOG_LEVEL_NOTE;
 
 /**
- * Setting log level to LOG_LEVEL_TRACE causes all log output to be output
+ * Setting log level to `LOG_LEVEL_TRACE` causes all log output to be output
  * 
  * @constant {number} LOG_LEVEL_TRACE
  */
@@ -106,51 +106,51 @@ module.exports.LOG_LEVEL_TRACE = LOG_LEVEL_TRACE;
 // Symbolic params to crdtuxp.getDir()
 
 /**
- * Pass DESKTOP_DIR into crdtuxp.getDir() to get the path of the user's Desktop folder
+ * Pass `DESKTOP_DIR` into `crdtuxp.getDir()` to get the path of the user's Desktop folder
  * 
  * @constant {string} DESKTOP_DIR
  */
 module.exports.DESKTOP_DIR    = "DESKTOP_DIR";
 
 /**
- * Pass DOCUMENTS_DIR into crdtuxp.getDir() to get the path of the user's Documents folder
+ * Pass `DOCUMENTS_DIR` into `crdtuxp.getDir()` to get the path of the user's Documents folder
  * 
  * @constant {string} DOCUMENTS_DIR
  */
 module.exports.DOCUMENTS_DIR  = "DOCUMENTS_DIR";
 
 /**
- * Pass HOME_DIR into crdtuxp.getDir() to get the path of the user's home folder
+ * Pass `HOME_DIR` into `crdtuxp.getDir()` to get the path of the user's home folder
  * 
  * @constant {string} HOME_DIR
  */
 module.exports.HOME_DIR       = "HOME_DIR";
 
 /**
- * Pass LOG_DIR into crdtuxp.getDir() to get the path of the Tightener logging folder folder
+ * Pass `LOG_DIR` into `crdtuxp.getDir()` to get the path of the Tightener logging folder folder
  * 
  * @constant {string} LOG_DIR
  */
 module.exports.LOG_DIR        = "LOG_DIR";
 
 /**
- * Pass SYSTEMDATA_DIR into crdtuxp.getDir() to get the path of the system data folder
- * (%PROGRAMDATA% or /Library/Application Support)
+ * Pass `SYSTEMDATA_DIR` into `crdtuxp.getDir()` to get the path of the system data folder
+ * (`%PROGRAMDATA%` or `/Library/Application Support`)
  * 
  * @constant {string} SYSTEMDATA_DIR
  */
 module.exports.SYSTEMDATA_DIR = "SYSTEMDATA_DIR";
 
 /**
- * Pass TMP_DIR into crdtuxp.getDir() to get the path of the temporary folder
+ * Pass `TMP_DIR` into `crdtuxp.getDir()` to get the path of the temporary folder
  * 
  * @constant {string} TMP_DIR
  */
 module.exports.TMP_DIR        = "TMP_DIR";
 
 /**
- * Pass USERDATA_DIR into crdtuxp.getDir() to get the path to the user data folder
- * (%APPDATA% or ~/Library/Application Support)
+ * Pass `USERDATA_DIR` into `crdtuxp.getDir()` to get the path to the user data folder
+ * (`%APPDATA%` or `~/Library/Application Support`)
  * 
  * @constant {string} USERDATA_DIR
  */
@@ -323,7 +323,7 @@ function charCodeToUTF8__(in_charCode) {
 }
 
 /**
- * (async) Reverse the operation of the `crdtuxp.encrypt` function
+ * (async) Reverse the operation of the @crdtuxp.encrypt function
  * 
  * @function crdtuxp.decrypt
  * 
@@ -501,6 +501,8 @@ module.exports.deQuote = deQuote;
  * 
  * Not limited to the UXP security sandbox.
  * 
+ * Be very careful with the `recurse` parameter! It is very easy to delete the wrong directory.
+ * 
  * @function crdtuxp.dirDelete
  * 
  * @param {string} filePath
@@ -522,7 +524,8 @@ async function dirDelete(filePath) {
 module.exports.dirDelete = dirDelete;
 
 /**
- * (async) Verify whether a directory exists. 
+ * (async) Verify whether a directory exists. Will return `false` if the path points to a file (instead of a directory).
+ * Also see @crdtuxp.fileExists
  * 
  * Not limited to the UXP security sandbox.
  * 
@@ -596,8 +599,13 @@ module.exports.dirScan = dirScan;
 /**
  * (sync) Wrap a string or a byte array into double quotes, encoding any
  * binary data as a string. Knows how to handle Unicode characters
- * or binary zeroes. When the input is a string, high Unicode characters are
- * encoded as \uHHHH
+ * or binary zeroes. 
+ * 
+ * When the input is a string, high Unicode characters are
+ * encoded as `\uHHHH`. 
+ * 
+ * When the inoput is a byte array, all bytes are encoded
+ * as characters or as `\xHH` escape sequences.
  * 
  * @function crdtuxp.dQ
  * 
@@ -794,7 +802,8 @@ async function fileDelete(filePath) {
 module.exports.fileDelete = fileDelete;
 
 /**
- * (async) Check if a file exists
+ * (async) Check if a file exists. Will return `false` if the file path points to a directory. 
+ * Also see @crdtuxp.dirExists
  * 
  * Not limited to the UXP security sandbox.
  * 
@@ -943,6 +952,7 @@ module.exports.getCapability = getCapability;
  * @function crdtuxp.getDir
  * 
  * @param {string} dirTag - a tag representing the dir:
+ * ```
  *    crdtuxp.DESKTOP_DIR
  *    crdtuxp.DOCUMENTS_DIR
  *    crdtuxp.HOME_DIR
@@ -950,7 +960,7 @@ module.exports.getCapability = getCapability;
  *    crdtuxp.SYSTEMDATA_DIR
  *    crdtuxp.TMP_DIR
  *    crdtuxp.USERDATA_DIR
-
+ * ```
  * @return {string} file path of dir or undefined
  */
 async function getDir(dirTag) {
@@ -986,9 +996,9 @@ async function getSysInfo__() {
 
 /**
  * (sync) Calculate an integer power of an int value. Avoids using floating point, so 
- * should not have any floating-point round-off errors. Math.pow() will probably
- * give the same result, but I am doubtful some implementations might use log and exp 
- * to handle Math.pow()
+ * should not have any floating-point round-off errors. `Math.pow()` will probably
+ * give the exact same result, but I am doubtful that some implementations might internally use `log` and `exp` 
+ * to handle `Math.pow()`
  * 
  * @function crdtuxp.intPow
  * 
@@ -1045,7 +1055,7 @@ function intPow(i, intPower) {
 module.exports.intPow = intPow;
 
 /**
- * (sync) Extend or shorten a string to an exact length, adding padChar as needed
+ * (sync) Extend or shorten a string to an exact length, adding `padChar` as needed
  * 
  * @function crdtuxp.leftPad
  * 
@@ -1087,11 +1097,11 @@ function leftPad(s, padChar, len) {
 module.exports.leftPad = leftPad;
 
 /**
- * (async) Make a log entry of the call of a function. Pass in the 'arguments' keyword as a parameter.
+ * (async) Make a log entry of the call of a function. Pass in the `arguments` keyword as a parameter.
  * 
  * @function crdtuxp.logEntry
  * 
- * @param {array} reportingFunctionArguments - pass in the current arguments to the function. This is used to determine the function's name for the log
+ * @param {array} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
  */
 
 async function logEntry(reportingFunctionArguments) {
@@ -1102,12 +1112,12 @@ async function logEntry(reportingFunctionArguments) {
 module.exports.logEntry = logEntry;
 
 /**
- * (async) Make a log entry of an error message. Pass in the 'arguments' keyword as the first parameter
- * If the error level is below LOG_LEVEL_ERROR nothing happens
+ * (async) Make a log entry of an error message. Pass in the `arguments` keyword as the first parameter
+ * If the error level is below `LOG_LEVEL_ERROR` nothing happens
  * 
  * @function crdtuxp.logError
  * 
- * @param {array} reportingFunctionArguments - pass in the current arguments to the function. This is used to determine the function's name for the log
+ * @param {array} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
  * @param {string} message - error message
  */
 async function logError(reportingFunctionArguments, message) {
@@ -1122,11 +1132,11 @@ async function logError(reportingFunctionArguments, message) {
 module.exports.logError = logError;
 
 /**
- * (async) Make a log entry of the exit of a function. Pass in the 'arguments' keyword as a parameter.
+ * (async) Make a log entry of the exit of a function. Pass in the `arguments` keyword as a parameter.
  * 
  * @function crdtuxp.logExit
  * 
- * @param {array} reportingFunctionArguments - pass in the current arguments to the function. This is used to determine the function's name for the log
+ * @param {array} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
  */
 
 async function logExit(reportingFunctionArguments) {
@@ -1219,12 +1229,12 @@ async function logMessage__(reportingFunctionArguments, levelPrefix, message) {
 }
 
 /**
- * (async) Make a log entry of a note. Pass in the 'arguments' keyword as the first parameter.
- * If the error level is below LOG_LEVEL_NOTE nothing happens
+ * (async) Make a log entry of a note. Pass in the `arguments` keyword as the first parameter.
+ * If the error level is below `LOG_LEVEL_NOTE` nothing happens
  * 
  * @function crdtuxp.logNote
  * 
- * @param {array} reportingFunctionArguments - pass in the current arguments to the function. This is used to determine the function's name for the log
+ * @param {array} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
  * @param {string} message - the note to output
  */
 async function logNote(reportingFunctionArguments, message) {
@@ -1239,12 +1249,12 @@ async function logNote(reportingFunctionArguments, message) {
 module.exports.logNote = logNote;
 
 /**
- * (async) Emit a trace messsage into the log. Pass in the 'arguments' keyword as the first parameter.
- * If the error level is below LOG_LEVEL_TRACE nothing happens
+ * (async) Emit a trace messsage into the log. Pass in the `arguments` keyword as the first parameter.
+ * If the error level is below `LOG_LEVEL_TRACE` nothing happens
  * 
  * @function crdtuxp.logTrace
  * 
- * @param {array} reportingFunctionArguments - pass in the current arguments to the function. This is used to determine the function's name for the log
+ * @param {array} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
  * @param {string} message - the trace message to output
  */
 async function logTrace(reportingFunctionArguments, message) {
@@ -1259,12 +1269,12 @@ async function logTrace(reportingFunctionArguments, message) {
 module.exports.logTrace = logTrace;
 
 /**
- * (async) Emit a warning messsage into the log. Pass in the 'arguments' keyword as the first parameter.
- * If the error level is below LOG_LEVEL_WARNING nothing happens
+ * (async) Emit a warning messsage into the log. Pass in the `arguments` keyword as the first parameter.
+ * If the error level is below `LOG_LEVEL_WARNING` nothing happens
  * 
  * @function crdtuxp.logWarning
  * 
- * @param {array} arguments - pass in the current arguments to the function. This is used to determine the function's name for the log
+ * @param {array} arguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
  * @param {string} message - the warning message to output
  */
 async function logWarning(reportingFunctionArguments, message) {
@@ -1279,11 +1289,11 @@ async function logWarning(reportingFunctionArguments, message) {
 module.exports.logWarning = logWarning;
 
 /**
- * (async) The unique GUID of this computer
+ * (async) The unique `GUID` of this computer
  * 
  * @function crdtuxp.machineGUID
  * 
- * @return {string} a GUID string
+ * @return {string} a `GUID` string
  */
 async function machineGUID() {
 
@@ -1344,7 +1354,7 @@ function pushLogLevel(newLogLevel) {
 module.exports.pushLogLevel = pushLogLevel;
 
 /**
- * (sync) Extend or shorten a string to an exact length, adding padChar as needed
+ * (sync) Extend or shorten a string to an exact length, adding `padChar` as needed
  * 
  * @function crdtuxp.rightPad
  * 
@@ -1388,7 +1398,7 @@ module.exports.rightPad = rightPad;
 
 /**
  * (async) Send in activation data so the daemon can determine whether some software is currently activated or not
- * Needs to be followed by a @crdtuxp.sublicense() call
+ * Needs to be followed by a @crdtuxp.sublicense call
  * 
  * @function crdtuxp.setIssuer
  * 
@@ -1412,8 +1422,12 @@ module.exports.setIssuer = setIssuer;
 /**
  * (sync) Wrap a string or a byte array into single quotes, encoding any
  * binary data as a string. Knows how to handle Unicode characters
- * or binary zeroes. When the input is a string, high Unicode characters are
- * encoded as \uHHHH
+ * or binary zeroes.
+ * 
+ * When the input is a string, high Unicode characters are
+ * encoded as `\uHHHH`
+ * 
+ * When the inoput is a byte array, all bytes are encoded as `\xHH` escape sequences.
  * 
  * @function crdtuxp.sQ
  * 
@@ -1464,7 +1478,7 @@ module.exports.strToUTF8 = strToUTF8;
 
 /**
  * (async) Send in sublicense info generated in the License Manager so the daemon can determine whether some software is currently activated or not
- * Needs to be preceded by a @crdtuxp.setIssuer() call
+ * Needs to be preceded by a @crdtuxp.setIssuer call
  * 
  * @function crdtuxp.sublicense
  * 
@@ -1487,7 +1501,7 @@ module.exports.sublicense = sublicense;
 
 /**
  * (sync) Convert an integer into a hex representation with a fixed number of digits
- * Negative numbers are converted using 2-s complement (so -15 results in 0x01)
+ * Negative numbers are converted using 2-s complement (so `-15` results in `0x01`)
  * 
  * @function crdtuxp.toHex
  * 
