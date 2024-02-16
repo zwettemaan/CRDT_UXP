@@ -53,6 +53,15 @@ module.exports.LOG_LEVEL_NOTE = LOG_LEVEL_NOTE;
 const LOG_LEVEL_TRACE = 4;
 module.exports.LOG_LEVEL_TRACE = LOG_LEVEL_TRACE;
 
+// Symbolic params to crdtuxp.getDir()
+module.exports.DESKTOP_DIR    = "DESKTOP_DIR";
+module.exports.DOCUMENTS_DIR  = "DOCUMENTS_DIR";
+module.exports.HOME_DIR       = "HOME_DIR";
+module.exports.LOG_DIR        = "LOG_DIR";
+module.exports.SYSTEMDATA_DIR = "SYSTEMDATA_DIR";
+module.exports.TMP_DIR        = "TMP_DIR";
+module.exports.USERDATA_DIR   = "USERDATA_DIR";
+
 // 
 // UXP internally caches responses from the server - we need to avoid this as each script
 // run can return different results. `HTTP_CACHE_BUSTER` will be incremented after each use
@@ -66,6 +75,8 @@ var IN_LOGGER                 = false;
 var LOG_TO_UXPDEVTOOL_CONSOLE = true;
 var LOG_TO_FILEPATH           = undefined;
 
+var SYS_INFO;
+
 /**
  * (async) Decode a string that was encoded using base64. This function has not been speed-tested;
  * I suspect it might only be beneficial for very large long strings, if that. The overheads might be
@@ -74,7 +85,7 @@ var LOG_TO_FILEPATH           = undefined;
  * @function crdtuxp.base64decode
  * 
  * @param {string} base64Str - base64 encoded string
- * @return {string} - decoded string
+ * @return {string} decoded string
  */
 async function base64decode(base64Str) {
 
@@ -97,7 +108,7 @@ module.exports.base64decode = base64decode;
  * @function crdtuxp.base64encode
  * 
  * @param {string} s_or_ByteArr - either a string or an array containing bytes (0-255).
- * @return {string} - encoded string
+ * @return {string} encoded string
  */
 async function base64encode(s_or_ByteArr) {
 
@@ -119,7 +130,7 @@ module.exports.base64encode = base64encode;
  * 
  * @param {array} in_byteArray - an array containing bytes (0-255)
  * for a string using UTF-8 encoding.
- * @return a string or undefined if the UTF-8 is not valid
+ * @return {string} a string or undefined if the UTF-8 is not valid
  */
 function binaryUTF8ToStr(in_byteArray) {
 
@@ -223,7 +234,7 @@ function charCodeToUTF8__(in_charCode) {
  * 
  * @param {string} s_or_ByteArr - a string or an array of bytes
  * @param {string} aesKey - a string or an array of bytes
- * @returns an array of bytes 
+ * @return {array} an array of bytes 
  */
 
 async function decrypt(s_or_ByteArr, aesKey, aesIV) {
@@ -249,7 +260,7 @@ module.exports.decrypt = decrypt;
  * @function crdtuxp.deQuote
  * 
  * @param {string} quotedString - a quoted string
- * @returns: a byte array. If the quoted string contains any \uXXXX codes,
+ * @return {array} a byte array. If the quoted string contains any \uXXXX codes,
  * these are first encoded using UTF-8 before storing them into the byte array.
  */
 function deQuote(quotedString) {
@@ -391,13 +402,36 @@ function deQuote(quotedString) {
 module.exports.deQuote = deQuote;
 
 /**
+ * (async) Delete a directory
+ * 
+ * @function crdtuxp.dirDelete
+ * 
+ * @param {string} filePath
+ * @param {boolean} recurse
+ * @return {boolean} success or failure
+ */
+
+async function dirDelete(filePath) {
+
+    var retVal;
+
+    var response = await evalTQL("dirDelete(" + dQ(filePath) + ")");
+    if (response && ! response.error) {
+        retVal = response.text == "true";
+    }
+
+    return retVal;
+}
+module.exports.dirDelete = dirDelete;
+
+/**
  * (async) Verify whether a directory exists. Not limited to the UXP
  * security sandbox.
  * 
  * @function crdtuxp.dirExists
  * 
  * @param {string} dirPath - a path to a directory
- * @returns true or false 
+ * @return {boolean} true or false 
  */
 
 async function dirExists(dirPath) {
@@ -406,12 +440,56 @@ async function dirExists(dirPath) {
 
     var response = await evalTQL("dirExists(" + dQ(dirPath) + ")");
     if (response && ! response.error) {
-        retVal = response.text;
+        retVal = response.text == "true";
     }
 
     return retVal;
 }
 module.exports.dirExists = dirExists;
+
+/**
+ * (async) Create a directory
+ * 
+ * @function crdtuxp.dirCreate
+ * 
+ * @param {string} filePath
+ * @return {array} list if items in directory
+ */
+
+async function dirCreate(filePath) {
+
+    var retVal;
+
+    var response = await evalTQL("dirCreate(" + dQ(filePath) + ")");
+    if (response && ! response.error) {
+        retVal = JSON.parse(response.text);
+    }
+
+    return retVal;
+}
+module.exports.dirCreate = dirCreate;
+
+/**
+ * (async) Scan a directory
+ * 
+ * @function crdtuxp.dirScan
+ * 
+ * @param {string} filePath
+ * @return {array} list if items in directory
+ */
+
+async function dirScan(filePath) {
+
+    var retVal;
+
+    var response = await evalTQL("dirScan(" + dQ(filePath) + ")");
+    if (response && ! response.error) {
+        retVal = JSON.parse(response.text);
+    }
+
+    return retVal;
+}
+module.exports.dirScan = dirScan;
 
 /**
  * (sync) Wrap a string or a byte array into double quotes, encoding any
@@ -422,7 +500,7 @@ module.exports.dirExists = dirExists;
  * @function crdtuxp.dQ
  * 
  * @param {string} s_or_ByteArr - a Unicode string or an array of bytes
- * @returns a string enclosed in double quotes. This string is pure 7-bit
+ * @return {string} a string enclosed in double quotes. This string is pure 7-bit
  * ASCII and can be used into generated script code 
  * Example:
  * var script = "a=b(" + dQ(somedata) + ");";
@@ -441,7 +519,7 @@ module.exports.dQ = dQ;
  * 
  * @param {string} s_or_ByteArr - a string or an array of bytes
  * @param {string} aesKey - a string or an array of bytes
- * @returns a base-64 encoded encrypted string. 
+ * @return {string} a base-64 encoded encrypted string. 
  */
 
 async function encrypt(s_or_ByteArr, aesKey, aesIV) {
@@ -521,7 +599,7 @@ function enQuote__(s_or_ByteArr, quoteChar) {
  * @param {string} tqlScopeName - a scope name to use. Scopes are persistent for the duration of the daemon process and can
  * be used to pass data between different processes
  * @param {boolean} resultIsRawBinary - whether the resulting data is raw binary, or can be decoded as a string
- * @returns a string or a byte array
+ * @return {any} a string or a byte array
  */
 async function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
 
@@ -578,8 +656,7 @@ async function fileClose(fileHandle) {
 
     var retVal;
 
-    var response;
-    response = await evalTQL("fileClose(" + fileHandle + ")");
+    var response = await evalTQL("fileClose(" + fileHandle + ")");
     if (response && ! response.error) {
         retVal = response.text;
     }
@@ -589,13 +666,57 @@ async function fileClose(fileHandle) {
 module.exports.fileClose = fileClose;
 
 /**
+ * (async) Delete a file
+ * 
+ * @function crdtuxp.fileDelete
+ * 
+ * @param {string} filePath
+ * @return {boolean} success or failure
+ */
+
+async function fileDelete(filePath) {
+
+    var retVal;
+
+    var response = await evalTQL("fileDelete(" + dQ(filePath) + ")");
+    if (response && ! response.error) {
+        retVal = response.text == "true";
+    }
+
+    return retVal;
+}
+module.exports.fileDelete = fileDelete;
+
+/**
+ * (async) Check if a file exists
+ * 
+ * @function crdtuxp.fileExists
+ * 
+ * @param {string} filePath
+ * @return {boolean} existence of file
+ */
+
+async function fileExists(filePath) {
+
+    var retVal;
+
+    var response = await evalTQL("fileExists(" + dQ(filePath) + ")");
+    if (response && ! response.error) {
+        retVal = response.text == "true";
+    }
+
+    return retVal;
+}
+module.exports.fileExists = fileExists;
+
+/**
  * (async) Open a binary file and return a handle
  * 
  * @function crdtuxp.fileOpen
  * 
  * @param {string} fileName - a native full file path to the file
  * @param {string} mode - one of 'a', 'r', 'w' (append, read, write)
- * @return {number} a file handle
+ * @return {number} file handle
  */
 
 async function fileOpen(fileName, mode) {
@@ -624,15 +745,14 @@ module.exports.fileOpen = fileOpen;
  * 
  * @param {number} fileHandle - a file handle as returned by fileOpen()
  * @param {boolean} isBinary - whether the file is considered a binary file (as opposed to a UTF-8 text file)
- * @return {any} return either a byte array or a string
+ * @return {any} retn either a byte array or a string
  */
 
 async function fileRead(fileHandle, isBinary) {
 
     var retVal;
 
-    var response;
-    response = await evalTQL("fileRead(" + fileHandle + ")", undefined, true);
+    var response = await evalTQL("fileRead(" + fileHandle + ")", undefined, true);
     if (response && ! response.error) {
         var byteArray = deQuote(response.text);
         if (isBinary) {
@@ -654,15 +774,22 @@ module.exports.fileRead = fileRead;
  * 
  * @param {number} fileHandle - a file handle as returned by fileOpen()
  * @param {string} s_or_ByteArr - data to write to the file
- * @return {any} return value from daemon
+ * @return {any} retn value from daemon
  */
 
 async function fileWrite(fileHandle, s_or_ByteArr) {
 
     var retVal;
 
-    var response;
-    response = await evalTQL("fileWrite(" + fileHandle + "," + dQ(s_or_ByteArr) + ")");
+    var byteArray;
+    if ("string" == typeof s) {
+        byteArray = strToUTF8(s_or_ByteArr);
+    }
+    else {
+        byteArray = s_or_ByteArr;
+    }
+
+    var response = await evalTQL("fileWrite(" + fileHandle + "," + dQ(byteArray) + ")");
     if (response && ! response.error) {
         retVal = response.text;
     }
@@ -679,7 +806,7 @@ module.exports.fileWrite = fileWrite;
  * @param {string} issuer - a GUID identifier for the developer account as seen in the License Manager
  * @param {string} productCode - a product code for the software product to be activated (as determined by the developer)
  * @param {string} password - the password (created by the developer) needed to decode the capability data
- * @return {string} - a JSON structure with capability data (customer GUID, decrypted data from the activation file)
+ * @return {string} a JSON structure with capability data (customer GUID, decrypted data from the activation file)
  */
 async function getCapability(issuer, productCode, password) {
 
@@ -693,6 +820,53 @@ async function getCapability(issuer, productCode, password) {
     return retVal;
 }    
 module.exports.getCapability = getCapability;
+
+/**
+ * (async) Get the path of a system directory
+ * 
+ * @function crdtuxp.getDir()
+ * 
+ * @param {string} dirTag - a tag representing the dir:
+ *    crdtuxp.DESKTOP_DIR
+ *    crdtuxp.DOCUMENTS_DIR
+ *    crdtuxp.HOME_DIR
+ *    crdtuxp.LOG_DIR
+ *    crdtuxp.SYSTEMDATA_DIR
+ *    crdtuxp.TMP_DIR
+ *    crdtuxp.USERDATA_DIR
+
+ * @return {string} file path of dir or undefined
+ */
+async function getDir(dirTag) {
+
+    var retVal;
+
+    var sysInfo = getSysInfo__();
+    if (dirTag in sysInfo) {
+        retVal = sysInfo[dirTag];
+    }
+
+    return retVal;
+}
+module.exports.getDir = getDir;
+
+// Internal function getSysInfo__: fetch the whole Tightener sysInfo structure
+
+async function getSysInfo__() {
+
+    var retVal;
+
+    if (! SYS_INFO) {
+        var response = await evalTQL("sysInfo()");
+        if (response && ! response.error) {
+            SYS_INFO = JSON.parse(response.text);
+        }
+    }
+    
+    retVal = SYS_INFO;
+
+    return retVal;
+}
 
 /**
  * (sync) Calculate an integer power of an int value. Avoids floating-point round-off errors.
@@ -770,6 +944,9 @@ function leftPad(s, padChar, len) {
         try {
 
             retVal = s + "";
+            if (retVal.length == len) {
+                break;
+            }
 
             if (retVal.length > len) {
                 retVal = retVal.substring(retVal.length - len);
@@ -987,7 +1164,7 @@ module.exports.logWarning = logWarning;
  * 
  * @function crdtuxp.machineGUID
  * 
- * @return {string} - a GUID string
+ * @return {string} a GUID string
  */
 async function machineGUID() {
 
@@ -1048,6 +1225,49 @@ function pushLogLevel(newLogLevel) {
 module.exports.pushLogLevel = pushLogLevel;
 
 /**
+ * (sync) Extend or shorten a string to an exact length, adding padChar as needed
+ * 
+ * @function crdtuxp.rightPad
+ * 
+ * @param {string} s - string to be extended or shortened
+ * @param {string} padChar - string to append repeatedly if length needs to extended
+ * @param {number} len - desired result length
+ * @return {string} padded or shortened string
+ */
+
+function rightPad(s, padChar, len) {
+
+    var retVal = undefined;
+
+    do {
+        try {
+
+            retVal = s + "";
+
+            if (retVal.length == len) {
+                break;
+            }
+
+            if (retVal.length > len) {
+                retVal = retVal.substring(0, retVal.length - len);
+                break;
+            }
+
+            var padLength = len - retVal.length;
+
+            var padding = new Array(padLength + 1).join(padChar)
+            retVal = retVal + padding;
+        }
+        catch (err) {
+        }
+    }
+    while (false);
+
+    return retVal;
+}
+module.exports.rightPad = rightPad;
+
+/**
  * (async) Send in activation data so the daemon can determine whether some software is currently activated or not
  * Needs to be followed by a @crdtuxp.sublicense() call
  * 
@@ -1079,7 +1299,7 @@ module.exports.setIssuer = setIssuer;
  * @function crdtuxp.sQ
  * 
  * @param {string} s_or_ByteArr - a Unicode string or an array of bytes
- * @returns a string enclosed in double quotes. This string is pure 7-bit
+ * @return {string} a string enclosed in double quotes. This string is pure 7-bit
  * ASCII and can be used into generated script code 
  * Example:
  * var script = "a=b(" + sQ(somedata) + ");";
@@ -1131,7 +1351,7 @@ module.exports.strToUTF8 = strToUTF8;
  * 
  * @param {string} key - key needed to decode activation data
  * @param {string} activation - encrypted activation data
- * @returns { boolean } - success or failure
+ * @return { boolean } success or failure
  */
 async function sublicense(key, activation) {
 
@@ -1153,7 +1373,7 @@ module.exports.sublicense = sublicense;
  * 
  * @param {number} i - integer to convert to hex
  * @param {number} numDigits - How many digits. Defaults to 4 if omitted.
- * @returns { string } - hex-encoded integer
+ * @return { string } hex-encoded integer
  */
 function toHex(i, numDigits) {
 
@@ -1176,7 +1396,7 @@ function toHex(i, numDigits) {
     }
     toHex.zeroes = zeroes;
 
-    var retVal = i.toString(16);
+    var retVal = i.toString(16).toLowerCase(); // Probably always lowercase by default, but just in case...
     if (retVal.length > numDigits) {
         retVal = retVal.substring(retVal.length - numDigits);
     } 
