@@ -3,21 +3,21 @@
 <dl>
 <dt><a href="#crdtuxp">crdtuxp</a> : <code>object</code></dt>
 <dd><p><code>crdtuxp</code> contains a number of useful functions. Some of these functions
-are part of crdtux.js and are synchronous. </p>
+are part of <code>crdtux.js</code> and are synchronous. </p>
 <p>Other functions are delegated to a daemon process, and are always asynchronous.</p>
 <p><code>crdtuxp</code> steps out of the UXP security sandbox - which means that as a developer, 
 you need to be judicious when using this. </p>
 <p>Every solution operates in a unique context. The UXP security measures are
 helpful in keeping things secure, but in many situations, they are a massive overkill.</p>
 <p>It should be up to the user/developer/IT department to decide how to handle security.</p>
-<p>Sometimes the whole workflow can be contained inside a sandbox or walled garden, on
-a disconnected network, without any contact with the outside world and not allowed to run any
+<p>Sometimes the whole workflow can live inside walled garden, on
+a disconnected network, without any contact with the outside world and not be allowed to run any
 unvetted software. </p>
-<p>Sometimes the OS security is safe enough for the workflow at hand.</p>
+<p>Or sometimes the OS security is safe enough for the workflow at hand.</p>
 <p>In those cases, the UXP security measures are counter-productive: they represent 
 unnessary hurdles to the software development, or make the user interace clunky and
 user-unfriendly.</p>
-<p>Using the UXP sandboxing should be an option, not an enforced requirement, and it should
+<p>Using the UXP sandboxing should be a developer-selectable option, not an enforced requirement, and it should
 be up to the developer and/or the IT department to decide what is appropriate and what not.</p>
 </dd>
 </dl>
@@ -30,7 +30,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
 <p>The Tightener daemon manages the necessary certificate for https</p>
 </dd>
 <dt><a href="#PORT_TIGHTENER_DAEMON">PORT_TIGHTENER_DAEMON</a> : <code>number</code></dt>
-<dd><p>The Tightener daemon listens for HTTPS connections on port 18888.</p>
+<dd><p>The Tightener daemon listens for HTTPS connections on port <code>18888</code>.</p>
 </dd>
 <dt><a href="#TQL_SCOPE_NAME_DEFAULT">TQL_SCOPE_NAME_DEFAULT</a> : <code>string</code></dt>
 <dd><p>The Tightener daemon provides persistent named scopes (similar to persistent ExtendScript engines)
@@ -38,45 +38,45 @@ When executing multiple TQL scripts in succession a named scope will retain any 
 were defined by a previous script</p>
 </dd>
 <dt><a href="#LOG_LEVEL_OFF">LOG_LEVEL_OFF</a> : <code>number</code></dt>
-<dd><p>Setting log level to LOG_LEVEL_OFF causes all log output to be suppressed</p>
+<dd><p>Setting log level to <code>LOG_LEVEL_OFF</code> causes all log output to be suppressed</p>
 </dd>
 <dt><a href="#LOG_LEVEL_ERROR">LOG_LEVEL_ERROR</a> : <code>number</code></dt>
-<dd><p>Setting log level to LOG_LEVEL_ERROR causes all log output to be suppressed,
+<dd><p>Setting log level to <code>LOG_LEVEL_ERROR</code> causes all log output to be suppressed,
 except for errors</p>
 </dd>
 <dt><a href="#LOG_LEVEL_WARNING">LOG_LEVEL_WARNING</a> : <code>number</code></dt>
-<dd><p>Setting log level to LOG_LEVEL_WARNING causes all log output to be suppressed,
+<dd><p>Setting log level to <code>LOG_LEVEL_WARNING</code> causes all log output to be suppressed,
 except for errors and warnings</p>
 </dd>
 <dt><a href="#LOG_LEVEL_NOTE">LOG_LEVEL_NOTE</a> : <code>number</code></dt>
-<dd><p>Setting log level to LOG_LEVEL_NOTE causes all log output to be suppressed,
+<dd><p>Setting log level to <code>LOG_LEVEL_NOTE</code> causes all log output to be suppressed,
 except for errors, warnings and notes</p>
 </dd>
 <dt><a href="#LOG_LEVEL_TRACE">LOG_LEVEL_TRACE</a> : <code>number</code></dt>
-<dd><p>Setting log level to LOG_LEVEL_TRACE causes all log output to be output</p>
+<dd><p>Setting log level to <code>LOG_LEVEL_TRACE</code> causes all log output to be output</p>
 </dd>
 <dt><a href="#DESKTOP_DIR">DESKTOP_DIR</a> : <code>string</code></dt>
-<dd><p>Pass DESKTOP_DIR into crdtuxp.getDir() to get the path of the user&#39;s Desktop folder</p>
+<dd><p>Pass <code>DESKTOP_DIR</code> into <code>crdtuxp.getDir()</code> to get the path of the user&#39;s Desktop folder</p>
 </dd>
 <dt><a href="#DOCUMENTS_DIR">DOCUMENTS_DIR</a> : <code>string</code></dt>
-<dd><p>Pass DOCUMENTS_DIR into crdtuxp.getDir() to get the path of the user&#39;s Documents folder</p>
+<dd><p>Pass <code>DOCUMENTS_DIR</code> into <code>crdtuxp.getDir()</code> to get the path of the user&#39;s Documents folder</p>
 </dd>
 <dt><a href="#HOME_DIR">HOME_DIR</a> : <code>string</code></dt>
-<dd><p>Pass HOME_DIR into crdtuxp.getDir() to get the path of the user&#39;s home folder</p>
+<dd><p>Pass <code>HOME_DIR</code> into <code>crdtuxp.getDir()</code> to get the path of the user&#39;s home folder</p>
 </dd>
 <dt><a href="#LOG_DIR">LOG_DIR</a> : <code>string</code></dt>
-<dd><p>Pass LOG_DIR into crdtuxp.getDir() to get the path of the Tightener logging folder folder</p>
+<dd><p>Pass <code>LOG_DIR</code> into <code>crdtuxp.getDir()</code> to get the path of the Tightener logging folder folder</p>
 </dd>
 <dt><a href="#SYSTEMDATA_DIR">SYSTEMDATA_DIR</a> : <code>string</code></dt>
-<dd><p>Pass SYSTEMDATA_DIR into crdtuxp.getDir() to get the path of the system data folder
-(%PROGRAMDATA% or /Library/Application Support)</p>
+<dd><p>Pass <code>SYSTEMDATA_DIR</code> into <code>crdtuxp.getDir()</code> to get the path of the system data folder
+(<code>%PROGRAMDATA%</code> or <code>/Library/Application Support</code>)</p>
 </dd>
 <dt><a href="#TMP_DIR">TMP_DIR</a> : <code>string</code></dt>
-<dd><p>Pass TMP_DIR into crdtuxp.getDir() to get the path of the temporary folder</p>
+<dd><p>Pass <code>TMP_DIR</code> into <code>crdtuxp.getDir()</code> to get the path of the temporary folder</p>
 </dd>
 <dt><a href="#USERDATA_DIR">USERDATA_DIR</a> : <code>string</code></dt>
-<dd><p>Pass USERDATA_DIR into crdtuxp.getDir() to get the path to the user data folder
-(%APPDATA% or ~/Library/Application Support)</p>
+<dd><p>Pass <code>USERDATA_DIR</code> into <code>crdtuxp.getDir()</code> to get the path to the user data folder
+(<code>%APPDATA%</code> or <code>~/Library/Application Support</code>)</p>
 </dd>
 </dl>
 
@@ -84,7 +84,7 @@ except for errors, warnings and notes</p>
 
 ## crdtuxp : <code>object</code>
 `crdtuxp` contains a number of useful functions. Some of these functions
-are part of crdtux.js and are synchronous. 
+are part of `crdtux.js` and are synchronous. 
 
 Other functions are delegated to a daemon process, and are always asynchronous.
 
@@ -96,17 +96,17 @@ helpful in keeping things secure, but in many situations, they are a massive ove
 
 It should be up to the user/developer/IT department to decide how to handle security.
 
-Sometimes the whole workflow can be contained inside a sandbox or walled garden, on
-a disconnected network, without any contact with the outside world and not allowed to run any
+Sometimes the whole workflow can live inside walled garden, on
+a disconnected network, without any contact with the outside world and not be allowed to run any
 unvetted software. 
 
-Sometimes the OS security is safe enough for the workflow at hand.
+Or sometimes the OS security is safe enough for the workflow at hand.
 
 In those cases, the UXP security measures are counter-productive: they represent 
 unnessary hurdles to the software development, or make the user interace clunky and
 user-unfriendly.
  
-Using the UXP sandboxing should be an option, not an enforced requirement, and it should
+Using the UXP sandboxing should be a developer-selectable option, not an enforced requirement, and it should
 be up to the developer and/or the IT department to decide what is appropriate and what not.
 
 **Kind**: global namespace  
@@ -193,7 +193,7 @@ larger than the speed benefit.
 <a name="crdtuxp.decrypt"></a>
 
 ### crdtuxp.decrypt(s_or_ByteArr, aesKey) ⇒ <code>array</code>
-(async) Reverse the operation of the `crdtuxp.encrypt` function
+(async) Reverse the operation of the @crdtuxp.encrypt function
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 **Returns**: <code>array</code> - an array of bytes  
@@ -223,6 +223,8 @@ these are first encoded using UTF-8 before storing them into the byte array.
 
 Not limited to the UXP security sandbox.
 
+Be very careful with the `recurse` parameter! It is very easy to delete the wrong directory.
+
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 **Returns**: <code>boolean</code> - success or failure  
 
@@ -234,7 +236,8 @@ Not limited to the UXP security sandbox.
 <a name="crdtuxp.dirExists"></a>
 
 ### crdtuxp.dirExists(dirPath) ⇒ <code>boolean</code>
-(async) Verify whether a directory exists. 
+(async) Verify whether a directory exists. Will return `false` if the path points to a file (instead of a directory).
+Also see @crdtuxp.fileExists
 
 Not limited to the UXP security sandbox.
 
@@ -278,8 +281,13 @@ Not limited to the UXP security sandbox.
 ### crdtuxp.dQ(s_or_ByteArr) ⇒ <code>string</code>
 (sync) Wrap a string or a byte array into double quotes, encoding any
 binary data as a string. Knows how to handle Unicode characters
-or binary zeroes. When the input is a string, high Unicode characters are
-encoded as \uHHHH
+or binary zeroes. 
+
+When the input is a string, high Unicode characters are
+encoded as `\uHHHH`. 
+
+When the inoput is a byte array, all bytes are encoded
+as characters or as `\xHH` escape sequences.
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 **Returns**: <code>string</code> - a string enclosed in double quotes. This string is pure 7-bit
@@ -351,7 +359,8 @@ Not limited to the UXP security sandbox.
 <a name="crdtuxp.fileExists"></a>
 
 ### crdtuxp.fileExists(filePath) ⇒ <code>boolean</code>
-(async) Check if a file exists
+(async) Check if a file exists. Will return `false` if the file path points to a directory. 
+Also see @crdtuxp.dirExists
 
 Not limited to the UXP security sandbox.
 
@@ -433,15 +442,15 @@ Not limited to the UXP security sandbox.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| dirTag | <code>string</code> | a tag representing the dir:    crdtuxp.DESKTOP_DIR    crdtuxp.DOCUMENTS_DIR    crdtuxp.HOME_DIR    crdtuxp.LOG_DIR    crdtuxp.SYSTEMDATA_DIR    crdtuxp.TMP_DIR    crdtuxp.USERDATA_DIR |
+| dirTag | <code>string</code> | a tag representing the dir: ```    crdtuxp.DESKTOP_DIR    crdtuxp.DOCUMENTS_DIR    crdtuxp.HOME_DIR    crdtuxp.LOG_DIR    crdtuxp.SYSTEMDATA_DIR    crdtuxp.TMP_DIR    crdtuxp.USERDATA_DIR ``` |
 
 <a name="crdtuxp.intPow"></a>
 
 ### crdtuxp.intPow(i, intPower) ⇒ <code>number</code>
 (sync) Calculate an integer power of an int value. Avoids using floating point, so 
-should not have any floating-point round-off errors. Math.pow() will probably
-give the same result, but I am doubtful some implementations might use log and exp 
-to handle Math.pow()
+should not have any floating-point round-off errors. `Math.pow()` will probably
+give the exact same result, but I am doubtful that some implementations might internally use `log` and `exp` 
+to handle `Math.pow()`
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 **Returns**: <code>number</code> - i ^ intPower  
@@ -454,7 +463,7 @@ to handle Math.pow()
 <a name="crdtuxp.leftPad"></a>
 
 ### crdtuxp.leftPad(s, padChar, len) ⇒ <code>string</code>
-(sync) Extend or shorten a string to an exact length, adding padChar as needed
+(sync) Extend or shorten a string to an exact length, adding `padChar` as needed
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 **Returns**: <code>string</code> - padded or shortened string  
@@ -468,84 +477,84 @@ to handle Math.pow()
 <a name="crdtuxp.logEntry"></a>
 
 ### crdtuxp.logEntry(reportingFunctionArguments)
-(async) Make a log entry of the call of a function. Pass in the 'arguments' keyword as a parameter.
+(async) Make a log entry of the call of a function. Pass in the `arguments` keyword as a parameter.
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| reportingFunctionArguments | <code>array</code> | pass in the current arguments to the function. This is used to determine the function's name for the log |
+| reportingFunctionArguments | <code>array</code> | pass in the current `arguments` to the function. This is used to determine the function's name for the log |
 
 <a name="crdtuxp.logError"></a>
 
 ### crdtuxp.logError(reportingFunctionArguments, message)
-(async) Make a log entry of an error message. Pass in the 'arguments' keyword as the first parameter
-If the error level is below LOG_LEVEL_ERROR nothing happens
+(async) Make a log entry of an error message. Pass in the `arguments` keyword as the first parameter
+If the error level is below `LOG_LEVEL_ERROR` nothing happens
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| reportingFunctionArguments | <code>array</code> | pass in the current arguments to the function. This is used to determine the function's name for the log |
+| reportingFunctionArguments | <code>array</code> | pass in the current `arguments` to the function. This is used to determine the function's name for the log |
 | message | <code>string</code> | error message |
 
 <a name="crdtuxp.logExit"></a>
 
 ### crdtuxp.logExit(reportingFunctionArguments)
-(async) Make a log entry of the exit of a function. Pass in the 'arguments' keyword as a parameter.
+(async) Make a log entry of the exit of a function. Pass in the `arguments` keyword as a parameter.
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| reportingFunctionArguments | <code>array</code> | pass in the current arguments to the function. This is used to determine the function's name for the log |
+| reportingFunctionArguments | <code>array</code> | pass in the current `arguments` to the function. This is used to determine the function's name for the log |
 
 <a name="crdtuxp.logNote"></a>
 
 ### crdtuxp.logNote(reportingFunctionArguments, message)
-(async) Make a log entry of a note. Pass in the 'arguments' keyword as the first parameter.
-If the error level is below LOG_LEVEL_NOTE nothing happens
+(async) Make a log entry of a note. Pass in the `arguments` keyword as the first parameter.
+If the error level is below `LOG_LEVEL_NOTE` nothing happens
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| reportingFunctionArguments | <code>array</code> | pass in the current arguments to the function. This is used to determine the function's name for the log |
+| reportingFunctionArguments | <code>array</code> | pass in the current `arguments` to the function. This is used to determine the function's name for the log |
 | message | <code>string</code> | the note to output |
 
 <a name="crdtuxp.logTrace"></a>
 
 ### crdtuxp.logTrace(reportingFunctionArguments, message)
-(async) Emit a trace messsage into the log. Pass in the 'arguments' keyword as the first parameter.
-If the error level is below LOG_LEVEL_TRACE nothing happens
+(async) Emit a trace messsage into the log. Pass in the `arguments` keyword as the first parameter.
+If the error level is below `LOG_LEVEL_TRACE` nothing happens
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| reportingFunctionArguments | <code>array</code> | pass in the current arguments to the function. This is used to determine the function's name for the log |
+| reportingFunctionArguments | <code>array</code> | pass in the current `arguments` to the function. This is used to determine the function's name for the log |
 | message | <code>string</code> | the trace message to output |
 
 <a name="crdtuxp.logWarning"></a>
 
 ### crdtuxp.logWarning(arguments, message)
-(async) Emit a warning messsage into the log. Pass in the 'arguments' keyword as the first parameter.
-If the error level is below LOG_LEVEL_WARNING nothing happens
+(async) Emit a warning messsage into the log. Pass in the `arguments` keyword as the first parameter.
+If the error level is below `LOG_LEVEL_WARNING` nothing happens
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| arguments | <code>array</code> | pass in the current arguments to the function. This is used to determine the function's name for the log |
+| arguments | <code>array</code> | pass in the current `arguments` to the function. This is used to determine the function's name for the log |
 | message | <code>string</code> | the warning message to output |
 
 <a name="crdtuxp.machineGUID"></a>
 
 ### crdtuxp.machineGUID() ⇒ <code>string</code>
-(async) The unique GUID of this computer
+(async) The unique `GUID` of this computer
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
-**Returns**: <code>string</code> - a GUID string  
+**Returns**: <code>string</code> - a `GUID` string  
 <a name="crdtuxp.popLogLevel"></a>
 
 ### crdtuxp.popLogLevel() ⇒ <code>number</code>
@@ -568,7 +577,7 @@ If the error level is below LOG_LEVEL_WARNING nothing happens
 <a name="crdtuxp.rightPad"></a>
 
 ### crdtuxp.rightPad(s, padChar, len) ⇒ <code>string</code>
-(sync) Extend or shorten a string to an exact length, adding padChar as needed
+(sync) Extend or shorten a string to an exact length, adding `padChar` as needed
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 **Returns**: <code>string</code> - padded or shortened string  
@@ -583,7 +592,7 @@ If the error level is below LOG_LEVEL_WARNING nothing happens
 
 ### crdtuxp.setIssuer(issuerGUID, issuerEmail) ⇒ <code>boolean</code>
 (async) Send in activation data so the daemon can determine whether some software is currently activated or not
-Needs to be followed by a @crdtuxp.sublicense() call
+Needs to be followed by a @crdtuxp.sublicense call
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 **Returns**: <code>boolean</code> - - success or failure  
@@ -598,8 +607,12 @@ Needs to be followed by a @crdtuxp.sublicense() call
 ### crdtuxp.sQ(s_or_ByteArr) ⇒ <code>string</code>
 (sync) Wrap a string or a byte array into single quotes, encoding any
 binary data as a string. Knows how to handle Unicode characters
-or binary zeroes. When the input is a string, high Unicode characters are
-encoded as \uHHHH
+or binary zeroes.
+
+When the input is a string, high Unicode characters are
+encoded as `\uHHHH`
+
+When the inoput is a byte array, all bytes are encoded as `\xHH` escape sequences.
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 **Returns**: <code>string</code> - a string enclosed in double quotes. This string is pure 7-bit
@@ -627,7 +640,7 @@ var script = "a=b(" + sQ(somedata) + ");";
 
 ### crdtuxp.sublicense(key, activation) ⇒ <code>boolean</code>
 (async) Send in sublicense info generated in the License Manager so the daemon can determine whether some software is currently activated or not
-Needs to be preceded by a @crdtuxp.setIssuer() call
+Needs to be preceded by a @crdtuxp.setIssuer call
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 **Returns**: <code>boolean</code> - success or failure  
@@ -641,7 +654,7 @@ Needs to be preceded by a @crdtuxp.setIssuer() call
 
 ### crdtuxp.toHex(i, numDigits) ⇒ <code>string</code>
 (sync) Convert an integer into a hex representation with a fixed number of digits
-Negative numbers are converted using 2-s complement (so -15 results in 0x01)
+Negative numbers are converted using 2-s complement (so `-15` results in `0x01`)
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
 **Returns**: <code>string</code> - hex-encoded integer  
@@ -662,7 +675,7 @@ The Tightener daemon manages the necessary certificate for https
 <a name="PORT_TIGHTENER_DAEMON"></a>
 
 ## PORT\_TIGHTENER\_DAEMON : <code>number</code>
-The Tightener daemon listens for HTTPS connections on port 18888.
+The Tightener daemon listens for HTTPS connections on port `18888`.
 
 **Kind**: global constant  
 <a name="TQL_SCOPE_NAME_DEFAULT"></a>
@@ -676,77 +689,77 @@ were defined by a previous script
 <a name="LOG_LEVEL_OFF"></a>
 
 ## LOG\_LEVEL\_OFF : <code>number</code>
-Setting log level to LOG_LEVEL_OFF causes all log output to be suppressed
+Setting log level to `LOG_LEVEL_OFF` causes all log output to be suppressed
 
 **Kind**: global constant  
 <a name="LOG_LEVEL_ERROR"></a>
 
 ## LOG\_LEVEL\_ERROR : <code>number</code>
-Setting log level to LOG_LEVEL_ERROR causes all log output to be suppressed,
+Setting log level to `LOG_LEVEL_ERROR` causes all log output to be suppressed,
 except for errors
 
 **Kind**: global constant  
 <a name="LOG_LEVEL_WARNING"></a>
 
 ## LOG\_LEVEL\_WARNING : <code>number</code>
-Setting log level to LOG_LEVEL_WARNING causes all log output to be suppressed,
+Setting log level to `LOG_LEVEL_WARNING` causes all log output to be suppressed,
 except for errors and warnings
 
 **Kind**: global constant  
 <a name="LOG_LEVEL_NOTE"></a>
 
 ## LOG\_LEVEL\_NOTE : <code>number</code>
-Setting log level to LOG_LEVEL_NOTE causes all log output to be suppressed,
+Setting log level to `LOG_LEVEL_NOTE` causes all log output to be suppressed,
 except for errors, warnings and notes
 
 **Kind**: global constant  
 <a name="LOG_LEVEL_TRACE"></a>
 
 ## LOG\_LEVEL\_TRACE : <code>number</code>
-Setting log level to LOG_LEVEL_TRACE causes all log output to be output
+Setting log level to `LOG_LEVEL_TRACE` causes all log output to be output
 
 **Kind**: global constant  
 <a name="DESKTOP_DIR"></a>
 
 ## DESKTOP\_DIR : <code>string</code>
-Pass DESKTOP_DIR into crdtuxp.getDir() to get the path of the user's Desktop folder
+Pass `DESKTOP_DIR` into `crdtuxp.getDir()` to get the path of the user's Desktop folder
 
 **Kind**: global constant  
 <a name="DOCUMENTS_DIR"></a>
 
 ## DOCUMENTS\_DIR : <code>string</code>
-Pass DOCUMENTS_DIR into crdtuxp.getDir() to get the path of the user's Documents folder
+Pass `DOCUMENTS_DIR` into `crdtuxp.getDir()` to get the path of the user's Documents folder
 
 **Kind**: global constant  
 <a name="HOME_DIR"></a>
 
 ## HOME\_DIR : <code>string</code>
-Pass HOME_DIR into crdtuxp.getDir() to get the path of the user's home folder
+Pass `HOME_DIR` into `crdtuxp.getDir()` to get the path of the user's home folder
 
 **Kind**: global constant  
 <a name="LOG_DIR"></a>
 
 ## LOG\_DIR : <code>string</code>
-Pass LOG_DIR into crdtuxp.getDir() to get the path of the Tightener logging folder folder
+Pass `LOG_DIR` into `crdtuxp.getDir()` to get the path of the Tightener logging folder folder
 
 **Kind**: global constant  
 <a name="SYSTEMDATA_DIR"></a>
 
 ## SYSTEMDATA\_DIR : <code>string</code>
-Pass SYSTEMDATA_DIR into crdtuxp.getDir() to get the path of the system data folder
-(%PROGRAMDATA% or /Library/Application Support)
+Pass `SYSTEMDATA_DIR` into `crdtuxp.getDir()` to get the path of the system data folder
+(`%PROGRAMDATA%` or `/Library/Application Support`)
 
 **Kind**: global constant  
 <a name="TMP_DIR"></a>
 
 ## TMP\_DIR : <code>string</code>
-Pass TMP_DIR into crdtuxp.getDir() to get the path of the temporary folder
+Pass `TMP_DIR` into `crdtuxp.getDir()` to get the path of the temporary folder
 
 **Kind**: global constant  
 <a name="USERDATA_DIR"></a>
 
 ## USERDATA\_DIR : <code>string</code>
-Pass USERDATA_DIR into crdtuxp.getDir() to get the path to the user data folder
-(%APPDATA% or ~/Library/Application Support)
+Pass `USERDATA_DIR` into `crdtuxp.getDir()` to get the path to the user data folder
+(`%APPDATA%` or `~/Library/Application Support`)
 
 **Kind**: global constant  
