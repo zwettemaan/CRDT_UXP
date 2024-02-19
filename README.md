@@ -207,7 +207,9 @@ Once the order is validated and the activation file has been imported, switch th
 
 If you don't have a developer account yet, create and register one. Wait for a confirmation email, and make sure to check your spam filter. 
 
-Once you have a registered developer account, go to the _Sublicensing_ window, and select the order.
+Once you have a registered developer account, go to the _Sublicensing_ window, and select the order. There are two options to pass on the activation: a side-car file or embedding it into your source code.
+
+### Sidecar File
 
 Select the option _SideCar File_, then click the _Copy_ button. 
 
@@ -225,6 +227,19 @@ or
 ```
 
 The software will now auto-activate when your customer runs it and the user won't have to deal with activations.
+
+### Embedding
+
+On the _Sublicensing_ window, select _JavaScript_, then click the _Copy_ button and then go to your source code, 
+and _Paste_ the code in your initialization code once crdtuxp is available. You will need to tweak the code a bit to 
+make it fit your source. Replace the word TIGHTENER with the module name for crdtuxp - e.g. it might look like:
+
+crdtuxp.setIssuer("1186cb861234567377c49d7eade","my@email.com");
+crdtuxp.sublicense("hdjshsajdshajdkas..lotsofit...NEmgd0UGH28dbI1RK0GRig==");
+
+Creative Developer Tools will now auto-activate when your customer runs it and the user won't have to deal with activations.
+
+`crdtuxp.sublicense()` returns a boolean - it will return `false` if the activation fails for some reason, so you can verify in code whether the activation succeeded or not.
 
 ## Changing computers
 
