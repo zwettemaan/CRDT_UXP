@@ -510,11 +510,11 @@ module.exports.deQuote = deQuote;
  * @return {boolean} success or failure
  */
 
-async function dirDelete(filePath) {
+async function dirDelete(filePath, recurse) {
 
     var retVal;
 
-    var response = await evalTQL("dirDelete(" + dQ(filePath) + ")");
+    var response = await evalTQL("dirDelete(" + dQ(filePath) + "," + (recurse ? "true" : "false") + ") ? \"true\" : \"false\"");
     if (response && ! response.error) {
         retVal = response.text == "true";
     }
@@ -539,7 +539,7 @@ async function dirExists(dirPath) {
 
     var retVal;
 
-    var response = await evalTQL("dirExists(" + dQ(dirPath) + ")");
+    var response = await evalTQL("dirExists(" + dQ(dirPath) + ") ? \"true\" : \"false\"");
     if (response && ! response.error) {
         retVal = response.text == "true";
     }
@@ -563,9 +563,9 @@ async function dirCreate(filePath) {
 
     var retVal;
 
-    var response = await evalTQL("dirCreate(" + dQ(filePath) + ")");
+    var response = await evalTQL("dirCreate(" + dQ(filePath) + ") ? \"true\" : \"false\"");
     if (response && ! response.error) {
-        retVal = JSON.parse(response.text);
+        retVal = response.text == "true";
     }
 
     return retVal;
@@ -587,9 +587,9 @@ async function dirScan(filePath) {
 
     var retVal;
 
-    var response = await evalTQL("dirScan(" + dQ(filePath) + ")");
+    var response = await evalTQL("enquote(dirScan(" + dQ(filePath) + ").toString())");
     if (response && ! response.error) {
-        retVal = JSON.parse(response.text);
+        retVal = JSON.parse(binaryUTF8ToStr(deQuote(response.text)));
     }
 
     return retVal;
@@ -746,7 +746,7 @@ async function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
         };
 
     } catch (e) {
-        retVal.exception = e;
+        throw "CRDT daemon is probably not running. Use License Manager to verify CRDT is activated, then use the Preferences screen to start it";
     }
 
     return retVal;
@@ -761,16 +761,16 @@ module.exports.evalTQL = evalTQL;
  * @function crdtuxp.fileClose
  * 
  * @param {number} fileHandle - a file handle as returned by fileOpen()
- * @return {any} return value from daemon
+ * @return {boolean} success or failure
  */
 
 async function fileClose(fileHandle) {
 
     var retVal;
 
-    var response = await evalTQL("fileClose(" + fileHandle + ")");
+    var response = await evalTQL("fileClose(" + fileHandle + ") ? \"true\" : \"false\"");
     if (response && ! response.error) {
-        retVal = response.text;
+        retVal = response.text == "true";
     }
 
     return retVal;
@@ -792,7 +792,7 @@ async function fileDelete(filePath) {
 
     var retVal;
 
-    var response = await evalTQL("fileDelete(" + dQ(filePath) + ")");
+    var response = await evalTQL("fileDelete(" + dQ(filePath) + ") ? \"true\" : \"false\"");
     if (response && ! response.error) {
         retVal = response.text == "true";
     }
@@ -817,7 +817,7 @@ async function fileExists(filePath) {
 
     var retVal;
 
-    var response = await evalTQL("fileExists(" + dQ(filePath) + ")");
+    var response = await evalTQL("fileExists(" + dQ(filePath) + ") ? \"true\" : \"false\"");
     if (response && ! response.error) {
         retVal = response.text == "true";
     }
@@ -844,13 +844,13 @@ async function fileOpen(fileName, mode) {
 
     var response;
     if (mode) {
-        response = await evalTQL("fileOpen(" + dQ(fileName) + "," + dQ(mode) + ")");
+        response = await evalTQL("enquote(fileOpen(" + dQ(fileName) + "," + dQ(mode) + "))");
     }
     else {
-        response = await evalTQL("fileOpen(" + dQ(fileName) + ")");
+        response = await evalTQL("enquote(fileOpen(" + dQ(fileName) + "))");
     }
     if (response && ! response.error) {
-        retVal = response.text;
+        retVal = parseInt(binaryUTF8ToStr(deQuote(response.text)), 10);
     }
 
     return retVal;
@@ -873,14 +873,14 @@ async function fileRead(fileHandle, isBinary) {
 
     var retVal;
 
-    var response = await evalTQL("fileRead(" + fileHandle + ")", undefined, true);
+    var response = await evalTQL("enquote(fileRead(" + fileHandle + "))", undefined, true);
     if (response && ! response.error) {
         var byteArray = deQuote(response.text);
         if (isBinary) {
-            retVal = byteArray;
+            retVal = deQuote(binaryUTF8ToStr(byteArray));
         }
         else {
-            retVal = binaryUTF8ToStr(byteArray);
+            retVal = binaryUTF8ToStr(deQuote(binaryUTF8ToStr(byteArray)));
         }
     }
 
@@ -897,7 +897,7 @@ module.exports.fileRead = fileRead;
  * 
  * @param {number} fileHandle - a file handle as returned by fileOpen()
  * @param {string} s_or_ByteArr - data to write to the file
- * @return {any} retn value from daemon
+ * @return {boolean} retn value from daemon
  */
 
 async function fileWrite(fileHandle, s_or_ByteArr) {
@@ -905,16 +905,16 @@ async function fileWrite(fileHandle, s_or_ByteArr) {
     var retVal;
 
     var byteArray;
-    if ("string" == typeof s) {
+    if ("string" == typeof s_or_ByteArr) {
         byteArray = strToUTF8(s_or_ByteArr);
     }
     else {
         byteArray = s_or_ByteArr;
     }
 
-    var response = await evalTQL("fileWrite(" + fileHandle + "," + dQ(byteArray) + ")");
+    var response = await evalTQL("fileWrite(" + fileHandle + "," + dQ(byteArray) + ") ? \"true\" : \"false\"");
     if (response && ! response.error) {
-        retVal = response.text;
+        retVal = response.text == "true";
     }
 
     return retVal;
@@ -967,7 +967,7 @@ async function getDir(dirTag) {
 
     var retVal;
 
-    var sysInfo = getSysInfo__();
+    var sysInfo = await getSysInfo__();
     if (dirTag in sysInfo) {
         retVal = sysInfo[dirTag];
     }
@@ -983,9 +983,9 @@ async function getSysInfo__() {
     var retVal;
 
     if (! SYS_INFO) {
-        var response = await evalTQL("sysInfo()");
+        var response = await evalTQL("enquote(sysInfo())");
         if (response && ! response.error) {
-            SYS_INFO = JSON.parse(response.text);
+            SYS_INFO = JSON.parse(binaryUTF8ToStr(deQuote(response.text)))
         }
     }
     
@@ -1378,7 +1378,7 @@ function rightPad(s, padChar, len) {
             }
 
             if (retVal.length > len) {
-                retVal = retVal.substring(0, retVal.length - len);
+                retVal = retVal.substring(0, len);
                 break;
             }
 
@@ -1467,7 +1467,7 @@ function strToUTF8(in_s) {
         }
         else {
             for (var byteIdx = 0; byteIdx < bytes.length; byteIdx++) {
-                buffer.push(bytes[byteIdx]);
+                retVal.push(bytes[byteIdx]);
             }
         }
     }
@@ -1516,8 +1516,9 @@ function toHex(i, numDigits) {
     }
 
     if (i < 0) {
+        var upper = intPow(2, numDigits*4);
         // Calculate 2's complement with numDigits if negative
-        i = intPow(2, numDigits*4) + i;
+        i = (intPow(2, numDigits*4) + i) & (upper - 1);
     }
 
     // Calculate and cache a long enough string of zeroes

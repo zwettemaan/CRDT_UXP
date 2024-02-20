@@ -92,21 +92,21 @@ async function testDirs() {
     var fileContentAsString = "Hello World☜✿\x00\x7Féøo";
     var fileContentAsUTF8 = await crdtuxp.strToUTF8(fileContentAsString);
 
-    var writeFileHandle = await crdtuxp.fileOpen(testFilePath, "w");
-    await fileWrite(writeFileHandle, fileContentAsString);
-    await fileClose(writeFileHandle);
+    var writeFileHandle1 = await crdtuxp.fileOpen(testFilePath, "w");
+    await crdtuxp.fileWrite(writeFileHandle1, fileContentAsString);
+    await crdtuxp.fileClose(writeFileHandle1);
 
-    var writeFileHandle = await crdtuxp.fileOpen(testFilePath2, "w");
-    await fileWrite(writeFileHandle, fileContentAsString);
-    await fileClose(writeFileHandle);
+    var writeFileHandle2 = await crdtuxp.fileOpen(testFilePath2, "w");
+    await crdtuxp.fileWrite(writeFileHandle2, fileContentAsString);
+    await crdtuxp.fileClose(writeFileHandle2);
 
-    var readFileHandle = await crdtuxp.fileOpen(testFilePath, "r");
-    var binaryReadContent = await crdtuxp.fileRead(readFileHandle, true);
-    await fileClose(readFileHandle);
+    var readFileHandle1 = await crdtuxp.fileOpen(testFilePath, "r");
+    var binaryReadContent = await crdtuxp.fileRead(readFileHandle1, true);
+    await crdtuxp.fileClose(readFileHandle1);
 
-    readFileHandle = await crdtuxp.fileOpen(testFilePath, "r");
-    var stringReadContent = await crdtuxp.fileRead(readFileHandle, false);
-    await fileClose(readFileHandle);
+    var readFileHandle2 = await crdtuxp.fileOpen(testFilePath, "r");
+    var stringReadContent = await crdtuxp.fileRead(readFileHandle2, false);
+    await crdtuxp.fileClose(readFileHandle2);
 
     if (fileContentAsString != stringReadContent) {
         await crdtuxp.logError(arguments, "failed to read file as string");
@@ -119,7 +119,7 @@ async function testDirs() {
         retVal = false;
     }
 
-    var desktopFiles = await crdtuxp.dirScan(desktopDir);
+    var desktopFiles = await crdtuxp.dirScan(testDirPath);
     var foundTestFile = false;
     for (var idx = 0; ! foundTestFile && idx < desktopFiles.length; idx++) {
         var fileName = desktopFiles[idx];
@@ -164,7 +164,7 @@ async function testDirs() {
     // Should fail because second file is still in there
     await crdtuxp.dirDelete(testDirPath);
 
-    testDirExists = await crdtuxp.fileExists(testFilePath);
+    testDirExists = await crdtuxp.dirExists(testDirPath);
     if (! testDirExists) {
         await crdtuxp.logError(arguments, "testDir should not disappear as it is not empty");
         retVal = false;
@@ -173,7 +173,7 @@ async function testDirs() {
     // Recursive should succeed
     await crdtuxp.dirDelete(testDirPath, true);
 
-    testDirExists = await crdtuxp.fileExists(testFilePath);
+    testDirExists = await crdtuxp.dirExists(testDirPath);
     if (testDirExists) {
         await crdtuxp.logError(arguments, "testDir should disappear with recursive delete");
         retVal = false;
@@ -186,19 +186,19 @@ async function testIntPow() {
 
     var retVal = true;
 
-    var x = intPow(2, 10);
+    var x = crdtuxp.intPow(2, 10);
     if (x != 1024) {
         await crdtuxp.logError(arguments, "2^10 intPow failed");
         retVal = false;
     }
 
-    x = intPow(-2, 11);
+    x = crdtuxp.intPow(-2, 11);
     if (x != -2048) {
         await crdtuxp.logError(arguments, "(-2)^11 intPow failed");
         retVal = false;
     }
 
-    x = intPow(0,0);
+    x = crdtuxp.intPow(0,0);
     if (! isNaN(x)) {
         await crdtuxp.logError(arguments, "0^0 intPow failed");
         retVal = false;
@@ -345,7 +345,7 @@ async function testQuoteDequote() {
     }
 
     s = crdtuxp.sQ(s);
-    if (s != '') {
+    if (s != "'\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f !\"#$%&\\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\\x7f\\x80\\x81\\x82\\x83\\x84\\x85\\x86\\x87\\x88\\x89\\x8a\\x8b\\x8c\\x8d\\x8e\\x8f\\x90\\x91\\x92\\x93\\x94\\x95\\x96\\x97\\x98\\x99\\x9a\\x9b\\x9c\\x9d\\x9e\\x9f\\xa0\\xa1\\xa2\\xa3\\xa4\\xa5\\xa6\\xa7\\xa8\\xa9\\xaa\\xab\\xac\\xad\\xae\\xaf\\xb0\\xb1\\xb2\\xb3\\xb4\\xb5\\xb6\\xb7\\xb8\\xb9\\xba\\xbb\\xbc\\xbd\\xbe\\xbf\\xc0\\xc1\\xc2\\xc3\\xc4\\xc5\\xc6\\xc7\\xc8\\xc9\\xca\\xcb\\xcc\\xcd\\xce\\xcf\\xd0\\xd1\\xd2\\xd3\\xd4\\xd5\\xd6\\xd7\\xd8\\xd9\\xda\\xdb\\xdc\\xdd\\xde\\xdf\\xe0\\xe1\\xe2\\xe3\\xe4\\xe5\\xe6\\xe7\\xe8\\xe9\\xea\\xeb\\xec\\xed\\xee\\xef\\xf0\\xf1\\xf2\\xf3\\xf4\\xf5\\xf6\\xf7\\xf8\\xf9\\xfa\\xfb\\xfc\\xfd\\xfe\\xff'") {
         await crdtuxp.logError(arguments, "failed crdtuxp.sQ byte array with all bytes 0-255");
         retVal = false;        
     }
@@ -385,13 +385,13 @@ async function testUTFRoundTrip() {
 }
 
 var tests = [
-    testBase64,
-    testDirs,
-    testEncrypt,
     testIntPow,
     testLeftRightPad,
     testQuoteDequote,
     testToHex,
+    testBase64,
+    testDirs,
+    testEncrypt,
     testUTFRoundTrip
 ];
 
@@ -399,27 +399,34 @@ async function run() {
 
     crdtuxp.pushLogLevel(crdtuxp.LOG_LEVEL_NOTE);
     
-    await crdtuxp.logNote(arguments, "Starting crdtuxp_test");
+    try {
+        await crdtuxp.logNote(arguments, "Starting crdtuxp_test");
 
-    var success = true;
+        var success = true;
 
-    for (var idx = 0; idx < tests.length; idx++) {
-        try {
-            var ftn = tests[idx];
-            var result = await ftn();            
-            if (! result) {
-                await crdtuxp.logError(arguments, "failed test idx " + idx);
+        for (var idx = 0; idx < tests.length; idx++) {
+            try {
+                var ftn = tests[idx];
+                var result = await ftn();            
+                if (! result) {
+                    await crdtuxp.logError(arguments, "failed test idx " + idx);
+                }
             }
-        }
-        catch (err) {
-            await crdtuxp.logError(arguments, "throws " + err + " for test idx " + idx);
-            result = false;
-        }
+            catch (err) {
+                await crdtuxp.logError(arguments, "throws " + err + " for test idx " + idx);
+                result = false;
+            }
 
-        success = result && success;
+            success = result && success;
+        }
     }
-
+    catch (err) {
+        await crdtuxp.logError(arguments, "throws " + err);
+    }
+    
     crdtuxp.popLogLevel();
+
+    await crdtuxp.logNote(arguments, "crdtuxp_test complete");
 
     return success;
 }

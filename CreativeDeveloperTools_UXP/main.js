@@ -17,7 +17,12 @@ const crdtuxp = require("./crdtuxp");
 const RUN_CRDT_UXP_TESTS = true;
 if (RUN_CRDT_UXP_TESTS) {
   const crdtuxp_test = require("./crdtuxp_test");
-  crdtuxp_test.run();
+  setTimeout(async function() {
+    // The await fetch... does not work immediately after startup. We need to wait a bit
+    // for it to become available. Duh.
+    await crdtuxp_test.run();
+  },
+  5000);
 }
 
 entrypoints.setup({
