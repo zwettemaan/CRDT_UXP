@@ -124,12 +124,12 @@ be up to the developer and/or the IT department to decide what is appropriate an
     * [.dQ(s_or_ByteArr)](#crdtuxp.dQ) ⇒ <code>string</code>
     * [.encrypt(s_or_ByteArr, aesKey)](#crdtuxp.encrypt) ⇒ <code>string</code>
     * [.evalTQL(tqlScript, tqlScopeName, resultIsRawBinary)](#crdtuxp.evalTQL) ⇒ <code>any</code>
-    * [.fileClose(fileHandle)](#crdtuxp.fileClose) ⇒ <code>any</code>
+    * [.fileClose(fileHandle)](#crdtuxp.fileClose) ⇒ <code>boolean</code>
     * [.fileDelete(filePath)](#crdtuxp.fileDelete) ⇒ <code>boolean</code>
     * [.fileExists(filePath)](#crdtuxp.fileExists) ⇒ <code>boolean</code>
     * [.fileOpen(fileName, mode)](#crdtuxp.fileOpen) ⇒ <code>number</code>
     * [.fileRead(fileHandle, isBinary)](#crdtuxp.fileRead) ⇒ <code>any</code>
-    * [.fileWrite(fileHandle, s_or_ByteArr)](#crdtuxp.fileWrite) ⇒ <code>any</code>
+    * [.fileWrite(fileHandle, s_or_ByteArr)](#crdtuxp.fileWrite) ⇒ <code>boolean</code>
     * [.getCapability(issuer, productCode, password)](#crdtuxp.getCapability) ⇒ <code>string</code>
     * [.getDir(dirTag)](#crdtuxp.getDir) ⇒ <code>string</code>
     * [.intPow(i, intPower)](#crdtuxp.intPow) ⇒ <code>number</code>
@@ -330,13 +330,13 @@ be different every time.
 
 <a name="crdtuxp.fileClose"></a>
 
-### crdtuxp.fileClose(fileHandle) ⇒ <code>any</code>
+### crdtuxp.fileClose(fileHandle) ⇒ <code>boolean</code>
 (async) Close a currently open file
 
 Not limited to the UXP security sandbox.
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
-**Returns**: <code>any</code> - return value from daemon  
+**Returns**: <code>boolean</code> - success or failure  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -403,13 +403,13 @@ Not limited to the UXP security sandbox.
 
 <a name="crdtuxp.fileWrite"></a>
 
-### crdtuxp.fileWrite(fileHandle, s_or_ByteArr) ⇒ <code>any</code>
+### crdtuxp.fileWrite(fileHandle, s_or_ByteArr) ⇒ <code>boolean</code>
 (async) Binary write to a file. Strings are written as UTF-8
 
 Not limited to the UXP security sandbox.
 
 **Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
-**Returns**: <code>any</code> - retn value from daemon  
+**Returns**: <code>boolean</code> - retn value from daemon  
 
 | Param | Type | Description |
 | --- | --- | --- |
