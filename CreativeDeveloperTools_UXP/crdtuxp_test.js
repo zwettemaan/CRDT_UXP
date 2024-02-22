@@ -409,7 +409,10 @@ async function run() {
                 var ftn = tests[idx];
                 var result = await ftn();            
                 if (! result) {
-                    await crdtuxp.logError(arguments, "failed test idx " + idx);
+                    await crdtuxp.logError(arguments, "failed test " + ftn.name);
+                }
+                else {
+                    await crdtuxp.logNote(arguments, "passed test " + ftn.name);
                 }
             }
             catch (err) {
@@ -424,9 +427,9 @@ async function run() {
         await crdtuxp.logError(arguments, "throws " + err);
     }
     
-    crdtuxp.popLogLevel();
-
     await crdtuxp.logNote(arguments, "crdtuxp_test complete");
+
+    crdtuxp.popLogLevel();
 
     return success;
 }

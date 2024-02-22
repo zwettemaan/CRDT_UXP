@@ -1,8 +1,14 @@
 /**
+ * For downloading and installation info, visit
+ *
+ * https://www.rorohiko.com/crdt
+ *
  *  `crdtuxp` contains a number of useful functions. Some of these functions
- * are part of `crdtux.js` and are synchronous. 
+ * are implemented in JavaScript in `crdtux.js` and are synchronous. 
  * 
  * Other functions are delegated to a daemon process, and are always asynchronous.
+ *
+ * The list of endpoints is further down
  * 
  * `crdtuxp` steps out of the UXP security sandbox - which means that as a developer, 
  * you need to be judicious when using this. 
@@ -1146,6 +1152,31 @@ async function logExit(reportingFunctionArguments) {
 }
 module.exports.logExit = logExit;
 
+/**
+ * (sync) Extract the function name from its arguments
+ * 
+ * @function crdtuxp.functionNameFromArguments
+ * 
+ * @param {object} functionArguments - pass in the current `arguments` to the function. This is used to determine the function's name
+ * @return {string} function name
+ */
+
+function functionNameFromArguments(functionArguments) {
+
+    var functionName;
+    try {
+        functionName = functionArguments.callee.toString().match(/function ([^\(]+)/)[1];
+    }
+    catch (err) {
+        functionName = "[anonymous function]";
+    }
+
+    return functionName;
+
+}
+module.exports.functionNameFromArguments = functionNameFromArguments;
+
+
 // Internal use: write out a log message
 
 async function logMessage__(reportingFunctionArguments, levelPrefix, message) {
@@ -1178,14 +1209,7 @@ async function logMessage__(reportingFunctionArguments, levelPrefix, message) {
                 }
                 else {
 
-                    var reportingFunctionName;
-                    try {
-                        reportingFunctionName = reportingFunctionArguments.callee.toString().match(/function ([^\(]+)/)[1];
-                    }
-                    catch (err) {
-                        reportingFunctionName = "[anonymous function]";
-                    }
-                    functionPrefix += reportingFunctionName + ": ";
+                    functionPrefix += functionNameFromArguments(reportingFunctionArguments) + ": ";
 
                 }
             }
