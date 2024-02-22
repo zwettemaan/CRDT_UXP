@@ -31,28 +31,9 @@ This will automatically start the daemon each time you run the _License Manager_
 
 The daemon will continue running after you quit _License Manager_, until the next restart of your computer.
 
-Once the daemon is running, you can use the various endpoints in the module `crdtuxp.js` from your UXP Plugin or UXPScript:
-```
-async crdtuxp.base64decode(base64Str)
-async crdtuxp.base64encode(s_or_ByteArr)
-      crdtuxp.binaryUTF8ToStr(in_byteArray)
-async crdtuxp.decrypt(s_or_ByteArr, aesKey)
-async crdtuxp.dirExists(dirPath)
-async crdtuxp.dQ(s_or_ByteArr)
-async crdtuxp.encrypt(s_or_ByteArr, aesKey)
-      crdtuxp.deQuote(quotedString)
-async crdtuxp.fileClose(fileHandle)
-async crdtuxp.fileOpen(fileName, mode)
-async crdtuxp.fileRead(fileHandle, isBinary)
-async crdtuxp.fileWrite(fileHandle, s_or_ByteArr)
-      crdtuxp.intPow(i, intPower)
-async crdtuxp.sQ(s_or_ByteArr)
-async crdtuxp.getCapability(issuer, productCode, password)
-async crdtuxp.machineGUID()
-async crdtuxp.setIssuer(issuerGUID, issuerEmail)
-async crdtuxp.sublicense(key, activation)
-      crdtuxp.toHex(i, numDigits)
-```
+Once the daemon is running, you can use the various endpoints in the module `crdtuxp.js` from your UXP Plugin or UXPScript, see:
+
+https://github.com/zwettemaan/UXPTightener/blob/main/docs.md
 
 To manage the daemon, you can also use double-clickable scripts like `startDaemon` or `killDaemon`.
 

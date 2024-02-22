@@ -137,6 +137,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
     * [.logEntry(reportingFunctionArguments)](#crdtuxp.logEntry)
     * [.logError(reportingFunctionArguments, message)](#crdtuxp.logError)
     * [.logExit(reportingFunctionArguments)](#crdtuxp.logExit)
+    * [.functionNameFromArguments(functionArguments)](#crdtuxp.functionNameFromArguments) ⇒ <code>string</code>
     * [.logNote(reportingFunctionArguments, message)](#crdtuxp.logNote)
     * [.logTrace(reportingFunctionArguments, message)](#crdtuxp.logTrace)
     * [.logWarning(arguments, message)](#crdtuxp.logWarning)
@@ -508,6 +509,18 @@ If the error level is below `LOG_LEVEL_ERROR` nothing happens
 | Param | Type | Description |
 | --- | --- | --- |
 | reportingFunctionArguments | <code>array</code> | pass in the current `arguments` to the function. This is used to determine the function's name for the log |
+
+<a name="crdtuxp.functionNameFromArguments"></a>
+
+### crdtuxp.functionNameFromArguments(functionArguments) ⇒ <code>string</code>
+(sync) Extract the function name from its arguments
+
+**Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
+**Returns**: <code>string</code> - function name  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| functionArguments | <code>object</code> | pass in the current `arguments` to the function. This is used to determine the function's name |
 
 <a name="crdtuxp.logNote"></a>
 

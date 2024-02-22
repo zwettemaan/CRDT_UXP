@@ -1,7 +1,7 @@
 {
   "id": "creative-developer-tools-uxp-sample",
   "name": "creative-developer-tools-uxp-sample",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "main": "index.html",
   "host": [ 
     {
@@ -26,20 +26,20 @@
       "type": "panel",
       "id": "showPanel",
       "minimumSize": {
-        "width": 700,
-        "height": 300
+        "width": 1000,
+        "height": 900
       },
       "maximumSize": {
-        "width": 2000,
-        "height": 2000
+        "width": 1000,
+        "height": 900
       },
       "preferredDockedSize": {
-        "width": 700,
-        "height": 300
+        "width": 1000,
+        "height": 900
       },
       "preferredFloatingSize": {
-        "width": 700,
-        "height": 300
+        "width": 1000,
+        "height": 900
       },
       "label": {
         "default": "Creative Developer Tools Sample"
