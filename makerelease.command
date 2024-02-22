@@ -11,13 +11,7 @@ export SCRIPT_DIR=`dirname "$0"`
 cd "$SCRIPT_DIR"
 export SCRIPT_DIR=`pwd`/
 
-#
-# Assume nvm, npm and node are installed
-# Node must be version 20 - version 21 has problems with deprecated 'punycode'
-#
-npm install jsdoc-to-markdown
-# https://github.com/jsdoc2md/jsdoc-to-markdown/issues/279
-./node_modules/.bin/jsdoc2md "!(node_modules|coverage)/**/*.js" > docs.md
+./buildDocs.command
 
 if [ "${TIGHTENER_RELEASE_ROOT}" = "" -o ! -d "${TIGHTENER_RELEASE_ROOT}" ]; then
     echo "Cannot make release. JSXGetURL repo needs to be installed alongside TightenerDocs repo"

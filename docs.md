@@ -2,7 +2,23 @@
 
 <dl>
 <dt><a href="#crdtuxp">crdtuxp</a> : <code>object</code></dt>
-<dd><p>For downloading and installation info, visit</p>
+<dd><p>Creative Developer Tools (CRDT) is a growing suite of tools aimed at script developers and plug-in developers for the Adobe Creative Cloud eco-system.</p>
+<p>Currently, it is at an alpha stage: the feature set is not frozen, and new features are added regularly.</p>
+<p>There are two different versions of CRDT: one for UXP/UXPScript and another for ExtendScript.</p>
+<p>The alpha version is meant to be functional and useful, but without a doubt, there will be bugs and dragons…</p>
+<p>Features include:</p>
+<ul>
+<li>Read/Write files beyond the UXP sandbox, including binary files</li>
+<li>Read the environment variables</li>
+<li>Provides a unique machine GUID for each end-user computer</li>
+<li>Provides a unique account GUID for each end user</li>
+<li>Add licensing and activation features to your script</li>
+<li>Protect sensitive source code and make it hard to reverse engineer</li>
+<li>AES-256 encryption/decryption functions</li>
+<li>Base64 encode and decode functions</li>
+</ul>
+<p>More to come! You can contact us on <a href="mailto:&#100;&#x65;&#x76;&#64;&#x72;&#x6f;&#x72;&#111;&#104;&#105;&#x6b;&#111;&#x2e;&#x63;&#111;&#109;">&#100;&#x65;&#x76;&#64;&#x72;&#x6f;&#x72;&#111;&#104;&#105;&#x6b;&#111;&#x2e;&#x63;&#111;&#109;</a> with feature request</p>
+<p>For downloading and installation info, visit</p>
 <p><a href="https://www.rorohiko.com/crdt">https://www.rorohiko.com/crdt</a></p>
 <p> <code>crdtuxp</code> contains a number of useful functions. Some of these functions
 are implemented in JavaScript in <code>crdtux.js</code> and are synchronous. </p>
@@ -86,6 +102,27 @@ except for errors, warnings and notes</p>
 <a name="crdtuxp"></a>
 
 ## crdtuxp : <code>object</code>
+Creative Developer Tools (CRDT) is a growing suite of tools aimed at script developers and plug-in developers for the Adobe Creative Cloud eco-system.
+
+Currently, it is at an alpha stage: the feature set is not frozen, and new features are added regularly.
+
+There are two different versions of CRDT: one for UXP/UXPScript and another for ExtendScript.
+
+The alpha version is meant to be functional and useful, but without a doubt, there will be bugs and dragons…
+
+Features include:
+
+- Read/Write files beyond the UXP sandbox, including binary files
+- Read the environment variables
+- Provides a unique machine GUID for each end-user computer
+- Provides a unique account GUID for each end user
+- Add licensing and activation features to your script
+- Protect sensitive source code and make it hard to reverse engineer
+- AES-256 encryption/decryption functions
+- Base64 encode and decode functions
+
+More to come! You can contact us on dev@rorohiko.com with feature request
+
 For downloading and installation info, visit
 
 https://www.rorohiko.com/crdt
