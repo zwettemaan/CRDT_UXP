@@ -2,9 +2,12 @@
 
 <dl>
 <dt><a href="#crdtuxp">crdtuxp</a> : <code>object</code></dt>
-<dd><p><code>crdtuxp</code> contains a number of useful functions. Some of these functions
-are part of <code>crdtux.js</code> and are synchronous. </p>
+<dd><p>For downloading and installation info, visit</p>
+<p><a href="https://www.rorohiko.com/crdt">https://www.rorohiko.com/crdt</a></p>
+<p> <code>crdtuxp</code> contains a number of useful functions. Some of these functions
+are implemented in JavaScript in <code>crdtux.js</code> and are synchronous. </p>
 <p>Other functions are delegated to a daemon process, and are always asynchronous.</p>
+<p>The list of endpoints is further down</p>
 <p><code>crdtuxp</code> steps out of the UXP security sandbox - which means that as a developer, 
 you need to be judicious when using this. </p>
 <p>Every solution operates in a unique context. The UXP security measures are
@@ -83,10 +86,16 @@ except for errors, warnings and notes</p>
 <a name="crdtuxp"></a>
 
 ## crdtuxp : <code>object</code>
-`crdtuxp` contains a number of useful functions. Some of these functions
-are part of `crdtux.js` and are synchronous. 
+For downloading and installation info, visit
+
+https://www.rorohiko.com/crdt
+
+ `crdtuxp` contains a number of useful functions. Some of these functions
+are implemented in JavaScript in `crdtux.js` and are synchronous. 
 
 Other functions are delegated to a daemon process, and are always asynchronous.
+
+The list of endpoints is further down
 
 `crdtuxp` steps out of the UXP security sandbox - which means that as a developer, 
 you need to be judicious when using this. 
