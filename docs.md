@@ -141,6 +141,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
     * [.fileWrite(fileHandle, s_or_ByteArr)](#crdtuxp.fileWrite) ⇒ <code>boolean</code>
     * [.getCapability(issuer, productCode, password)](#crdtuxp.getCapability) ⇒ <code>string</code>
     * [.getDir(dirTag)](#crdtuxp.getDir) ⇒ <code>string</code>
+    * [.getEnvironment(getEnvironment)](#crdtuxp.getEnvironment) ⇒ <code>string</code>
     * [.intPow(i, intPower)](#crdtuxp.intPow) ⇒ <code>number</code>
     * [.leftPad(s, padChar, len)](#crdtuxp.leftPad) ⇒ <code>string</code>
     * [.logEntry(reportingFunctionArguments)](#crdtuxp.logEntry)
@@ -453,6 +454,18 @@ Not limited to the UXP security sandbox.
 | Param | Type | Description |
 | --- | --- | --- |
 | dirTag | <code>string</code> | a tag representing the dir: ```    crdtuxp.DESKTOP_DIR    crdtuxp.DOCUMENTS_DIR    crdtuxp.HOME_DIR    crdtuxp.LOG_DIR    crdtuxp.SYSTEMDATA_DIR    crdtuxp.TMP_DIR    crdtuxp.USERDATA_DIR ``` |
+
+<a name="crdtuxp.getEnvironment"></a>
+
+### crdtuxp.getEnvironment(getEnvironment) ⇒ <code>string</code>
+(async) Access the environment as seen by the daemon program
+
+**Kind**: static method of [<code>crdtuxp</code>](#crdtuxp)  
+**Returns**: <code>string</code> - environment variable value  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| getEnvironment | <code>string</code> | name of environment variable |
 
 <a name="crdtuxp.intPow"></a>
 

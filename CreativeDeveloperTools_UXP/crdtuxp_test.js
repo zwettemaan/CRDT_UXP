@@ -1,8 +1,6 @@
 const crdtuxp = require("./crdtuxp");
 const os = require("os");
 
-const PLATFORM_MAC_OS_X = "darwin";
-
 if (! module.exports) {
     module.exports = {};
 }
@@ -21,35 +19,6 @@ async function testBase64() {
     var sRoundTrip = await crdtuxp.base64decode(s64);
     if (s != sRoundTrip) {
         await crdtuxp.logError(arguments, "failed to crdtuxp.base64decode()");
-        retVal = false;
-    }
-
-    return retVal;
-}
-
-async function testEncrypt() {
-
-    var retVal = true;
-
-    var key = "my secret key";
-
-    var s = "Hello World☜✿\x00\x7Féøo";
-    var s1 = await crdtuxp.encrypt(s, key);
-    var s2 = await crdtuxp.encrypt(s, key);
-    if (s1 == s2) {
-        await crdtuxp.logError(arguments, "Encrypting the same string twice should give a different result");
-        retVal = false;
-    }
-
-    var sRoundTrip1 = await crdtuxp.decrypt(s1, key);
-    if (sRoundTrip1 != s) {
-        await crdtuxp.logError(arguments, "failed to decrypt s1");
-        retVal = false;
-    }
-
-    var sRoundTrip2 = await crdtuxp.decrypt(s2, key);
-    if (sRoundTrip2 != s) {
-        await crdtuxp.logError(arguments, "failed to decrypt s2");
         retVal = false;
     }
 
@@ -182,6 +151,104 @@ async function testDirs() {
     return retVal;
 }
 
+async function testEncrypt() {
+
+    var retVal = true;
+
+    var key = "my secret key";
+
+    var s = "Hello World☜✿\x00\x7Féøo";
+    var s1 = await crdtuxp.encrypt(s, key);
+    var s2 = await crdtuxp.encrypt(s, key);
+    if (s1 == s2) {
+        await crdtuxp.logError(arguments, "Encrypting the same string twice should give a different result");
+        retVal = false;
+    }
+
+    var sRoundTrip1 = await crdtuxp.decrypt(s1, key);
+    if (sRoundTrip1 != s) {
+        await crdtuxp.logError(arguments, "failed to decrypt s1");
+        retVal = false;
+    }
+
+    var sRoundTrip2 = await crdtuxp.decrypt(s2, key);
+    if (sRoundTrip2 != s) {
+        await crdtuxp.logError(arguments, "failed to decrypt s2");
+        retVal = false;
+    }
+
+    return retVal;
+}
+
+async function testEnvironment() {
+
+    var retVal = true;
+
+    var homeDir = await crdtuxp.getDir(crdtuxp.HOME_DIR);
+    var homeDirExists = await crdtuxp.dirExists(homeDir);
+    if (! homeDirExists) {
+        await crdtuxp.logError(arguments, "failed to verify existence of home dir");
+        retVal = false;
+    }
+
+    var environmentHomeDirVariableName;
+    var separator;
+    if (crdtuxp.IS_MAC) {
+        environmentHomeDirVariableName = "HOME";
+        separator = "/";
+    }
+    else {
+        environmentHomeDirVariableName = "USERPROFILE";
+        separator = "\\";
+    }
+    var environmentHomeDir = await crdtuxp.getEnvironment(environmentHomeDirVariableName);
+
+    var homeDirSplit = homeDir.split(separator);
+    var homeDirSegmentIdx = homeDirSplit.length;
+
+    var environmentHomeDirSplit = environmentHomeDir.split(separator);
+    var environmentDirSegmentIdx = environmentHomeDirSplit.length;
+
+    var matchSucceeded = false;
+    var matchFailed = false;
+
+    while  (! matchSucceeded && ! matchFailed) {
+
+        // Skip over empty segments in either path
+
+        do {
+            homeDirSegmentIdx--;        
+        }
+        while (homeDirSegmentIdx >= 0 && homeDirSplit[homeDirSegmentIdx] == "");
+
+        do {
+            environmentDirSegmentIdx--;        
+        }
+        while (environmentDirSegmentIdx >= 0 && environmentHomeDirSplit[environmentDirSegmentIdx] == "");
+
+        if (homeDirSegmentIdx < 0 && environmentDirSegmentIdx < 0) {
+            // If we managed to compare all segments and it all matched, we've found a match
+            matchSucceeded = true;
+        }
+        else if (homeDirSegmentIdx < 0 || environmentDirSegmentIdx < 0) {
+            // If one has more non-empty segments than the other, it cannot be a match
+            matchFailed = true;
+        }
+        else if (homeDirSplit[homeDirSegmentIdx] != environmentHomeDirSplit[environmentDirSegmentIdx]) {
+            // If we find a non-matching segment, it cannot be a match
+            matchFailed = true;
+        }
+        // else, keep going, look at the next segment
+    }
+
+    if (! matchSucceeded) {
+        await crdtuxp.logError(arguments, "HOME_DIR " + homeDir + " does not match env. var " + environmentHomeDirVariableName + " = " + environmentHomeDir);
+        retVal = false;
+    }
+
+    return retVal;
+}
+
 async function testIntPow() {
 
     var retVal = true;
@@ -206,34 +273,6 @@ async function testIntPow() {
 
     return retVal;
 
-}
-
-async function testToHex() {
-
-    var retVal = true;
-
-    if (crdtuxp.toHex(10, 2) != "0a") {
-        await crdtuxp.logError(arguments, "toHex(10,2) failed");
-        retVal = false;
-    }
-
-    // 2-s complement
-    if (crdtuxp.toHex(-10, 2) != "f6") {
-        await crdtuxp.logError(arguments, "toHex(-10,2) failed");
-        retVal = false;
-    }
-
-    if (crdtuxp.toHex(65535, 2) != "ff") {
-        await crdtuxp.logError(arguments, "toHex(65535,2) failed");
-        retVal = false;
-    }
-
-    if (crdtuxp.toHex(-65535, 2) != "01") {
-        await crdtuxp.logError(arguments, "toHex(-65535,2) failed");
-        retVal = false;
-    }
-
-    return retVal;
 }
 
 async function testLeftRightPad() {
@@ -369,6 +408,34 @@ async function testQuoteDequote() {
     return retVal;
 }
 
+async function testToHex() {
+
+    var retVal = true;
+
+    if (crdtuxp.toHex(10, 2) != "0a") {
+        await crdtuxp.logError(arguments, "toHex(10,2) failed");
+        retVal = false;
+    }
+
+    // 2-s complement
+    if (crdtuxp.toHex(-10, 2) != "f6") {
+        await crdtuxp.logError(arguments, "toHex(-10,2) failed");
+        retVal = false;
+    }
+
+    if (crdtuxp.toHex(65535, 2) != "ff") {
+        await crdtuxp.logError(arguments, "toHex(65535,2) failed");
+        retVal = false;
+    }
+
+    if (crdtuxp.toHex(-65535, 2) != "01") {
+        await crdtuxp.logError(arguments, "toHex(-65535,2) failed");
+        retVal = false;
+    }
+
+    return retVal;
+}
+
 async function testUTFRoundTrip() {
 
     var retVal = true;
@@ -385,13 +452,14 @@ async function testUTFRoundTrip() {
 }
 
 var tests = [
+    testBase64,
+    testDirs,
+    testEncrypt,
+    testEnvironment,
     testIntPow,
     testLeftRightPad,
     testQuoteDequote,
     testToHex,
-    testBase64,
-    testDirs,
-    testEncrypt,
     testUTFRoundTrip
 ];
 

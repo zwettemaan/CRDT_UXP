@@ -62,9 +62,16 @@ const LOCALHOST_URL = "https://" + DNS_NAME_FOR_LOCALHOST+ ":" + PORT_TIGHTENER_
  */
 const TQL_SCOPE_NAME_DEFAULT = "defaultScope";
 
+const PLATFORM_MAC_OS_X = "darwin";
+
+
+
 if (! module.exports) {
     module.exports = {};
 }
+
+module.exports.IS_MAC = require('os').platform() == PLATFORM_MAC_OS_X;
+module.exports.IS_WINDOWS = ! module.exports.IS_MAC;
 
 /**
  * Setting log level to `LOG_LEVEL_OFF` causes all log output to be suppressed
@@ -981,6 +988,27 @@ async function getDir(dirTag) {
     return retVal;
 }
 module.exports.getDir = getDir;
+
+/**
+ * (async) Access the environment as seen by the daemon program
+ * 
+ * @function crdtuxp.getEnvironment
+ * 
+ * @param {string} getEnvironment - name of environment variable
+ * @return {string} environment variable value
+ */
+async function getEnvironment(in_envVarName) {
+
+    var retVal;
+
+    var response = await evalTQL("getEnv(" + dQ(in_envVarName) + ")");
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+}
+module.exports.getEnvironment = getEnvironment;
 
 // Internal function getSysInfo__: fetch the whole Tightener sysInfo structure
 
