@@ -173,28 +173,24 @@ Setting log level to `LOG_LEVEL_TRACE` causes all log output to be output.
 Pass `DESKTOP_DIR` into `getDir()` to get the path of the user's Desktop folder.
 
 **Kind**: inner constant of [<code>crdtuxp</code>](#module_crdtuxp)  
-**See**: `getDir`.  
 <a name="module_crdtuxp..DOCUMENTS_DIR"></a>
 
 ### crdtuxp~DOCUMENTS\_DIR : <code>string</code>
 Pass `DOCUMENTS_DIR` into `getDir()` to get the path of the user's Documents folder.
 
 **Kind**: inner constant of [<code>crdtuxp</code>](#module_crdtuxp)  
-**See**: `getDir`.  
 <a name="module_crdtuxp..HOME_DIR"></a>
 
 ### crdtuxp~HOME\_DIR : <code>string</code>
 Pass `HOME_DIR` into `getDir()` to get the path of the user's home folder.
 
 **Kind**: inner constant of [<code>crdtuxp</code>](#module_crdtuxp)  
-**See**: `getDir`.  
 <a name="module_crdtuxp..LOG_DIR"></a>
 
 ### crdtuxp~LOG\_DIR : <code>string</code>
 Pass `LOG_DIR` into `getDir()` to get the path of the Tightener logging folder.
 
 **Kind**: inner constant of [<code>crdtuxp</code>](#module_crdtuxp)  
-**See**: `getDir`  
 <a name="module_crdtuxp..SYSTEMDATA_DIR"></a>
 
 ### crdtuxp~SYSTEMDATA\_DIR : <code>string</code>
@@ -202,14 +198,12 @@ Pass `SYSTEMDATA_DIR` into `getDir()` to get the path of the system data folder
 (`%PROGRAMDATA%` or `/Library/Application Support`).
 
 **Kind**: inner constant of [<code>crdtuxp</code>](#module_crdtuxp)  
-**See**: `getDir`  
 <a name="module_crdtuxp..TMP_DIR"></a>
 
 ### crdtuxp~TMP\_DIR : <code>string</code>
 Pass `TMP_DIR` into `getDir()` to get the path of the temporary folder.
 
 **Kind**: inner constant of [<code>crdtuxp</code>](#module_crdtuxp)  
-**See**: `getDir`  
 <a name="module_crdtuxp..USERDATA_DIR"></a>
 
 ### crdtuxp~USERDATA\_DIR : <code>string</code>
@@ -217,7 +211,6 @@ Pass `USERDATA_DIR` into `getDir()` to get the path to the user data folder
 (`%APPDATA%` or `~/Library/Application Support`).
 
 **Kind**: inner constant of [<code>crdtuxp</code>](#module_crdtuxp)  
-**See**: `getDir`  
 <a name="module_crdtuxp..base64decode"></a>
 
 ### crdtuxp~base64decode(base64Str) ⇒ <code>string</code>
@@ -239,7 +232,8 @@ larger than the speed benefit.
 ### crdtuxp~base64encode(s_or_ByteArr) ⇒ <code>string</code>
 (async) Encode a string or an array of bytes using Base 64 encoding.
 
-This function has not been speed-tested; @see `base64decode`
+This function has not been speed-tested.
+
 I suspect it might only be beneficial for very large long strings, if that. The overheads might be
 larger than the speed benefit.
 
@@ -265,7 +259,7 @@ larger than the speed benefit.
 <a name="module_crdtuxp..decrypt"></a>
 
 ### crdtuxp~decrypt(s_or_ByteArr, aesKey) ⇒ <code>array</code>
-(async) Reverse the operation of the @see encrypt function.
+(async) Reverse the operation of the `encrypt()` function.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>array</code> - an array of bytes  
@@ -278,7 +272,7 @@ larger than the speed benefit.
 <a name="module_crdtuxp..deQuote"></a>
 
 ### crdtuxp~deQuote(quotedString) ⇒ <code>array</code>
-(sync) Reverse the operation of @see dQ or @see sQ.
+(sync) Reverse the operation of `dQ()` or `sQ()`.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>array</code> - a byte array. If the quoted string contains any `\uHHHH`` codes,
@@ -310,7 +304,7 @@ Be very careful with the `recurse` parameter! It is very easy to delete the wron
 ### crdtuxp~dirExists(dirPath) ⇒ <code>boolean</code>
 (async) Verify whether a directory exists. Will return `false` if the path points to a file (instead of a directory).
 
-Also @see `fileExists`.
+Also see `fileExists()`.
 
 Not limited to the UXP security sandbox.
 
@@ -413,7 +407,7 @@ Not limited to the UXP security sandbox.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| fileHandle | <code>number</code> | a file handle as returned by @see `fileOpen`.` |
+| fileHandle | <code>number</code> | a file handle as returned by `fileOpen()`. |
 
 <a name="module_crdtuxp..fileDelete"></a>
 
@@ -434,7 +428,7 @@ Not limited to the UXP security sandbox.
 ### crdtuxp~fileExists(filePath) ⇒ <code>boolean</code>
 (async) Check if a file exists. Will return `false` if the file path points to a directory.
 
-Also @see `dirExists`.
+Also see `dirExists()`.
 
 Not limited to the UXP security sandbox.
 
@@ -472,7 +466,7 @@ Not limited to the UXP security sandbox.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| fileHandle | <code>number</code> | a file handle as returned by @see `fileOpen`. |
+| fileHandle | <code>number</code> | a file handle as returned by `fileOpen()`. |
 | isBinary | <code>boolean</code> | whether the file is considered a binary file (as opposed to a UTF-8 text file) |
 
 <a name="module_crdtuxp..fileWrite"></a>
@@ -487,7 +481,7 @@ Not limited to the UXP security sandbox.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| fileHandle | <code>number</code> | a file handle as returned by @see `fileOpen`. |
+| fileHandle | <code>number</code> | a file handle as returned by `fileOpen()`. |
 | s_or_ByteArr | <code>string</code> | data to write to the file |
 
 <a name="module_crdtuxp..getCapability"></a>
@@ -516,7 +510,7 @@ Not limited to the UXP security sandbox.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| dirTag | <code>string</code> | a tag representing the dir: ```    crdtuxp.DESKTOP_DIR    crdtuxp.DOCUMENTS_DIR    crdtuxp.HOME_DIR    crdtuxp.LOG_DIR    crdtuxp.SYSTEMDATA_DIR    crdtuxp.TMP_DIR    crdtuxp.USERDATA_DIR ``` |
+| dirTag | <code>string</code> | a tag representing the dir: ```    DESKTOP_DIR    DOCUMENTS_DIR    HOME_DIR    LOG_DIR    SYSTEMDATA_DIR    TMP_DIR    USERDATA_DIR ``` |
 
 <a name="module_crdtuxp..getEnvironment"></a>
 
@@ -691,7 +685,7 @@ If the error level is below `LOG_LEVEL_WARNING` nothing happens
 ### crdtuxp~setIssuer(issuerGUID, issuerEmail)
 (async) Send in activation data so the daemon can determine whether some software is currently activated or not.
 
-Needs to be followed by a @see `sublicense` call
+Needs to be followed by a `sublicense()` call
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returnss**: <code> boolean </code> - success or failure  
@@ -740,7 +734,7 @@ Example:
 ### crdtuxp~sublicense(key, activation) ⇒ <code>boolean</code>
 (async) Send in sublicense info generated in the License Manager so the daemon can determine whether some software is currently activated or not.
 
-Needs to be preceded by a @see `setIssuer` call.
+Needs to be preceded by a `setIssuer()` call.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>boolean</code> - success or failure  

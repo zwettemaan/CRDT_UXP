@@ -136,12 +136,10 @@ module.exports.LOG_LEVEL_NOTE = LOG_LEVEL_NOTE;
 const LOG_LEVEL_TRACE = 4;
 module.exports.LOG_LEVEL_TRACE = LOG_LEVEL_TRACE;
 
-// Symbolic params to crdtuxp.getDir()
+// Symbolic params to `getDir()`
 
 /**
  * Pass `DESKTOP_DIR` into `getDir()` to get the path of the user's Desktop folder.
- *
- * @see `getDir`.
  *
  * @constant {string} DESKTOP_DIR
  */
@@ -150,8 +148,6 @@ module.exports.DESKTOP_DIR    = "DESKTOP_DIR";
 /**
  * Pass `DOCUMENTS_DIR` into `getDir()` to get the path of the user's Documents folder.
  *
- * @see `getDir`.
- *
  * @constant {string} DOCUMENTS_DIR
  */
 module.exports.DOCUMENTS_DIR  = "DOCUMENTS_DIR";
@@ -159,16 +155,12 @@ module.exports.DOCUMENTS_DIR  = "DOCUMENTS_DIR";
 /**
  * Pass `HOME_DIR` into `getDir()` to get the path of the user's home folder.
  *
- * @see `getDir`.
- *
  * @constant {string} HOME_DIR
  */
 module.exports.HOME_DIR       = "HOME_DIR";
 
 /**
  * Pass `LOG_DIR` into `getDir()` to get the path of the Tightener logging folder.
- *
- * @see `getDir`
  *
  * @constant {string} LOG_DIR
  */
@@ -178,16 +170,12 @@ module.exports.LOG_DIR        = "LOG_DIR";
  * Pass `SYSTEMDATA_DIR` into `getDir()` to get the path of the system data folder
  * (`%PROGRAMDATA%` or `/Library/Application Support`).
  *
- * @see `getDir`
- *
  * @constant {string} SYSTEMDATA_DIR
  */
 module.exports.SYSTEMDATA_DIR = "SYSTEMDATA_DIR";
 
 /**
  * Pass `TMP_DIR` into `getDir()` to get the path of the temporary folder.
- *
- * @see `getDir`
  *
  * @constant {string} TMP_DIR
  */
@@ -196,8 +184,6 @@ module.exports.TMP_DIR        = "TMP_DIR";
 /**
  * Pass `USERDATA_DIR` into `getDir()` to get the path to the user data folder
  * (`%APPDATA%` or `~/Library/Application Support`).
- *
- * @see `getDir`
  *
  * @constant {string} USERDATA_DIR
  */
@@ -246,7 +232,8 @@ module.exports.base64decode = base64decode;
 /**
  * (async) Encode a string or an array of bytes using Base 64 encoding.
  *
- * This function has not been speed-tested; @see `base64decode`
+ * This function has not been speed-tested.
+ *
  * I suspect it might only be beneficial for very large long strings, if that. The overheads might be
  * larger than the speed benefit.
  *
@@ -375,7 +362,7 @@ function charCodeToUTF8__(in_charCode) {
 }
 
 /**
- * (async) Reverse the operation of the @see encrypt function.
+ * (async) Reverse the operation of the `encrypt()` function.
  *
  * @function decrypt
  *
@@ -402,7 +389,7 @@ async function decrypt(s_or_ByteArr, aesKey, aesIV) {
 module.exports.decrypt = decrypt;
 
 /**
- * (sync) Reverse the operation of @see dQ or @see sQ.
+ * (sync) Reverse the operation of `dQ()` or `sQ()`.
  *
  * @function deQuote
  *
@@ -578,7 +565,7 @@ module.exports.dirDelete = dirDelete;
 /**
  * (async) Verify whether a directory exists. Will return `false` if the path points to a file (instead of a directory).
  *
- * Also @see `fileExists`.
+ * Also see `fileExists()`.
  *
  * Not limited to the UXP security sandbox.
  *
@@ -813,7 +800,7 @@ module.exports.evalTQL = evalTQL;
  *
  * @function fileClose
  *
- * @param {number} fileHandle - a file handle as returned by @see `fileOpen`.`
+ * @param {number} fileHandle - a file handle as returned by `fileOpen()`.
  * @returns {boolean} success or failure
  */
 
@@ -857,7 +844,7 @@ module.exports.fileDelete = fileDelete;
 /**
  * (async) Check if a file exists. Will return `false` if the file path points to a directory.
  *
- * Also @see `dirExists`.
+ * Also see `dirExists()`.
  *
  * Not limited to the UXP security sandbox.
  *
@@ -918,7 +905,7 @@ module.exports.fileOpen = fileOpen;
  *
  * @function fileRead
  *
- * @param {number} fileHandle - a file handle as returned by @see `fileOpen`.
+ * @param {number} fileHandle - a file handle as returned by `fileOpen()`.
  * @param {boolean} isBinary - whether the file is considered a binary file (as opposed to a UTF-8 text file)
  * @returns {any} either a byte array or a string
  */
@@ -949,7 +936,7 @@ module.exports.fileRead = fileRead;
  *
  * @function fileWrite
  *
- * @param {number} fileHandle - a file handle as returned by @see `fileOpen`.
+ * @param {number} fileHandle - a file handle as returned by `fileOpen()`.
  * @param {string} s_or_ByteArr - data to write to the file
  * @returns {boolean} success or failure
  */
@@ -1007,13 +994,13 @@ module.exports.getCapability = getCapability;
  *
  * @param {string} dirTag - a tag representing the dir:
  * ```
- *    crdtuxp.DESKTOP_DIR
- *    crdtuxp.DOCUMENTS_DIR
- *    crdtuxp.HOME_DIR
- *    crdtuxp.LOG_DIR
- *    crdtuxp.SYSTEMDATA_DIR
- *    crdtuxp.TMP_DIR
- *    crdtuxp.USERDATA_DIR
+ *    DESKTOP_DIR
+ *    DOCUMENTS_DIR
+ *    HOME_DIR
+ *    LOG_DIR
+ *    SYSTEMDATA_DIR
+ *    TMP_DIR
+ *    USERDATA_DIR
  * ```
  * @returns {string} file path of dir or undefined
  */
@@ -1492,7 +1479,7 @@ module.exports.rightPad = rightPad;
 /**
  * (async) Send in activation data so the daemon can determine whether some software is currently activated or not.
  *
- * Needs to be followed by a @see `sublicense` call
+ * Needs to be followed by a `sublicense()` call
  *
  * @function setIssuer
  *
@@ -1573,7 +1560,7 @@ module.exports.strToUTF8 = strToUTF8;
 /**
  * (async) Send in sublicense info generated in the License Manager so the daemon can determine whether some software is currently activated or not.
  *
- * Needs to be preceded by a @see `setIssuer` call.
+ * Needs to be preceded by a `setIssuer()` call.
  *
  * @function sublicense
  *
