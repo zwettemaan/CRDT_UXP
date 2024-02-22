@@ -1022,14 +1022,14 @@ module.exports.getDir = getDir;
  *
  * @function getEnvironment
  *
- * @param {string} getEnvironment - name of environment variable
+ * @param {string} envVarName - name of environment variable
  * @returns {string} environment variable value
  */
-async function getEnvironment(in_envVarName) {
+async function getEnvironment(envVarName) {
 
     var retVal;
 
-    var response = await evalTQL("getEnv(" + dQ(in_envVarName) + ")");
+    var response = await evalTQL("getEnv(" + dQ(envVarName) + ")");
     if (response && ! response.error) {
         retVal = response.text;
     }

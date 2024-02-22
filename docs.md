@@ -91,7 +91,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
     * [~fileWrite(fileHandle, s_or_ByteArr)](#module_crdtuxp..fileWrite) ⇒ <code>boolean</code>
     * [~getCapability(issuer, productCode, password)](#module_crdtuxp..getCapability) ⇒ <code>string</code>
     * [~getDir(dirTag)](#module_crdtuxp..getDir) ⇒ <code>string</code>
-    * [~getEnvironment(getEnvironment)](#module_crdtuxp..getEnvironment) ⇒ <code>string</code>
+    * [~getEnvironment(envVarName)](#module_crdtuxp..getEnvironment) ⇒ <code>string</code>
     * [~intPow(i, intPower)](#module_crdtuxp..intPow) ⇒ <code>number</code>
     * [~leftPad(s, padChar, len)](#module_crdtuxp..leftPad) ⇒ <code>string</code>
     * [~logEntry(reportingFunctionArguments)](#module_crdtuxp..logEntry)
@@ -514,7 +514,7 @@ Not limited to the UXP security sandbox.
 
 <a name="module_crdtuxp..getEnvironment"></a>
 
-### crdtuxp~getEnvironment(getEnvironment) ⇒ <code>string</code>
+### crdtuxp~getEnvironment(envVarName) ⇒ <code>string</code>
 (async) Access the environment as seen by the daemon program
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
@@ -522,7 +522,7 @@ Not limited to the UXP security sandbox.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| getEnvironment | <code>string</code> | name of environment variable |
+| envVarName | <code>string</code> | name of environment variable |
 
 <a name="module_crdtuxp..intPow"></a>
 
