@@ -66,7 +66,7 @@ async function testDirs() {
     await crdtuxp.fileClose(writeFileHandle1);
 
     var writeFileHandle2 = await crdtuxp.fileOpen(testFilePath2, "w");
-    await crdtuxp.fileWrite(writeFileHandle2, fileContentAsString);
+    await crdtuxp.fileWrite(writeFileHandle2, fileContentAsUTF8);
     await crdtuxp.fileClose(writeFileHandle2);
 
     var readFileHandle1 = await crdtuxp.fileOpen(testFilePath, "r");
@@ -77,8 +77,17 @@ async function testDirs() {
     var stringReadContent = await crdtuxp.fileRead(readFileHandle2, false);
     await crdtuxp.fileClose(readFileHandle2);
 
+    var readFileHandle3 = await crdtuxp.fileOpen(testFilePath2, "r");
+    var file2ReadContent = await crdtuxp.fileRead(readFileHandle3, false);
+    await crdtuxp.fileClose(readFileHandle3);
+
     if (fileContentAsString != stringReadContent) {
         await crdtuxp.logError(arguments, "failed to read file as string");
+        retVal = false;
+    }
+
+    if (fileContentAsString != file2ReadContent) {
+        await crdtuxp.logError(arguments, "failed to read UTF8 file as string");
         retVal = false;
     }
 
