@@ -1002,7 +1002,7 @@ module.exports.getCapability = getCapability;
  *    TMP_DIR
  *    USERDATA_DIR
  * ```
- * @returns {string} file path of dir or undefined
+ * @returns {string} file path of dir or undefined. Directory paths include a trailing slash or backslash.
  */
 async function getDir(dirTag) {
 
