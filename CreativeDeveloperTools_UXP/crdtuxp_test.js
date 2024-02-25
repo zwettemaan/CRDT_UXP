@@ -417,6 +417,52 @@ async function testQuoteDequote() {
     return retVal;
 }
 
+async function testPersistData() {
+
+    var retVal = true;
+
+    do {
+        var sampleIssuerGUID = "3a0c0e2dfa2a4b24b4e5a6a97c2a4cdd";
+        var sampleDataKey = "My Data";
+        var key = "My" + "secret";
+
+        var now = new Date();
+        var nowTimestamp = now.getTime();
+
+        var persistData = await crdtuxp.getPersistData(sampleIssuerGUID, sampleDataKey, key);
+        if (! persistData) {
+            persistData = nowTimestamp + "\t" + (nowTimestamp + 1000);
+            await crdtuxp.setPersistData(sampleIssuerGUID, sampleDataKey, key, persistData);
+        }
+
+        var splitTimestamps = persistData.split("\t");
+        if (splitTimestamps.length != 2) {
+            await crdtuxp.logError(arguments, "failed to split timestamps");
+            retVal = false;
+            break;
+        }
+
+        var lastSavedTimestamp = parseInt(splitTimestamps[0]);
+        var lastSavedTimestampPlus1000 = parseInt(splitTimestamps[1]);
+        if (lastSavedTimestamp + 1000 != lastSavedTimestampPlus1000) {
+            await crdtuxp.logError(arguments, "failed to match timestamps");
+            retVal = false;
+            break;
+        }
+
+        var secondsSinceLastRun = nowTimestamp - lastSavedTimestamp;
+        if (secondsSinceLastRun < 0) {
+            await crdtuxp.logError(arguments, "invalid secondsSinceLastRun");
+            retVal = false;
+            break;
+        }
+
+    }
+    while (false);
+
+    return retVal;
+}
+
 async function testToHex() {
 
     var retVal = true;
@@ -468,6 +514,7 @@ var tests = [
     testIntPow,
     testLeftRightPad,
     testQuoteDequote,
+    testPersistData,
     testToHex,
     testUTFRoundTrip
 ];

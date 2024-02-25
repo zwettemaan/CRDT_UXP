@@ -1038,6 +1038,29 @@ async function getEnvironment(envVarName) {
 }
 module.exports.getEnvironment = getEnvironment;
 
+/**
+ * (async) Query the daemon for persisted data
+ *
+ * @function getPersistData
+ *
+ * @param {string} issuer - a GUID identifier for the developer account as seen in the License Manager
+ * @param {string} attribute - an attribute name for the data
+ * @param {string} password - the password (created by the developer) needed to decode the persistent data
+ * @returns {any} whatever persistent data is stored for the given attribute
+ */
+async function getPersistData(issuer, attribute, password) {
+
+    var retVal;
+
+    var response = await evalTQL("getPersistData(" + dQ(issuer) + "," + dQ(attribute) + "," + dQ(password) + ")");
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+}
+crdtes.getPersistData = getPersistData;
+
 // Internal function getSysInfo__: fetch the whole Tightener sysInfo structure
 
 async function getSysInfo__() {
@@ -1047,7 +1070,7 @@ async function getSysInfo__() {
     if (! SYS_INFO) {
         var response = await evalTQL("enquote(sysInfo())");
         if (response && ! response.error) {
-            SYS_INFO = JSON.parse(binaryUTF8ToStr(deQuote(response.text)))
+            SYS_INFO = JSON.parse(binaryUTF8ToStr(deQuote(response.text)));
         }
     }
 
@@ -1522,6 +1545,28 @@ function sQ(s_or_ByteArr) {
     return enQuote__(s_or_ByteArr, "'");
 }
 module.exports.sQ = sQ;
+
+/**
+ * (async) Store some persistent data (e.g. a time stamp to determine a demo version lapsing)
+ *
+ * @function setPersistData
+ *
+ * @param {string} issuer - a GUID identifier for the developer account as seen in the License Manager
+ * @param {string} attribute - an attribute name for the data
+ * @param {string} password - the password (created by the developer) needed to decode the persistent data
+ * @param {string} data - any data to persist
+ * @returns {boolean} success or failure
+ */
+async function setPersistData(issuer, attribute, password, data) {
+
+    var response = await evalTQL("setPersistData(" + dQ(issuer) + "," + dQ(attribute) + "," + dQ(password) + "," + dQ(data) + ") ? \"true\" : \"false\"");
+    if (response && ! response.error) {
+        retVal = response.text == "true";
+    }
+
+    return retVal;
+}
+module.exports.setPersistData = setPersistData;
 
 /**
  * (sync) Encode a string into an byte array using UTF-8
