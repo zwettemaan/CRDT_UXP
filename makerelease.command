@@ -8,7 +8,7 @@ fi
 echo "makerelease ${CRDT_UXP_PRODUCT_NAME} in ${CRDT_UXP_GIT_ROOT} started"
 
 if [ "${TIGHTENER_RELEASE_ROOT}" = "" -o ! -d "${TIGHTENER_RELEASE_ROOT}" ]; then
-    echo "Cannot make release. UXPTightener repo needs to be installed alongside TightenerDocs repo"
+    echo "Cannot make release. CRDT_UXP repo needs to be installed alongside TightenerDocs repo"
     exit
 fi
 
@@ -90,4 +90,4 @@ zip -y -r ${CRDT_UXP_RELEASE_DIR_NAME}.zip ${CRDT_UXP_RELEASE_DIR_NAME} > /dev/n
 
 rm -rf ${CRDT_UXP_RELEASE_DIR_TEMP}
 
-echo "makerelease ${CRDT_UXP_PRODUCT_NAME} (UXPTightener) done"
+echo "makerelease ${CRDT_UXP_PRODUCT_NAME} done"
