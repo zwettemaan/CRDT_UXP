@@ -1,6 +1,7 @@
-CreativeDeveloperTools_*.zip
+/CreativeDeveloperTools_UXP.*.zip
 /node_modules
 /out
+/package.json
 /package-lock.json
-creative-developer-tools-uxp-sample_ID.ccx
-creative-developer-tools-uxp-sample_PS.ccx
+/creative-developer-tools-uxp-sample_ID.ccx
+/creative-developer-tools-uxp-sample_PS.ccx
