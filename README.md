@@ -10,7 +10,7 @@ The first releases are meant to be functional and useful.
 
 For information on the feature set:
 
-https://github.com/zwettemaan/UXPTightener/blob/main/docs.md
+https://github.com/zwettemaan/CRDT_UXP/blob/main/docs.md
 
 ## How it works
 
