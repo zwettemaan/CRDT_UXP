@@ -92,6 +92,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
     * [~getCapability(issuer, productCode, password)](#module_crdtuxp..getCapability) ⇒ <code>string</code>
     * [~getDir(dirTag)](#module_crdtuxp..getDir) ⇒ <code>string</code>
     * [~getEnvironment(envVarName)](#module_crdtuxp..getEnvironment) ⇒ <code>string</code>
+    * [~getPersistData(issuer, attribute, password)](#module_crdtuxp..getPersistData) ⇒ <code>any</code>
     * [~intPow(i, intPower)](#module_crdtuxp..intPow) ⇒ <code>number</code>
     * [~leftPad(s, padChar, len)](#module_crdtuxp..leftPad) ⇒ <code>string</code>
     * [~logEntry(reportingFunctionArguments)](#module_crdtuxp..logEntry)
@@ -107,6 +108,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
     * [~rightPad(s, padChar, len)](#module_crdtuxp..rightPad) ⇒ <code>string</code>
     * [~setIssuer(issuerGUID, issuerEmail)](#module_crdtuxp..setIssuer)
     * [~sQ(s_or_ByteArr)](#module_crdtuxp..sQ) ⇒ <code>string</code>
+    * [~setPersistData(issuer, attribute, password, data)](#module_crdtuxp..setPersistData) ⇒ <code>boolean</code>
     * [~strToUTF8(in_s)](#module_crdtuxp..strToUTF8) ⇒ <code>array</code>
     * [~sublicense(key, activation)](#module_crdtuxp..sublicense) ⇒ <code>boolean</code>
     * [~toHex(i, numDigits)](#module_crdtuxp..toHex) ⇒ <code>string</code>
@@ -506,7 +508,7 @@ Not limited to the UXP security sandbox.
 Not limited to the UXP security sandbox.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
-**Returns**: <code>string</code> - file path of dir or undefined  
+**Returns**: <code>string</code> - file path of dir or undefined. Directory paths include a trailing slash or backslash.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -523,6 +525,20 @@ Not limited to the UXP security sandbox.
 | Param | Type | Description |
 | --- | --- | --- |
 | envVarName | <code>string</code> | name of environment variable |
+
+<a name="module_crdtuxp..getPersistData"></a>
+
+### crdtuxp~getPersistData(issuer, attribute, password) ⇒ <code>any</code>
+(async) Query the daemon for persisted data
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+**Returns**: <code>any</code> - whatever persistent data is stored for the given attribute  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| issuer | <code>string</code> | a GUID identifier for the developer account as seen in the License Manager |
+| attribute | <code>string</code> | an attribute name for the data |
+| password | <code>string</code> | the password (created by the developer) needed to decode the persistent data |
 
 <a name="module_crdtuxp..intPow"></a>
 
@@ -716,6 +732,21 @@ Example:
 | Param | Type | Description |
 | --- | --- | --- |
 | s_or_ByteArr | <code>string</code> | a Unicode string or an array of bytes |
+
+<a name="module_crdtuxp..setPersistData"></a>
+
+### crdtuxp~setPersistData(issuer, attribute, password, data) ⇒ <code>boolean</code>
+(async) Store some persistent data (e.g. a time stamp to determine a demo version lapsing)
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+**Returns**: <code>boolean</code> - success or failure  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| issuer | <code>string</code> | a GUID identifier for the developer account as seen in the License Manager |
+| attribute | <code>string</code> | an attribute name for the data |
+| password | <code>string</code> | the password (created by the developer) needed to decode the persistent data |
+| data | <code>string</code> | any data to persist |
 
 <a name="module_crdtuxp..strToUTF8"></a>
 

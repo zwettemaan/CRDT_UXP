@@ -1,9 +1,14 @@
-export EXTENSION_DIR_NAME=CreativeDeveloperTools_UXP
-
-echo "makerelease ${EXTENSION_DIR_NAME} (UXPTightener) started"
-
 if [ `uname` != "Darwin" ]; then
     echo Needs to run on Mac
+    exit
+fi
+
+. "${TIGHTENER_GIT_ROOT}BuildScripts/setEnv"
+
+echo "makerelease ${CRDT_UXP_PRODUCT_NAME} in ${CRDT_UXP_GIT_ROOT} started"
+
+if [ "${TIGHTENER_RELEASE_ROOT}" = "" -o ! -d "${TIGHTENER_RELEASE_ROOT}" ]; then
+    echo "Cannot make release. UXPTightener repo needs to be installed alongside TightenerDocs repo"
     exit
 fi
 
@@ -13,42 +18,33 @@ export SCRIPT_DIR=`pwd`/
 
 ./buildDocs.command
 
-if [ "${TIGHTENER_RELEASE_ROOT}" = "" -o ! -d "${TIGHTENER_RELEASE_ROOT}" ]; then
-    echo "Cannot make release. UXPTightener repo needs to be installed alongside TightenerDocs repo"
-    exit
-fi
+sed -E "s/\"version\":\s*\"[^\"]*\"/\"version\": \"${CREATIVEDEVTOOLS_UXP_VERSION}\"/" "${SCRIPT_DIR}${CRDT_UXP_PRODUCT_NAME}/manifest.json" > "${SCRIPT_DIR}${CRDT_UXP_PRODUCT_NAME}/manifest.json.new"
 
-. "${TIGHTENER_GIT_ROOT}BuildScripts/setEnv"
+mv "${SCRIPT_DIR}${CRDT_UXP_PRODUCT_NAME}/manifest.json.new" "${SCRIPT_DIR}${CRDT_UXP_PRODUCT_NAME}/manifest.json"
 
-sed -E "s/\"version\":\s*\"[^\"]*\"/\"version\": \"${CREATIVEDEVTOOLS_UXP_VERSION}\"/" "${SCRIPT_DIR}${EXTENSION_DIR_NAME}/manifest.json" > "${SCRIPT_DIR}${EXTENSION_DIR_NAME}/manifest.json.new"
+rm -rf ${CRDT_UXP_RELEASE}
 
-mv "${SCRIPT_DIR}${EXTENSION_DIR_NAME}/manifest.json.new" "${SCRIPT_DIR}${EXTENSION_DIR_NAME}/manifest.json"
+rm -rf "${CRDT_UXP_RELEASE_DIR_TEMP}"
 
-export CRDT_UXP_RELEASE_DIR_NAME=${EXTENSION_DIR_NAME}.${CREATIVEDEVTOOLS_UXP_VERSION}
-export CRDT_UXP_RELEASE_DIR="${SCRIPT_DIR}${CRDT_UXP_RELEASE_DIR_NAME}/"
-rm -rf ${CRDT_UXP_RELEASE_DIR_NAME}.zip
-
-rm -rf "${CRDT_UXP_RELEASE_DIR}"
-
-mkdir "${CRDT_UXP_RELEASE_DIR}"
-mkdir "${CRDT_UXP_RELEASE_DIR}Helpers"
-mkdir "${CRDT_UXP_RELEASE_DIR}Helpers/Mac"
-mkdir "${CRDT_UXP_RELEASE_DIR}Helpers/Windows_x86_64"
-mkdir "${CRDT_UXP_RELEASE_DIR}Helpers/Windows_arm64"
+mkdir "${CRDT_UXP_RELEASE_DIR_TEMP}"
+mkdir "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers"
+mkdir "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac"
+mkdir "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64"
+mkdir "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64"
 
 if [ -f creative-developer-tools-uxp-sample_ID.ccx ]; then
-    cp creative-developer-tools-uxp-sample_ID.ccx "${CRDT_UXP_RELEASE_DIR}"
+    cp creative-developer-tools-uxp-sample_ID.ccx "${CRDT_UXP_RELEASE_DIR_TEMP}"
 fi
 
 if [ -f creative-developer-tools-uxp-sample_PS.ccx ]; then
-    cp creative-developer-tools-uxp-sample_PS.ccx "${CRDT_UXP_RELEASE_DIR}"
+    cp creative-developer-tools-uxp-sample_PS.ccx "${CRDT_UXP_RELEASE_DIR_TEMP}"
 fi
 
 # Fetch latest License Manager
 
-cp "${TIGHTENER_RELEASE_ROOT}Apps/LicenseManager.tgz" "${CRDT_UXP_RELEASE_DIR}Helpers"
+cp "${TIGHTENER_RELEASE_ROOT}Apps/LicenseManager.tgz" "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers"
 
-cd "${CRDT_UXP_RELEASE_DIR}Helpers"
+cd "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers"
 
 tar -zxf LicenseManager.tgz > /dev/null
 rm -f LicenseManager.tgz
@@ -56,16 +52,16 @@ rm -f LicenseManager.tgz
 cd LicenseManager
 
 unzip MacOS_Intel_And_M1/LicenseManager.zip > /dev/null
-mv    LicenseManager.app     "${CRDT_UXP_RELEASE_DIR}Helpers/Mac"
-mv    README.md              "${CRDT_UXP_RELEASE_DIR}Helpers/Mac/LicenseManager_README.md"
+mv    LicenseManager.app     "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac"
+mv    README.md              "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac/LicenseManager_README.md"
 
 unzip Windows_Intel_x86_64/LicenseManager.zip > /dev/null
-mv    LicenseManager         "${CRDT_UXP_RELEASE_DIR}Helpers/Windows_x86_64"
-mv    README.md              "${CRDT_UXP_RELEASE_DIR}Helpers/Windows_x86_64/LicenseManager_README.md"
+mv    LicenseManager         "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64"
+mv    README.md              "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64/LicenseManager_README.md"
 
 unzip Windows_ARM64/LicenseManager.zip > /dev/null
-mv    LicenseManager         "${CRDT_UXP_RELEASE_DIR}Helpers/Windows_arm64"
-mv    README.md              "${CRDT_UXP_RELEASE_DIR}Helpers/Windows_arm64/LicenseManager_README.md"
+mv    LicenseManager         "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64"
+mv    README.md              "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64/LicenseManager_README.md"
 
 cd ..
 
@@ -73,25 +69,25 @@ rm -rf LicenseManager
 
 cd "${SCRIPT_DIR}"
 
-cp startDaemon.command "${CRDT_UXP_RELEASE_DIR}Helpers/Mac"
-cp killDaemon.command "${CRDT_UXP_RELEASE_DIR}Helpers/Mac"
+cp startDaemon.command "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac"
+cp killDaemon.command "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac"
 
-cp startDaemon.bat "${CRDT_UXP_RELEASE_DIR}Helpers/Windows_x86_64"
-cp killDaemon.bat "${CRDT_UXP_RELEASE_DIR}Helpers/Windows_x86_64"
+cp startDaemon.bat "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64"
+cp killDaemon.bat "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64"
 
-cp startDaemon.bat "${CRDT_UXP_RELEASE_DIR}Helpers/Windows_arm64"
-cp killDaemon.bat "${CRDT_UXP_RELEASE_DIR}Helpers/Windows_arm64"
+cp startDaemon.bat "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64"
+cp killDaemon.bat "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64"
 
-cp macDequarantineHelpers.command "${CRDT_UXP_RELEASE_DIR}"
+cp macDequarantineHelpers.command "${CRDT_UXP_RELEASE_DIR_TEMP}"
 
-cp -R ${EXTENSION_DIR_NAME} "${CRDT_UXP_RELEASE_DIR}"
-cp README.md                "${CRDT_UXP_RELEASE_DIR}"
-cp docs.md                  "${CRDT_UXP_RELEASE_DIR}"
+cp -R ${CRDT_UXP_PRODUCT_NAME} "${CRDT_UXP_RELEASE_DIR_TEMP}"
+cp README.md                "${CRDT_UXP_RELEASE_DIR_TEMP}"
+cp docs.md                  "${CRDT_UXP_RELEASE_DIR_TEMP}"
 
 find . -name ".DS_Store" | while read a; do rm "$a"; done
 
 zip -y -r ${CRDT_UXP_RELEASE_DIR_NAME}.zip ${CRDT_UXP_RELEASE_DIR_NAME} > /dev/null
 
-rm -rf ${CRDT_UXP_RELEASE_DIR_NAME}
+rm -rf ${CRDT_UXP_RELEASE_DIR_TEMP}
 
-echo "makerelease ${EXTENSION_DIR_NAME} (UXPTightener) done"
+echo "makerelease ${CRDT_UXP_PRODUCT_NAME} (UXPTightener) done"
