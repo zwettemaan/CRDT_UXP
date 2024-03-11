@@ -968,15 +968,19 @@ module.exports.fileWrite = fileWrite;
  * @function getCapability
  *
  * @param {string} issuer - a GUID identifier for the developer account as seen in the License Manager
- * @param {string} productCode - a product code for the software product to be activated (as determined by the developer)
- * @param {string} password - the password (created by the developer) needed to decode the capability data
- * @returns {string} a JSON structure with capability data (customer GUID, decrypted data from the activation file)
+ * @param {string} capabilityCode - a code for the software features to be activated (as determined by the developer).
+ * `capabilityCode` is not the same as `orderProductCode` - there can be multiple `orderProductCode` associated with 
+ * a single `capabilityCode` (e.g. `capabilityCode` 'XYZ', `orderProductCode` 'XYZ_1YEAR', 'XYZ_2YEAR'...).
+ * @param {string} encryptionKey - the secret encryption key (created by the developer) needed to decode the capability data. You want to make
+ * sure this password is obfuscated and contained within encrypted script code.
+ * @returns {string} a JSON-encoded object with meta object (containing customer GUID, seatIndex, decrypted developer-provided data from the activation file).
+ * The decrypted developer data is embedded as a string, so might be two levels of JSON-encoding to be dealt with to get to any JSON-encoded decrypted data
  */
-async function getCapability(issuer, productCode, password) {
+async function getCapability(issuer, capabilityCode, encryptionKey) {
 
     var retVal;
 
-    var response = await evalTQL("getCapability(" + dQ(issuer) + ", " + dQ(productCode) + ", " + dQ(password) + ")");
+    var response = await evalTQL("getCapability(" + dQ(issuer) + ", " + dQ(capabilityCode) + ", " + dQ(encryptionKey) + ")");
     if (response && ! response.error) {
         retVal = response.text;
     }
