@@ -1043,6 +1043,27 @@ async function getEnvironment(envVarName) {
 module.exports.getEnvironment = getEnvironment;
 
 /**
+ * (async) Get file path to License Manager if it is installed
+ *
+ * @function getLicenseManagerPath
+ * @returns {string} file path
+*/
+
+async function getLicenseManagerPath() {
+
+    var retVal;
+
+    var response = await evalTQL("getLicenseManagerPath()");
+    if (response && ! response.error) {
+        retVal = response.text;
+    }
+
+    return retVal;
+
+}
+module.exports.getLicenseManagerPath = getLicenseManagerPath;
+
+/**
  * (async) Query the daemon for persisted data
  *
  * @function getPersistData
@@ -1184,6 +1205,28 @@ function leftPad(s, padChar, len) {
     return retVal;
 }
 module.exports.leftPad = leftPad;
+
+/**
+ * (async) Launch the License Manager if it is installed and configured
+ *
+ * @function licenseManager
+ * 
+ * @returns {boolean} success/failure
+*/
+
+async function licenseManager() {
+
+    var retVal;
+
+    var response = await evalTQL("licenseManager()");
+    if (response && ! response.error) {
+        retVal = response.text == "true";
+    }
+
+    return retVal;
+
+}
+module.exports.licenseManager = licenseManager;
 
 /**
  * (async) Make a log entry of the call of a function. Pass in the `arguments` keyword as a parameter.
@@ -1512,7 +1555,7 @@ module.exports.rightPad = rightPad;
  *
  * @param {string} issuerGUID - a GUID identifier for the developer account as seen in the License Manager
  * @param {string} issuerEmail - the email for the developer account as seen in the License Manager
- * @returnss { boolean } - success or failure
+ * @returns { boolean } - success or failure
  */
 async function setIssuer(issuerGUID, issuerEmail) {
 
@@ -1520,7 +1563,7 @@ async function setIssuer(issuerGUID, issuerEmail) {
 
     var response = await evalTQL("setIssuer(" + dQ(issuerGUID) + "," + dQ(issuerEmail) + ")");
     if (response && ! response.error) {
-        retVal = response.text;
+        retVal = response.text == "true";
     }
 
     return retVal;
@@ -1623,7 +1666,7 @@ async function sublicense(key, activation) {
 
     var response = await evalTQL("sublicense(" + dQ(key) + "," + dQ(activation) + ")");
     if (response && ! response.error) {
-        retVal = response.text;
+        retVal = response.text == "true";
     }
 
     return retVal;
