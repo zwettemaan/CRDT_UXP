@@ -89,12 +89,14 @@ be up to the developer and/or the IT department to decide what is appropriate an
     * [~fileOpen(fileName, mode)](#module_crdtuxp..fileOpen) ⇒ <code>number</code>
     * [~fileRead(fileHandle, isBinary)](#module_crdtuxp..fileRead) ⇒ <code>any</code>
     * [~fileWrite(fileHandle, s_or_ByteArr)](#module_crdtuxp..fileWrite) ⇒ <code>boolean</code>
-    * [~getCapability(issuer, productCode, password)](#module_crdtuxp..getCapability) ⇒ <code>string</code>
+    * [~getCapability(issuer, capabilityCode, encryptionKey)](#module_crdtuxp..getCapability) ⇒ <code>string</code>
     * [~getDir(dirTag)](#module_crdtuxp..getDir) ⇒ <code>string</code>
     * [~getEnvironment(envVarName)](#module_crdtuxp..getEnvironment) ⇒ <code>string</code>
+    * [~getLicenseManagerPath()](#module_crdtuxp..getLicenseManagerPath) ⇒ <code>string</code>
     * [~getPersistData(issuer, attribute, password)](#module_crdtuxp..getPersistData) ⇒ <code>any</code>
     * [~intPow(i, intPower)](#module_crdtuxp..intPow) ⇒ <code>number</code>
     * [~leftPad(s, padChar, len)](#module_crdtuxp..leftPad) ⇒ <code>string</code>
+    * [~licenseManager()](#module_crdtuxp..licenseManager) ⇒ <code>boolean</code>
     * [~logEntry(reportingFunctionArguments)](#module_crdtuxp..logEntry)
     * [~logError(reportingFunctionArguments, message)](#module_crdtuxp..logError)
     * [~logExit(reportingFunctionArguments)](#module_crdtuxp..logExit)
@@ -106,7 +108,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
     * [~popLogLevel()](#module_crdtuxp..popLogLevel) ⇒ <code>number</code>
     * [~pushLogLevel(newLogLevel)](#module_crdtuxp..pushLogLevel) ⇒ <code>number</code>
     * [~rightPad(s, padChar, len)](#module_crdtuxp..rightPad) ⇒ <code>string</code>
-    * [~setIssuer(issuerGUID, issuerEmail)](#module_crdtuxp..setIssuer)
+    * [~setIssuer(issuerGUID, issuerEmail)](#module_crdtuxp..setIssuer) ⇒ <code>boolean</code>
     * [~sQ(s_or_ByteArr)](#module_crdtuxp..sQ) ⇒ <code>string</code>
     * [~setPersistData(issuer, attribute, password, data)](#module_crdtuxp..setPersistData) ⇒ <code>boolean</code>
     * [~strToUTF8(in_s)](#module_crdtuxp..strToUTF8) ⇒ <code>array</code>
@@ -488,17 +490,18 @@ Not limited to the UXP security sandbox.
 
 <a name="module_crdtuxp..getCapability"></a>
 
-### crdtuxp~getCapability(issuer, productCode, password) ⇒ <code>string</code>
+### crdtuxp~getCapability(issuer, capabilityCode, encryptionKey) ⇒ <code>string</code>
 (async) Query the daemon to see whether some software is currently activated or not
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
-**Returns**: <code>string</code> - a JSON structure with capability data (customer GUID, decrypted data from the activation file)  
+**Returns**: <code>string</code> - a JSON-encoded object with meta object (containing customer GUID, seatIndex, decrypted developer-provided data from the activation file).
+The decrypted developer data is embedded as a string, so might be two levels of JSON-encoding to be dealt with to get to any JSON-encoded decrypted data  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | issuer | <code>string</code> | a GUID identifier for the developer account as seen in the License Manager |
-| productCode | <code>string</code> | a product code for the software product to be activated (as determined by the developer) |
-| password | <code>string</code> | the password (created by the developer) needed to decode the capability data |
+| capabilityCode | <code>string</code> | a code for the software features to be activated (as determined by the developer). `capabilityCode` is not the same as `orderProductCode` - there can be multiple `orderProductCode` associated with  a single `capabilityCode` (e.g. `capabilityCode` 'XYZ', `orderProductCode` 'XYZ_1YEAR', 'XYZ_2YEAR'...). |
+| encryptionKey | <code>string</code> | the secret encryption key (created by the developer) needed to decode the capability data. You want to make sure this password is obfuscated and contained within encrypted script code. |
 
 <a name="module_crdtuxp..getDir"></a>
 
@@ -526,6 +529,13 @@ Not limited to the UXP security sandbox.
 | --- | --- | --- |
 | envVarName | <code>string</code> | name of environment variable |
 
+<a name="module_crdtuxp..getLicenseManagerPath"></a>
+
+### crdtuxp~getLicenseManagerPath() ⇒ <code>string</code>
+(async) Get file path to License Manager if it is installed
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+**Returns**: <code>string</code> - file path  
 <a name="module_crdtuxp..getPersistData"></a>
 
 ### crdtuxp~getPersistData(issuer, attribute, password) ⇒ <code>any</code>
@@ -570,6 +580,13 @@ to handle `Math.pow()`
 | padChar | <code>string</code> | string to append repeatedly if length needs to extended |
 | len | <code>number</code> | desired result length |
 
+<a name="module_crdtuxp..licenseManager"></a>
+
+### crdtuxp~licenseManager() ⇒ <code>boolean</code>
+(async) Launch the License Manager if it is installed and configured
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+**Returns**: <code>boolean</code> - success/failure  
 <a name="module_crdtuxp..logEntry"></a>
 
 ### crdtuxp~logEntry(reportingFunctionArguments)
@@ -698,13 +715,13 @@ If the error level is below `LOG_LEVEL_WARNING` nothing happens
 
 <a name="module_crdtuxp..setIssuer"></a>
 
-### crdtuxp~setIssuer(issuerGUID, issuerEmail)
+### crdtuxp~setIssuer(issuerGUID, issuerEmail) ⇒ <code>boolean</code>
 (async) Send in activation data so the daemon can determine whether some software is currently activated or not.
 
 Needs to be followed by a `sublicense()` call
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
-**Returnss**: <code> boolean </code> - success or failure  
+**Returns**: <code>boolean</code> - - success or failure  
 
 | Param | Type | Description |
 | --- | --- | --- |
