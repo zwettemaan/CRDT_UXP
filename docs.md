@@ -92,11 +92,11 @@ be up to the developer and/or the IT department to decide what is appropriate an
     * [~getCapability(issuer, capabilityCode, encryptionKey)](#module_crdtuxp..getCapability) ⇒ <code>string</code>
     * [~getDir(dirTag)](#module_crdtuxp..getDir) ⇒ <code>string</code>
     * [~getEnvironment(envVarName)](#module_crdtuxp..getEnvironment) ⇒ <code>string</code>
-    * [~getLicenseManagerPath()](#module_crdtuxp..getLicenseManagerPath) ⇒ <code>string</code>
+    * [~getPluginInstallerPath()](#module_crdtuxp..getPluginInstallerPath) ⇒ <code>string</code>
     * [~getPersistData(issuer, attribute, password)](#module_crdtuxp..getPersistData) ⇒ <code>any</code>
     * [~intPow(i, intPower)](#module_crdtuxp..intPow) ⇒ <code>number</code>
     * [~leftPad(s, padChar, len)](#module_crdtuxp..leftPad) ⇒ <code>string</code>
-    * [~licenseManager()](#module_crdtuxp..licenseManager) ⇒ <code>boolean</code>
+    * [~pluginInstaller()](#module_crdtuxp..pluginInstaller) ⇒ <code>boolean</code>
     * [~logEntry(reportingFunctionArguments)](#module_crdtuxp..logEntry)
     * [~logError(reportingFunctionArguments, message)](#module_crdtuxp..logError)
     * [~logExit(reportingFunctionArguments)](#module_crdtuxp..logExit)
@@ -499,7 +499,7 @@ The decrypted developer data is embedded as a string, so might be two levels of 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| issuer | <code>string</code> | a GUID identifier for the developer account as seen in the License Manager |
+| issuer | <code>string</code> | a GUID identifier for the developer account as seen in the PluginInstaller |
 | capabilityCode | <code>string</code> | a code for the software features to be activated (as determined by the developer). `capabilityCode` is not the same as `orderProductCode` - there can be multiple `orderProductCode` associated with  a single `capabilityCode` (e.g. `capabilityCode` 'XYZ', `orderProductCode` 'XYZ_1YEAR', 'XYZ_2YEAR'...). |
 | encryptionKey | <code>string</code> | the secret encryption key (created by the developer) needed to decode the capability data. You want to make sure this password is obfuscated and contained within encrypted script code. |
 
@@ -529,10 +529,10 @@ Not limited to the UXP security sandbox.
 | --- | --- | --- |
 | envVarName | <code>string</code> | name of environment variable |
 
-<a name="module_crdtuxp..getLicenseManagerPath"></a>
+<a name="module_crdtuxp..getPluginInstallerPath"></a>
 
-### crdtuxp~getLicenseManagerPath() ⇒ <code>string</code>
-(async) Get file path to License Manager if it is installed
+### crdtuxp~getPluginInstallerPath() ⇒ <code>string</code>
+(async) Get file path to PluginInstaller if it is installed
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>string</code> - file path  
@@ -546,7 +546,7 @@ Not limited to the UXP security sandbox.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| issuer | <code>string</code> | a GUID identifier for the developer account as seen in the License Manager |
+| issuer | <code>string</code> | a GUID identifier for the developer account as seen in the PluginInstaller |
 | attribute | <code>string</code> | an attribute name for the data |
 | password | <code>string</code> | the password (created by the developer) needed to decode the persistent data |
 
@@ -580,10 +580,10 @@ to handle `Math.pow()`
 | padChar | <code>string</code> | string to append repeatedly if length needs to extended |
 | len | <code>number</code> | desired result length |
 
-<a name="module_crdtuxp..licenseManager"></a>
+<a name="module_crdtuxp..pluginInstaller"></a>
 
-### crdtuxp~licenseManager() ⇒ <code>boolean</code>
-(async) Launch the License Manager if it is installed and configured
+### crdtuxp~pluginInstaller() ⇒ <code>boolean</code>
+(async) Launch the PluginInstaller if it is installed and configured
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>boolean</code> - success/failure  
@@ -725,8 +725,8 @@ Needs to be followed by a `sublicense()` call
 
 | Param | Type | Description |
 | --- | --- | --- |
-| issuerGUID | <code>string</code> | a GUID identifier for the developer account as seen in the License Manager |
-| issuerEmail | <code>string</code> | the email for the developer account as seen in the License Manager |
+| issuerGUID | <code>string</code> | a GUID identifier for the developer account as seen in the PluginInstaller |
+| issuerEmail | <code>string</code> | the email for the developer account as seen in the PluginInstaller |
 
 <a name="module_crdtuxp..sQ"></a>
 
@@ -760,7 +760,7 @@ Example:
 
 | Param | Type | Description |
 | --- | --- | --- |
-| issuer | <code>string</code> | a GUID identifier for the developer account as seen in the License Manager |
+| issuer | <code>string</code> | a GUID identifier for the developer account as seen in the PluginInstaller |
 | attribute | <code>string</code> | an attribute name for the data |
 | password | <code>string</code> | the password (created by the developer) needed to decode the persistent data |
 | data | <code>string</code> | any data to persist |
@@ -780,7 +780,7 @@ Example:
 <a name="module_crdtuxp..sublicense"></a>
 
 ### crdtuxp~sublicense(key, activation) ⇒ <code>boolean</code>
-(async) Send in sublicense info generated in the License Manager so the daemon can determine whether some software is currently activated or not.
+(async) Send in sublicense info generated in the PluginInstaller so the daemon can determine whether some software is currently activated or not.
 
 Needs to be preceded by a `setIssuer()` call.
 
