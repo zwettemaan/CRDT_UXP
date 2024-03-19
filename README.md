@@ -20,6 +20,6 @@ This DNS name resolves to 127.0.0.1
 
 Before you can start the daemon you need a valid license. See further below for info on how to obtain a free trial license.
 
-More info on how to use the License Manager and how to obtain a free license or a trial license:
+More info on how to use the PluginInstaller and how to obtain a free license or a trial license:
 
 https://www.rorohiko.com/crdt

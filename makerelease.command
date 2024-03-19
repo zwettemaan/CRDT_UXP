@@ -40,49 +40,49 @@ if [ -f creative-developer-tools-uxp-sample_PS.ccx ]; then
     cp creative-developer-tools-uxp-sample_PS.ccx "${CRDT_UXP_RELEASE_DIR_TEMP}"
 fi
 
-# Fetch latest License Manager
+# Fetch latest PluginInstaller
 
-cp "${TIGHTENER_RELEASE_ROOT}Apps/LicenseManager.tgz" "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers"
+cp "${TIGHTENER_RELEASE_ROOT}Apps/PluginInstaller.tgz" "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers"
 
 cd "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers"
 
-tar -zxf LicenseManager.tgz > /dev/null
-rm -f LicenseManager.tgz
+tar -zxf PluginInstaller.tgz > /dev/null
+rm -f PluginInstaller.tgz
 
-cd LicenseManager
+cd PluginInstaller
 
-unzip MacOS_Intel_And_M1/LicenseManager.zip > /dev/null
-mv    LicenseManager.app     "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac"
-mv    README.md              "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac/LicenseManager_README.md"
+unzip MacOS_Intel_And_M1/PluginInstaller.zip > /dev/null
+mv    PluginInstaller.app          "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac"
+mv    README.md                    "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac/PluginInstaller_README.md"
 
-unzip Windows_Intel_x86_64/LicenseManager.zip > /dev/null
-mv    LicenseManager         "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64"
-mv    README.md              "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64/LicenseManager_README.md"
+unzip Windows_Intel_x86_64/PluginInstaller.zip > /dev/null
+mv    PluginInstaller              "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64"
+mv    README.md                    "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64/PluginInstaller_README.md"
 
-unzip Windows_ARM64/LicenseManager.zip > /dev/null
-mv    LicenseManager         "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64"
-mv    README.md              "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64/LicenseManager_README.md"
+unzip Windows_ARM64/PluginInstaller.zip > /dev/null
+mv    PluginInstaller              "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64"
+mv    README.md                    "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64/PluginInstaller_README.md"
 
 cd ..
 
-rm -rf LicenseManager
+rm -rf PluginInstaller
 
 cd "${SCRIPT_DIR}"
 
-cp startDaemon.command "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac"
-cp killDaemon.command "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac"
+cp startDaemon.command             "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac"
+cp killDaemon.command              "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Mac"
 
-cp startDaemon.bat "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64"
-cp killDaemon.bat "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64"
+cp startDaemon.bat                 "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64"
+cp killDaemon.bat                  "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_x86_64"
 
-cp startDaemon.bat "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64"
-cp killDaemon.bat "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64"
+cp startDaemon.bat                 "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64"
+cp killDaemon.bat                  "${CRDT_UXP_RELEASE_DIR_TEMP}Helpers/Windows_arm64"
 
-cp macDequarantineHelpers.command "${CRDT_UXP_RELEASE_DIR_TEMP}"
+cp macDequarantineHelpers.command  "${CRDT_UXP_RELEASE_DIR_TEMP}"
 
-cp -R ${CRDT_UXP_PRODUCT_NAME} "${CRDT_UXP_RELEASE_DIR_TEMP}"
-cp README.md                "${CRDT_UXP_RELEASE_DIR_TEMP}"
-cp docs.md                  "${CRDT_UXP_RELEASE_DIR_TEMP}"
+cp -R ${CRDT_UXP_PRODUCT_NAME}     "${CRDT_UXP_RELEASE_DIR_TEMP}"
+cp README.md                       "${CRDT_UXP_RELEASE_DIR_TEMP}"
+cp docs.md                         "${CRDT_UXP_RELEASE_DIR_TEMP}"
 
 find . -name ".DS_Store" | while read a; do rm "$a"; done
 

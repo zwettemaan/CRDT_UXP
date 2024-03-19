@@ -3,15 +3,15 @@ if [ `uname` != "Darwin" ]; then
     exit
 fi
 
-export LICENSE_MANAGER_ROOT=`dirname "$0"`/
-cd "$LICENSE_MANAGER_ROOT"
-export LICENSE_MANAGER_ROOT=`pwd`/
+export PLUGIN_INSTALLER_ROOT=`dirname "$0"`/
+cd "$PLUGIN_INSTALLER_ROOT"
+export PLUGIN_INSTALLER_ROOT=`pwd`/
 
-export EMBEDDED_DAEMON="${LICENSE_MANAGER_ROOT}/LicenseManager.app/Contents/Resources/Tightener_Mac"
+export EMBEDDED_DAEMON="${PLUGIN_INSTALLER_ROOT}/PluginInstaller.app/Contents/Resources/Tightener_Mac"
 export SYSTEM_DAEMON=~/"Library/Application Support/net.tightener/SysConfig/Tightener"
 if [ ! -f "${SYSTEM_DAEMON}" ]; then
     if [ ! -f "${EMBEDDED_DAEMON}" ]; then
-        echo "Cannot access License Manager; make sure this script is not moved from being alongside the 'License Manager' folder"
+        echo "Cannot access PluginInstaller; make sure this script is not moved from being alongside the 'PluginInstaller' folder"
         exit
     fi
     echo "\n\n\n---------\n\nInstalling daemon as ${SYSTEM_DAEMON}\n\n---------\n\n\n"

@@ -786,7 +786,7 @@ async function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
         };
 
     } catch (e) {
-        throw "CRDT daemon is probably not running. Use License Manager to verify CRDT is activated, then use the Preferences screen to start it";
+        throw "CRDT daemon is probably not running. Use PluginInstaller to verify CRDT is activated, then use the Preferences screen to start it";
     }
 
     return retVal;
@@ -967,7 +967,7 @@ module.exports.fileWrite = fileWrite;
  *
  * @function getCapability
  *
- * @param {string} issuer - a GUID identifier for the developer account as seen in the License Manager
+ * @param {string} issuer - a GUID identifier for the developer account as seen in the PluginInstaller
  * @param {string} capabilityCode - a code for the software features to be activated (as determined by the developer).
  * `capabilityCode` is not the same as `orderProductCode` - there can be multiple `orderProductCode` associated with 
  * a single `capabilityCode` (e.g. `capabilityCode` 'XYZ', `orderProductCode` 'XYZ_1YEAR', 'XYZ_2YEAR'...).
@@ -1043,17 +1043,17 @@ async function getEnvironment(envVarName) {
 module.exports.getEnvironment = getEnvironment;
 
 /**
- * (async) Get file path to License Manager if it is installed
+ * (async) Get file path to PluginInstaller if it is installed
  *
- * @function getLicenseManagerPath
+ * @function getPluginInstallerPath
  * @returns {string} file path
 */
 
-async function getLicenseManagerPath() {
+async function getPluginInstallerPath() {
 
     var retVal;
 
-    var response = await evalTQL("getLicenseManagerPath()");
+    var response = await evalTQL("getPluginInstallerPath()");
     if (response && ! response.error) {
         retVal = response.text;
     }
@@ -1061,14 +1061,14 @@ async function getLicenseManagerPath() {
     return retVal;
 
 }
-module.exports.getLicenseManagerPath = getLicenseManagerPath;
+module.exports.getPluginInstallerPath = getPluginInstallerPath;
 
 /**
  * (async) Query the daemon for persisted data
  *
  * @function getPersistData
  *
- * @param {string} issuer - a GUID identifier for the developer account as seen in the License Manager
+ * @param {string} issuer - a GUID identifier for the developer account as seen in the PluginInstaller
  * @param {string} attribute - an attribute name for the data
  * @param {string} password - the password (created by the developer) needed to decode the persistent data
  * @returns {any} whatever persistent data is stored for the given attribute
@@ -1207,18 +1207,18 @@ function leftPad(s, padChar, len) {
 module.exports.leftPad = leftPad;
 
 /**
- * (async) Launch the License Manager if it is installed and configured
+ * (async) Launch the PluginInstaller if it is installed and configured
  *
- * @function licenseManager
+ * @function pluginInstaller
  * 
  * @returns {boolean} success/failure
 */
 
-async function licenseManager() {
+async function pluginInstaller() {
 
     var retVal;
 
-    var response = await evalTQL("licenseManager()");
+    var response = await evalTQL("pluginInstaller()");
     if (response && ! response.error) {
         retVal = response.text == "true";
     }
@@ -1226,7 +1226,7 @@ async function licenseManager() {
     return retVal;
 
 }
-module.exports.licenseManager = licenseManager;
+module.exports.pluginInstaller = pluginInstaller;
 
 /**
  * (async) Make a log entry of the call of a function. Pass in the `arguments` keyword as a parameter.
@@ -1553,8 +1553,8 @@ module.exports.rightPad = rightPad;
  *
  * @function setIssuer
  *
- * @param {string} issuerGUID - a GUID identifier for the developer account as seen in the License Manager
- * @param {string} issuerEmail - the email for the developer account as seen in the License Manager
+ * @param {string} issuerGUID - a GUID identifier for the developer account as seen in the PluginInstaller
+ * @param {string} issuerEmail - the email for the developer account as seen in the PluginInstaller
  * @returns { boolean } - success or failure
  */
 async function setIssuer(issuerGUID, issuerEmail) {
@@ -1598,7 +1598,7 @@ module.exports.sQ = sQ;
  *
  * @function setPersistData
  *
- * @param {string} issuer - a GUID identifier for the developer account as seen in the License Manager
+ * @param {string} issuer - a GUID identifier for the developer account as seen in the PluginInstaller
  * @param {string} attribute - an attribute name for the data
  * @param {string} password - the password (created by the developer) needed to decode the persistent data
  * @param {string} data - any data to persist
@@ -1650,7 +1650,7 @@ function strToUTF8(in_s) {
 module.exports.strToUTF8 = strToUTF8;
 
 /**
- * (async) Send in sublicense info generated in the License Manager so the daemon can determine whether some software is currently activated or not.
+ * (async) Send in sublicense info generated in the PluginInstaller so the daemon can determine whether some software is currently activated or not.
  *
  * Needs to be preceded by a `setIssuer()` call.
  *

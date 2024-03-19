@@ -31,9 +31,9 @@ crdtes.fileRead()
 crdtes.fileWrite()
 crdtes.getDir()
 crdtes.getEnvironment()
-crdtes.getLicenseManagerPath()
+crdtes.getPluginInstallerPath()
 crdtes.isCrdtesActivated()
-crdtes.licenseManager()
+crdtes.pluginInstaller()
 crdtes.setIssuer()
 crdtes.sQ()
 crdtes.sublicense()
@@ -44,8 +44,8 @@ Standard features (Creative Developer Tools for UXP)
 ```
 async crdtuxp.base64decode()
 async crdtuxp.base64encode()
-async crdtuxp.licenseManager()
-async crdtuxp.getLicenseManagerPath()
+async crdtuxp.pluginInstaller()
+async crdtuxp.getPluginInstallerPath()
 async crdtuxp.evalScript()
 async crdtuxp.getEnvironment()
 async crdtuxp.dirCreate()
@@ -63,9 +63,9 @@ async crdtuxp.fileRead()
 async crdtuxp.fileWrite()
 async crdtuxp.getDir()
 async crdtuxp.getEnvironment()
-async crdtuxp.getLicenseManagerPath()
+async crdtuxp.getPluginInstallerPath()
 async crdtuxp.isCrdtesActivated()
-async crdtuxp.licenseManager()
+async crdtuxp.pluginInstaller()
 async crdtuxp.setIssuer()
       crdtuxp.sQ()
 async crdtuxp.sublicense()
@@ -75,14 +75,14 @@ async crdtuxp.sublicense()
 
 ### Protect your code (somewhat like JSXBIN)
 
-Need to install License Manager and register for a developer account.
+Need to install PluginInstaller and register for a developer account.
 
 Add a few files and folders to your script.
 
-Package your script using the License Manager, and distribute the resulting .tpkg
+Package your script using the PluginInstaller, and distribute the resulting .tpkg
 file (download, email, store.tgrg.net).
 
-The end-user needs to install License Manager and import the .tpkg file.
+The end-user needs to install PluginInstaller and import the .tpkg file.
 
 User can then install/remove the software.
 
@@ -93,7 +93,7 @@ Optional pay-for features for developers: get a monthly report with
 
 ### Additional features enabled by a Creative Developer Tools license
 
-Need to install License Manager and register for a developer account.
+Need to install PluginInstaller and register for a developer account.
 
 You need to embed a license for Creative Developer Tools into
 your source code. Make sure this source code is encrypted in the .tpkg distribution file.
@@ -124,7 +124,7 @@ async crdtuxp.machineGUID()
 async crdtuxp.setPersistData()
 ```
 
-When creating your product in License Manager, you can embed any (JSON-formatted) capability data.
+When creating your product in PluginInstaller, you can embed any (JSON-formatted) capability data.
 
 In your script, you can call `getCapability()` to retrieve this data and determine what additional features are enabled or not. 
 
