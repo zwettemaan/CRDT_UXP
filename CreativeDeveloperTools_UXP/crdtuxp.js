@@ -1084,7 +1084,7 @@ async function getPersistData(issuer, attribute, password) {
 
     return retVal;
 }
-crdtes.getPersistData = getPersistData;
+module.exports.getPersistData = getPersistData;
 
 // Internal function getSysInfo__: fetch the whole Tightener sysInfo structure
 
