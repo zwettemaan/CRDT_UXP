@@ -200,6 +200,7 @@ var LOG_ENTRY_EXIT            = false;
 var LOG_LEVEL                 = LOG_LEVEL_OFF;
 var IN_LOGGER                 = false;
 var LOG_TO_UXPDEVTOOL_CONSOLE = true;
+var LOG_TO_CRDT               = false;
 var LOG_TO_FILEPATH           = undefined;
 
 var SYS_INFO;
@@ -360,6 +361,50 @@ function charCodeToUTF8__(in_charCode) {
 
     return retVal;
 }
+
+/**
+ * (sync) Configure the logger
+ *
+ * @function configLogger
+ *
+ * @param {object} logInfo - object with logger setup info
+ *     logLevel: 0-4
+ *     logEntryExit: boolean
+ *     logToUXPConsole: boolean
+ *     logToCRDT: boolean
+ *     logToFilePath: undefined or a file path for logging
+ * 
+ * @returns {boolean} success/failure
+ */
+function configLogger(logInfo) {
+
+    var retVal = false;
+    try {
+        if (logInfo) {
+            if ("logLevel" in logInfo) {
+                LOG_LEVEL = logInfo.logLevel;
+            }
+            if ("logEntryExit" in logInfo) {
+                LOG_ENTRY_EXIT = logInfo.logEntryExit;
+            }
+            if ("logToUXPConsole" in logInfo) {
+                LOG_TO_UXPDEVTOOL_CONSOLE = logInfo.logToUXPConsole;
+            }
+            if ("logToCRDT" in logInfo) {
+                LOG_TO_CRDT = logInfo.logToCRDT;
+            }
+            if ("logToFilePath" in logInfo) {
+                LOG_TO_FILEPATH = logInfo.logToFilePath;
+            }
+            retVal = true;
+        }
+    }
+    catch (err) {        
+    }
+
+    return retVal;
+}
+module.exports.configLogger = configLogger;
 
 /**
  * (async) Reverse the operation of the `encrypt()` function.
@@ -1258,7 +1303,7 @@ async function logError(reportingFunctionArguments, message) {
             message = reportingFunctionArguments;
             reportingFunctionArguments = undefined;
         }
-        await logMessage__(reportingFunctionArguments, "ERROR", message);
+        await logMessage(reportingFunctionArguments, LOG_LEVEL_ERROR, message);
     }
 }
 module.exports.logError = logError;
@@ -1303,9 +1348,17 @@ function functionNameFromArguments(functionArguments) {
 module.exports.functionNameFromArguments = functionNameFromArguments;
 
 
-// Internal use: write out a log message
+/**
+ * (async) Output a log message. Pass in the `arguments` keyword as the first parameter.
+ * 
+ * @function logMessage
+ *
+ * @param {array} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
+ * @param {logLevel} int - log level 0 - 4
+ * @param {string} message - the note to output
+ */
 
-async function logMessage__(reportingFunctionArguments, levelPrefix, message) {
+async function logMessage(reportingFunctionArguments, logLevel, message) {
 
     var savedInLogger = IN_LOGGER;
 
@@ -1319,25 +1372,25 @@ async function logMessage__(reportingFunctionArguments, levelPrefix, message) {
             IN_LOGGER = true;
 
             var functionPrefix = "";
+            var functionName = "";
 
             if (! message) {
 
-                  message = reportingFunctionArguments;
-                  reportingFunctionArguments = undefined;
+                message = reportingFunctionArguments;
+                reportingFunctionArguments = undefined;
 
             }
             else if (reportingFunctionArguments) {
 
                 if ("string" == typeof reportingFunctionArguments) {
-
-                    functionPrefix += reportingFunctionArguments + ": ";
-
+                    functionName = reportingFunctionArguments;
                 }
                 else {
-
-                    functionPrefix += functionNameFromArguments(reportingFunctionArguments) + ": ";
-
+                    functionName = functionNameFromArguments(reportingFunctionArguments);
                 }
+
+                functionPrefix += functionName + ": ";
+                
             }
 
             var now = new Date();
@@ -1357,7 +1410,29 @@ async function logMessage__(reportingFunctionArguments, levelPrefix, message) {
 
             var platformPrefix = "U ";
 
-            var logLine = platformPrefix + timePrefix + "- " + levelPrefix + ": " + functionPrefix + message;
+            switch (logLevel) {
+                case LOG_LEVEL_ERROR:
+                    logLevelPrefix = "ERROR";
+                    break;
+                case LOG_LEVEL_WARNING:
+                    logLevelPrefix = "WARN ";
+                    break;
+                case LOG_LEVEL_NOTE:
+                    logLevelPrefix = "NOTE ";
+                    break;
+                case LOG_LEVEL_TRACE:
+                    logLevelPrefix = "TRACE";
+                    break;
+                default:
+                    logLevelPrefix = "     ";
+                    break;
+            }
+
+            var logLine = platformPrefix + timePrefix + "- " + logLevelPrefix + ": " + functionPrefix + message;
+
+            if (LOG_TO_CRDT) {
+                await evalTQL("logMessage(" + logLevel + "," + dQ(functionName) + "," + dQ(message) + ")");                
+            }
 
             if (LOG_TO_UXPDEVTOOL_CONSOLE) {
                 console.log(logLine);
@@ -1377,6 +1452,7 @@ async function logMessage__(reportingFunctionArguments, levelPrefix, message) {
 
     IN_LOGGER = savedInLogger;
 }
+module.exports.logMessage = logMessage;
 
 /**
  * (async) Make a log entry of a note. Pass in the `arguments` keyword as the first parameter.
@@ -1393,7 +1469,7 @@ async function logNote(reportingFunctionArguments, message) {
             message = reportingFunctionArguments;
             reportingFunctionArguments = undefined;
         }
-        await logMessage__(reportingFunctionArguments, "NOTE ", message);
+        await logMessage(reportingFunctionArguments, LOG_LEVEL_NOTE, message);
     }
 }
 module.exports.logNote = logNote;
@@ -1413,7 +1489,7 @@ async function logTrace(reportingFunctionArguments, message) {
             message = reportingFunctionArguments;
             reportingFunctionArguments = undefined;
         }
-        await logMessage__(reportingFunctionArguments, "TRACE", message);
+        await logMessage(reportingFunctionArguments, LOG_LEVEL_TRACE, message);
     }
 }
 module.exports.logTrace = logTrace;
@@ -1433,7 +1509,7 @@ async function logWarning(reportingFunctionArguments, message) {
             message = reportingFunctionArguments;
             reportingFunctionArguments = undefined;
         }
-        await logMessage__(reportingFunctionArguments, "WARN ", message);
+        await logMessage(reportingFunctionArguments, LOG_LEVEL_WARNING, message);
     }
 }
 module.exports.logWarning = logWarning;
