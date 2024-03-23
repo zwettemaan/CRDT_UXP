@@ -74,6 +74,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
     * [~base64decode(base64Str)](#module_crdtuxp..base64decode) ⇒ <code>string</code>
     * [~base64encode(s_or_ByteArr)](#module_crdtuxp..base64encode) ⇒ <code>string</code>
     * [~binaryUTF8ToStr(in_byteArray)](#module_crdtuxp..binaryUTF8ToStr) ⇒ <code>string</code>
+    * [~configLogger(logInfo)](#module_crdtuxp..configLogger) ⇒ <code>boolean</code>
     * [~decrypt(s_or_ByteArr, aesKey)](#module_crdtuxp..decrypt) ⇒ <code>array</code>
     * [~deQuote(quotedString)](#module_crdtuxp..deQuote) ⇒ <code>array</code>
     * [~dirDelete(filePath, recurse)](#module_crdtuxp..dirDelete) ⇒ <code>boolean</code>
@@ -101,6 +102,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
     * [~logError(reportingFunctionArguments, message)](#module_crdtuxp..logError)
     * [~logExit(reportingFunctionArguments)](#module_crdtuxp..logExit)
     * [~functionNameFromArguments(functionArguments)](#module_crdtuxp..functionNameFromArguments) ⇒ <code>string</code>
+    * [~logMessage(reportingFunctionArguments, int, message)](#module_crdtuxp..logMessage)
     * [~logNote(reportingFunctionArguments, message)](#module_crdtuxp..logNote)
     * [~logTrace(reportingFunctionArguments, message)](#module_crdtuxp..logTrace)
     * [~logWarning(arguments, message)](#module_crdtuxp..logWarning)
@@ -259,6 +261,18 @@ larger than the speed benefit.
 | Param | Type | Description |
 | --- | --- | --- |
 | in_byteArray | <code>array</code> | an array containing bytes (0-255) for a string using UTF-8 encoding. |
+
+<a name="module_crdtuxp..configLogger"></a>
+
+### crdtuxp~configLogger(logInfo) ⇒ <code>boolean</code>
+(sync) Configure the logger
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+**Returns**: <code>boolean</code> - success/failure  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| logInfo | <code>object</code> | object with logger setup info     logLevel: 0-4     logEntryExit: boolean     logToUXPConsole: boolean     logToCRDT: boolean     logToFilePath: undefined or a file path for logging |
 
 <a name="module_crdtuxp..decrypt"></a>
 
@@ -633,6 +647,19 @@ If the error level is below `LOG_LEVEL_ERROR` nothing happens
 | Param | Type | Description |
 | --- | --- | --- |
 | functionArguments | <code>object</code> | pass in the current `arguments` to the function. This is used to determine the function's name |
+
+<a name="module_crdtuxp..logMessage"></a>
+
+### crdtuxp~logMessage(reportingFunctionArguments, int, message)
+(async) Output a log message. Pass in the `arguments` keyword as the first parameter.
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| reportingFunctionArguments | <code>array</code> | pass in the current `arguments` to the function. This is used to determine the function's name for the log |
+| int | <code>logLevel</code> | log level 0 - 4 |
+| message | <code>string</code> | the note to output |
 
 <a name="module_crdtuxp..logNote"></a>
 
