@@ -409,6 +409,8 @@ module.exports.configLogger = configLogger;
 /**
  * (async) Reverse the operation of the `encrypt()` function.
  *
+ * Only available to paid developer accounts
+ *
  * @function decrypt
  *
  * @param {string} s_or_ByteArr - a string or an array of bytes
@@ -583,7 +585,7 @@ module.exports.deQuote = deQuote;
 /**
  * (async) Delete a directory.
  *
- * Not limited to the UXP security sandbox.
+ * Not restricted by the UXP security sandbox.
  *
  * Be very careful with the `recurse` parameter! It is very easy to delete the wrong directory.
  *
@@ -612,7 +614,7 @@ module.exports.dirDelete = dirDelete;
  *
  * Also see `fileExists()`.
  *
- * Not limited to the UXP security sandbox.
+ * Not restricted by the UXP security sandbox.
  *
  * @function dirExists
  *
@@ -636,7 +638,7 @@ module.exports.dirExists = dirExists;
 /**
  * (async) Create a directory.
  *
- * Not limited to the UXP security sandbox.
+ * Not restricted by the UXP security sandbox.
  *
  * @function dirCreate
  *
@@ -660,7 +662,7 @@ module.exports.dirCreate = dirCreate;
 /**
  * (async) Scan a directory.
  *
- * Not limited to the UXP security sandbox.
+ * Not restricted by the UXP security sandbox.
  *
  * @function dirScan
  *
@@ -709,6 +711,8 @@ module.exports.dQ = dQ;
  * (async) Encrypt a string or array of bytes using a key. A random salt
  * is added into the mix, so even when passing in the same parameter values, the result will
  * be different every time.
+ *
+ * Only available to paid developer accounts
  *
  * @function encrypt
  *
@@ -841,7 +845,7 @@ module.exports.evalTQL = evalTQL;
 /**
  * (async) Close a currently open file
  *
- * Not limited to the UXP security sandbox.
+ * Not restricted by the UXP security sandbox.
  *
  * @function fileClose
  *
@@ -865,7 +869,7 @@ module.exports.fileClose = fileClose;
 /**
  * (async) Delete a file
  *
- * Not limited to the UXP security sandbox.
+ * Not restricted by the UXP security sandbox.
  *
  * @function fileDelete
  *
@@ -891,7 +895,7 @@ module.exports.fileDelete = fileDelete;
  *
  * Also see `dirExists()`.
  *
- * Not limited to the UXP security sandbox.
+ * Not restricted by the UXP security sandbox.
  *
  * @function fileExists
  *
@@ -915,7 +919,7 @@ module.exports.fileExists = fileExists;
 /**
  * (async) Open a binary file and return a handle
  *
- * Not limited to the UXP security sandbox.
+ * Not restricted by the UXP security sandbox.
  *
  * @function fileOpen
  *
@@ -946,7 +950,7 @@ module.exports.fileOpen = fileOpen;
 /**
  * (async) Read a file into memory
  *
- * Not limited to the UXP security sandbox.
+ * Not restricted by the UXP security sandbox.
  *
  * @function fileRead
  *
@@ -977,7 +981,7 @@ module.exports.fileRead = fileRead;
 /**
  * (async) Binary write to a file. Strings are written as UTF-8
  *
- * Not limited to the UXP security sandbox.
+ * Not restricted by the UXP security sandbox.
  *
  * @function fileWrite
  *
@@ -1013,7 +1017,7 @@ module.exports.fileWrite = fileWrite;
  * @function getCapability
  *
  * @param {string} issuer - a GUID identifier for the developer account as seen in the PluginInstaller
- * @param {string} capabilityCode - a code for the software features to be activated (as determined by the developer).
+ * @param {string} capabilityCode - a code for the software features to be activated (as determined by the developer who owns the account).
  * `capabilityCode` is not the same as `orderProductCode` - there can be multiple `orderProductCode` associated with 
  * a single `capabilityCode` (e.g. `capabilityCode` 'XYZ', `orderProductCode` 'XYZ_1YEAR', 'XYZ_2YEAR'...).
  * @param {string} encryptionKey - the secret encryption key (created by the developer) needed to decode the capability data. You want to make
@@ -1037,7 +1041,7 @@ module.exports.getCapability = getCapability;
 /**
  * (async) Get the path of a system directory
  *
- * Not limited to the UXP security sandbox.
+ * Not restricted by the UXP security sandbox.
  *
  * @function getDir
  *
@@ -1067,7 +1071,9 @@ async function getDir(dirTag) {
 module.exports.getDir = getDir;
 
 /**
- * (async) Access the environment as seen by the daemon program
+ * (async) Access the environment as available to the daemon program
+ *
+ * Not restricted by the UXP security sandbox.
  *
  * @function getEnvironment
  *
@@ -1110,6 +1116,8 @@ module.exports.getPluginInstallerPath = getPluginInstallerPath;
 
 /**
  * (async) Query the daemon for persisted data
+ *
+ * Only available to paid developer accounts
  *
  * @function getPersistData
  *
@@ -1517,6 +1525,8 @@ module.exports.logWarning = logWarning;
 /**
  * (async) The unique `GUID` of this computer
  *
+ * Only available to paid developer accounts
+ * 
  * @function machineGUID
  *
  * @returns {string} a `GUID` string
@@ -1671,6 +1681,8 @@ module.exports.sQ = sQ;
 
 /**
  * (async) Store some persistent data (e.g. a time stamp to determine a demo version lapsing)
+ *
+ * Only available to paid developer accounts
  *
  * @function setPersistData
  *
