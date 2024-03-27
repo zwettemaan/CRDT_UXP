@@ -1094,6 +1094,29 @@ async function getEnvironment(envVarName) {
 module.exports.getEnvironment = getEnvironment;
 
 /**
+ * (async) Determine the license level for CRDT: 0 = not, 1 = basic, 2 = full
+ *
+ * Some functions, marked with "Only available to paid developer accounts" 
+ * will only work with level 2. Licensing function only work with level 1
+ *
+ * @function getCreativeDeveloperToolsLevel
+ *
+ * @returns {number} - 0, 1 or 2
+ */
+function getCreativeDeveloperToolsLevel() {
+
+    var retVal = -1;
+
+    var response = await evalTQL("getCreativeDeveloperToolsLevel()");
+    if (response && ! response.error) {
+        retVal = parseInt(response.text, 10);
+    }
+
+    return retVal;
+}
+module.exports.getCreativeDeveloperToolsLevel = getCreativeDeveloperToolsLevel;
+
+/**
  * (async) Get file path to PluginInstaller if it is installed
  *
  * @function getPluginInstallerPath

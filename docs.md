@@ -279,6 +279,8 @@ larger than the speed benefit.
 ### crdtuxp~decrypt(s_or_ByteArr, aesKey) ⇒ <code>array</code>
 (async) Reverse the operation of the `encrypt()` function.
 
+Only available to paid developer accounts
+
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>array</code> - an array of bytes  
 
@@ -305,7 +307,7 @@ these are first re-encoded using UTF-8 before storing them into the byte array.
 ### crdtuxp~dirDelete(filePath, recurse) ⇒ <code>boolean</code>
 (async) Delete a directory.
 
-Not limited to the UXP security sandbox.
+Not restricted by the UXP security sandbox.
 
 Be very careful with the `recurse` parameter! It is very easy to delete the wrong directory.
 
@@ -324,7 +326,7 @@ Be very careful with the `recurse` parameter! It is very easy to delete the wron
 
 Also see `fileExists()`.
 
-Not limited to the UXP security sandbox.
+Not restricted by the UXP security sandbox.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>boolean</code> - true or false  
@@ -338,7 +340,7 @@ Not limited to the UXP security sandbox.
 ### crdtuxp~dirCreate(filePath) ⇒ <code>array</code>
 (async) Create a directory.
 
-Not limited to the UXP security sandbox.
+Not restricted by the UXP security sandbox.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>array</code> - list if items in directory  
@@ -352,7 +354,7 @@ Not limited to the UXP security sandbox.
 ### crdtuxp~dirScan(filePath) ⇒ <code>array</code>
 (async) Scan a directory.
 
-Not limited to the UXP security sandbox.
+Not restricted by the UXP security sandbox.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>array</code> - list if items in directory  
@@ -391,6 +393,8 @@ Example:
 is added into the mix, so even when passing in the same parameter values, the result will
 be different every time.
 
+Only available to paid developer accounts
+
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>string</code> - a base-64 encoded encrypted string.  
 
@@ -418,7 +422,7 @@ be different every time.
 ### crdtuxp~fileClose(fileHandle) ⇒ <code>boolean</code>
 (async) Close a currently open file
 
-Not limited to the UXP security sandbox.
+Not restricted by the UXP security sandbox.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>boolean</code> - success or failure  
@@ -432,7 +436,7 @@ Not limited to the UXP security sandbox.
 ### crdtuxp~fileDelete(filePath) ⇒ <code>boolean</code>
 (async) Delete a file
 
-Not limited to the UXP security sandbox.
+Not restricted by the UXP security sandbox.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>boolean</code> - success or failure  
@@ -448,7 +452,7 @@ Not limited to the UXP security sandbox.
 
 Also see `dirExists()`.
 
-Not limited to the UXP security sandbox.
+Not restricted by the UXP security sandbox.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>boolean</code> - existence of file  
@@ -462,7 +466,7 @@ Not limited to the UXP security sandbox.
 ### crdtuxp~fileOpen(fileName, mode) ⇒ <code>number</code>
 (async) Open a binary file and return a handle
 
-Not limited to the UXP security sandbox.
+Not restricted by the UXP security sandbox.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>number</code> - file handle  
@@ -477,7 +481,7 @@ Not limited to the UXP security sandbox.
 ### crdtuxp~fileRead(fileHandle, isBinary) ⇒ <code>any</code>
 (async) Read a file into memory
 
-Not limited to the UXP security sandbox.
+Not restricted by the UXP security sandbox.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>any</code> - either a byte array or a string  
@@ -492,7 +496,7 @@ Not limited to the UXP security sandbox.
 ### crdtuxp~fileWrite(fileHandle, s_or_ByteArr) ⇒ <code>boolean</code>
 (async) Binary write to a file. Strings are written as UTF-8
 
-Not limited to the UXP security sandbox.
+Not restricted by the UXP security sandbox.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>boolean</code> - success or failure  
@@ -514,7 +518,7 @@ The decrypted developer data is embedded as a string, so might be two levels of 
 | Param | Type | Description |
 | --- | --- | --- |
 | issuer | <code>string</code> | a GUID identifier for the developer account as seen in the PluginInstaller |
-| capabilityCode | <code>string</code> | a code for the software features to be activated (as determined by the developer). `capabilityCode` is not the same as `orderProductCode` - there can be multiple `orderProductCode` associated with  a single `capabilityCode` (e.g. `capabilityCode` 'XYZ', `orderProductCode` 'XYZ_1YEAR', 'XYZ_2YEAR'...). |
+| capabilityCode | <code>string</code> | a code for the software features to be activated (as determined by the developer who owns the account). `capabilityCode` is not the same as `orderProductCode` - there can be multiple `orderProductCode` associated with  a single `capabilityCode` (e.g. `capabilityCode` 'XYZ', `orderProductCode` 'XYZ_1YEAR', 'XYZ_2YEAR'...). |
 | encryptionKey | <code>string</code> | the secret encryption key (created by the developer) needed to decode the capability data. You want to make sure this password is obfuscated and contained within encrypted script code. |
 
 <a name="module_crdtuxp..getDir"></a>
@@ -522,7 +526,7 @@ The decrypted developer data is embedded as a string, so might be two levels of 
 ### crdtuxp~getDir(dirTag) ⇒ <code>string</code>
 (async) Get the path of a system directory
 
-Not limited to the UXP security sandbox.
+Not restricted by the UXP security sandbox.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>string</code> - file path of dir or undefined. Directory paths include a trailing slash or backslash.  
@@ -534,7 +538,9 @@ Not limited to the UXP security sandbox.
 <a name="module_crdtuxp..getEnvironment"></a>
 
 ### crdtuxp~getEnvironment(envVarName) ⇒ <code>string</code>
-(async) Access the environment as seen by the daemon program
+(async) Access the environment as available to the daemon program
+
+Not restricted by the UXP security sandbox.
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>string</code> - environment variable value  
@@ -554,6 +560,8 @@ Not limited to the UXP security sandbox.
 
 ### crdtuxp~getPersistData(issuer, attribute, password) ⇒ <code>any</code>
 (async) Query the daemon for persisted data
+
+Only available to paid developer accounts
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>any</code> - whatever persistent data is stored for the given attribute  
@@ -705,6 +713,8 @@ If the error level is below `LOG_LEVEL_WARNING` nothing happens
 ### crdtuxp~machineGUID() ⇒ <code>string</code>
 (async) The unique `GUID` of this computer
 
+Only available to paid developer accounts
+
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>string</code> - a `GUID` string  
 <a name="module_crdtuxp..popLogLevel"></a>
@@ -781,6 +791,8 @@ Example:
 
 ### crdtuxp~setPersistData(issuer, attribute, password, data) ⇒ <code>boolean</code>
 (async) Store some persistent data (e.g. a time stamp to determine a demo version lapsing)
+
+Only available to paid developer accounts
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>boolean</code> - success or failure  
