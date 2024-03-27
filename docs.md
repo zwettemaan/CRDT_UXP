@@ -93,6 +93,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
     * [~getCapability(issuer, capabilityCode, encryptionKey)](#module_crdtuxp..getCapability) ⇒ <code>string</code>
     * [~getDir(dirTag)](#module_crdtuxp..getDir) ⇒ <code>string</code>
     * [~getEnvironment(envVarName)](#module_crdtuxp..getEnvironment) ⇒ <code>string</code>
+    * [~getCreativeDeveloperToolsLevel()](#module_crdtuxp..getCreativeDeveloperToolsLevel) ⇒ <code>number</code>
     * [~getPluginInstallerPath()](#module_crdtuxp..getPluginInstallerPath) ⇒ <code>string</code>
     * [~getPersistData(issuer, attribute, password)](#module_crdtuxp..getPersistData) ⇒ <code>any</code>
     * [~intPow(i, intPower)](#module_crdtuxp..intPow) ⇒ <code>number</code>
@@ -549,6 +550,16 @@ Not restricted by the UXP security sandbox.
 | --- | --- | --- |
 | envVarName | <code>string</code> | name of environment variable |
 
+<a name="module_crdtuxp..getCreativeDeveloperToolsLevel"></a>
+
+### crdtuxp~getCreativeDeveloperToolsLevel() ⇒ <code>number</code>
+(async) Determine the license level for CRDT: 0 = not, 1 = basic, 2 = full
+
+Some functions, marked with "Only available to paid developer accounts" 
+will only work with level 2. Licensing function only work with level 1
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+**Returns**: <code>number</code> - - 0, 1 or 2  
 <a name="module_crdtuxp..getPluginInstallerPath"></a>
 
 ### crdtuxp~getPluginInstallerPath() ⇒ <code>string</code>

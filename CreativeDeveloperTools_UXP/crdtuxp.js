@@ -1103,7 +1103,7 @@ module.exports.getEnvironment = getEnvironment;
  *
  * @returns {number} - 0, 1 or 2
  */
-function getCreativeDeveloperToolsLevel() {
+async function getCreativeDeveloperToolsLevel() {
 
     var retVal = -1;
 
