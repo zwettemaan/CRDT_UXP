@@ -3,17 +3,22 @@ if [ `uname` != "Darwin" ]; then
     exit
 fi
 
-export PLUGIN_INSTALLER_ROOT=`dirname "$0"`/
-cd "$PLUGIN_INSTALLER_ROOT"
-export PLUGIN_INSTALLER_ROOT=`pwd`/
-
-export EMBEDDED_DAEMON="${PLUGIN_INSTALLER_ROOT}/PluginInstaller.app/Contents/Resources/Tightener_Mac"
 export SYSTEM_DAEMON=~/"Library/Application Support/net.tightener/SysConfig/Tightener"
+
 if [ ! -f "${SYSTEM_DAEMON}" ]; then
-    if [ ! -f "${EMBEDDED_DAEMON}" ]; then
-        echo "Cannot access PluginInstaller; make sure this script is not moved from being alongside the 'PluginInstaller' folder"
+    export MACHINE_INFO=~/"Library/Application Support/net.tightener/Licensing/Machine/machineInfo.json"
+    export PLUGIN_INSTALLER=`sed -E "s/.*\"pluginInstallerPath\"\s*:\s*\"([^\"]*)\".*/\1/" < "$MACHINE_INFO"`
+    if [ ! -d "${PLUGIN_INSTALLER}" ]; then
+        echo "Cannot access PluginInstaller; make sure to run the PluginInstaller after moving it"
         exit
     fi
+
+    export EMBEDDED_DAEMON="${PLUGIN_INSTALLER}/Contents/Resources/Tightener_Mac"
+    if [ ! -f "${EMBEDDED_DAEMON}" ]; then
+        echo "Cannot access embedded daemon; make sure to run the PluginInstaller after moving it"
+        exit
+    fi
+
     echo "\n\n\n---------\n\nInstalling daemon as ${SYSTEM_DAEMON}\n\n---------\n\n\n"
     cp "${EMBEDDED_DAEMON}" "${SYSTEM_DAEMON}"
 fi

@@ -526,6 +526,9 @@ async function run() {
     try {
         await crdtuxp.logNote(arguments, "Starting crdtuxp_test");
 
+        // You need something similar to this to enable CRDT
+        // await crdtuxp.setIssuer("1186cb861234567377c49d7eade","my@email.com");
+
         var success = true;
 
         for (var idx = 0; idx < tests.length; idx++) {
