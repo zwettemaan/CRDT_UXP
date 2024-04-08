@@ -23,12 +23,9 @@ IF NOT EXIST "%SYSTEM_DAEMON%" (
         GOTO DONE
     )
 
-    SET cmd="$machineInfo = (Get-Content -Path 'C:\Users\Administrator\AppData\Roaming\net.tightener\Licensing\Machine\machineInfo.json' | ConvertFrom-Json) ; ($machineInfo.pluginInstallerPath | out-file -encoding ASCII 'C:\Users\ADMINI~1\AppData\Local\Temp\2\pluginInstallerPath.txt')"
-    
+    SET cmd="$machineInfo = (Get-Content -Path '%MACHINE_INFO%' | ConvertFrom-Json) ; ($machineInfo.pluginInstallerPath | out-file -encoding ASCII '%TEMP%\pluginInstallerPath.txt')"    
     PowerShell %cmd%
-    REM FOR /F "delims=" %%x in (%TEMP%\pluginInstallerPath.txt) do set PLUGIN_INSTALLER=%%x
     SET /P PLUGIN_INSTALLER=<%TEMP%\pluginInstallerPath.txt
-    echo !PLUGIN_INSTALLER!
 
     SET DAEMON_APP_ROOT=!PLUGIN_INSTALLER!\..\PluginInstaller Resources\
     IF "%PROCESSOR_ARCHITECTURE%" == "ARM64" (
