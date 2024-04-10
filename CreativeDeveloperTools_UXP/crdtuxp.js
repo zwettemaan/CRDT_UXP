@@ -55,6 +55,19 @@
  * @module crdtuxp
  */
 
+function getPlatformGlobals() {
+    return global;
+}
+
+var platformGlobals = getPlatformGlobals();
+platformGlobals.getPlatformGlobals = getPlatformGlobals;
+platformGlobals.defineGlobalObject = function defineGlobalObject(globalName) {
+    if (! platformGlobals[globalName]) {
+        platformGlobals[globalName] = {};
+    }
+    return platformGlobals[globalName];
+}
+
 /**
  * `localhost.tgrg.net` resolves to `127.0.0.1`
  *
