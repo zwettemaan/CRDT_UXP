@@ -59,7 +59,7 @@ cp docs.md                         "${CRDT_UXP_RELEASE_DIR_TEMP}"
 
 find . -name ".DS_Store" | while read a; do rm "$a"; done
 
-zip -y -r ${CRDT_UXP_RELEASE_DIR_NAME}.zip ${CRDT_UXP_RELEASE_DIR_NAME} > /dev/null
+zip -q -y -r ${CRDT_UXP_RELEASE_DIR_NAME}.zip ${CRDT_UXP_RELEASE_DIR_NAME}
 
 rm -rf ${CRDT_UXP_RELEASE_DIR_TEMP}
 
