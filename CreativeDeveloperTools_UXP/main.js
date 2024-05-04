@@ -15,6 +15,15 @@ const crdtuxp = require("./crdtuxp");
 
 const crdtuxp_test = require("./crdtuxp_test");
 
+async function init() {
+    //
+    // To embed a license to CRDT you need to provide your developer GUID and email.
+    //
+    // await crdtuxp.setIssuer("1186cb432432878745ee377c49d7eade","my@email.com");
+    document.getElementById("machineGUID_out").textContent = await crdtuxp.machineGUID();
+}
+
+
 // Set to false in production code
 const RUN_CRDT_UXP_TESTS = true;
 
@@ -94,10 +103,6 @@ async function encryptDemo() {
 
     document.getElementById("encrypt_out").textContent = encrypted;
 
-}
-
-async function init() {
-    document.getElementById("machineGUID_out").textContent = await crdtuxp.machineGUID();
 }
 
 setTimeout(

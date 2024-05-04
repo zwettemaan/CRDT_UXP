@@ -1,28 +1,11 @@
 /**
  * Creative Developer Tools (CRDT) is a growing suite of tools aimed at script developers and plug-in developers for the Adobe Creative Cloud eco-system.
  *
- * Currently, it is at an alpha stage: the feature set is not frozen, and new features are added regularly.
- *
  * There are two different versions of CRDT: one for UXP/UXPScript and another for ExtendScript.
- *
- * The software is functional and useful, but without a doubt, there will be bugs and dragons…
- *
- * Features include:
- *
- * - Read/Write files beyond the UXP sandbox, including binary files
- * - Read the environment variables
- * - Provides a unique machine GUID for each end-user computer
- * - Provides a unique account GUID for each end user
- * - Add licensing and activation features to your script
- * - Protect sensitive source code and make it hard to reverse engineer
- * - AES-256 encryption/decryption functions
- * - Base64 encode and decode functions
- *
- * More to come! You can contact us on dev@rorohiko.com with feature request
  *
  * For downloading and installation info, visit
  *
- * https://www.rorohiko.com/crdt
+ * https://CreativeDeveloperTools.com
  *
  *  `crdtuxp` contains a number of useful functions. Some of these functions
  * are implemented in JavaScript in `crdtux.js` and are synchronous.
