@@ -24,8 +24,8 @@ helpful in keeping things secure, but in many situations, they are a massive ove
 
 It should be up to the user/developer/IT department to decide how to handle security.
 
-Sometimes the whole workflow can live inside walled garden, on
-a disconnected network, without any contact with the outside world and not be allowed to run any
+Sometimes the whole workflow can live inside walled garden, on a disconnected network, 
+without any contact with the outside world and not be allowed to run any
 unvetted software.
 
 Or sometimes the OS security is safe enough for the workflow at hand.
