@@ -7,16 +7,16 @@ if (! module.exports) {
 
 async function testBase64() {
 
-    var retVal = true;
+    let retVal = true;
 
-    var s = "Hello World☜✿\x00\x7Féøo";
-    var s64 = await crdtuxp.base64encode(s);
+    let s = "Hello World☜✿\x00\x7Féøo";
+    let s64 = await crdtuxp.base64encode(s);
     if (s64 != "SGVsbG8gV29ybGTimJzinL8Af8Opw7hv") {
         await crdtuxp.logError(arguments, "failed to crdtuxp.base64encode()");
         retVal = false;
     }
 
-    var sRoundTrip = await crdtuxp.base64decode(s64);
+    let sRoundTrip = await crdtuxp.base64decode(s64);
     if (s != sRoundTrip) {
         await crdtuxp.logError(arguments, "failed to crdtuxp.base64decode()");
         retVal = false;
@@ -27,18 +27,18 @@ async function testBase64() {
 
 async function testDirs() {
 
-    var retVal = true;
+    let retVal = true;
 
-    var desktopDir = await crdtuxp.getDir(crdtuxp.DESKTOP_DIR);
-    var desktopDirExists = await crdtuxp.dirExists(desktopDir);
+    let desktopDir = await crdtuxp.getDir(crdtuxp.DESKTOP_DIR);
+    let desktopDirExists = await crdtuxp.dirExists(desktopDir);
     if (! desktopDirExists) {
         await crdtuxp.logError(arguments, "failed to verify existence of desktop dir");
         retVal = false;
     }
 
-    var testDirName = "crdtuxp_test_thisIsATestDir_feelFreeToDelete";
-    var testDirPath = desktopDir + testDirName + "/";
-    var testDirExists = await crdtuxp.dirExists(testDirPath);
+    let testDirName = "crdtuxp_test_thisIsATestDir_feelFreeToDelete";
+    let testDirPath = desktopDir + testDirName + "/";
+    let testDirExists = await crdtuxp.dirExists(testDirPath);
     if (testDirExists) {
         await crdtuxp.logError(arguments, "testDir unexpectedly exists");
         retVal = false;
@@ -52,34 +52,43 @@ async function testDirs() {
         retVal = false;
     }
 
-    var testFileName = "testFile1.txt";
-    var testFilePath = testDirPath + testFileName;
+    let testFileName = "testFile1.txt";
+    let testFilePath = testDirPath + testFileName;
     
-    var testFileName2 = "testFile2.txt";
-    var testFilePath2 = testDirPath + testFileName2;
+    let testFileName2 = "testFile2.txt";
+    let testFilePath2 = testDirPath + testFileName2;
 
-    var fileContentAsString = "Hello World☜✿\x00\x7Féøo";
-    var fileContentAsUTF8 = await crdtuxp.strToUTF8(fileContentAsString);
+    let testFileName3 = "testFile3.txt";
+    let testFilePath3 = testDirPath + testFileName3;
 
-    var writeFileHandle1 = await crdtuxp.fileOpen(testFilePath, "w");
+    let fileContentAsString = "Hello World☜✿\x00\x7Féøo";
+    let fileContentAsUTF8 = await crdtuxp.strToUTF8(fileContentAsString);
+
+    await crdtuxp.fileAppendString(testFilePath3, fileContentAsString);
+
+    let writeFileHandle1 = await crdtuxp.fileOpen(testFilePath, "w");
     await crdtuxp.fileWrite(writeFileHandle1, fileContentAsString);
     await crdtuxp.fileClose(writeFileHandle1);
 
-    var writeFileHandle2 = await crdtuxp.fileOpen(testFilePath2, "w");
+    let writeFileHandle2 = await crdtuxp.fileOpen(testFilePath2, "w");
     await crdtuxp.fileWrite(writeFileHandle2, fileContentAsUTF8);
     await crdtuxp.fileClose(writeFileHandle2);
 
-    var readFileHandle1 = await crdtuxp.fileOpen(testFilePath, "r");
-    var binaryReadContent = await crdtuxp.fileRead(readFileHandle1, true);
+    let readFileHandle1 = await crdtuxp.fileOpen(testFilePath, "r");
+    let binaryReadContent = await crdtuxp.fileRead(readFileHandle1, true);
     await crdtuxp.fileClose(readFileHandle1);
 
-    var readFileHandle2 = await crdtuxp.fileOpen(testFilePath, "r");
-    var stringReadContent = await crdtuxp.fileRead(readFileHandle2, false);
+    let readFileHandle2 = await crdtuxp.fileOpen(testFilePath, "r");
+    let stringReadContent = await crdtuxp.fileRead(readFileHandle2, false);
     await crdtuxp.fileClose(readFileHandle2);
 
-    var readFileHandle3 = await crdtuxp.fileOpen(testFilePath2, "r");
-    var file2ReadContent = await crdtuxp.fileRead(readFileHandle3, false);
+    let readFileHandle3 = await crdtuxp.fileOpen(testFilePath2, "r");
+    let file2ReadContent = await crdtuxp.fileRead(readFileHandle3, false);
     await crdtuxp.fileClose(readFileHandle3);
+
+    let readFileHandle4 = await crdtuxp.fileOpen(testFilePath3, "r");
+    let file3ReadContent = await crdtuxp.fileRead(readFileHandle4, false);
+    await crdtuxp.fileClose(readFileHandle4);
 
     if (fileContentAsString != stringReadContent) {
         await crdtuxp.logError(arguments, "failed to read file as string");
@@ -91,16 +100,21 @@ async function testDirs() {
         retVal = false;
     }
 
-    var alternateStringReadContent = await crdtuxp.binaryUTF8ToStr(binaryReadContent);
+    if (fileContentAsString != file3ReadContent) {
+        await crdtuxp.logError(arguments, "failed to read appended file as string");
+        retVal = false;
+    }
+
+    let alternateStringReadContent = await crdtuxp.binaryUTF8ToStr(binaryReadContent);
     if (fileContentAsString != alternateStringReadContent) {
         await crdtuxp.logError(arguments, "failed to read file as binary then string");
         retVal = false;
     }
 
-    var desktopFiles = await crdtuxp.dirScan(testDirPath);
-    var foundTestFile = false;
-    for (var idx = 0; ! foundTestFile && idx < desktopFiles.length; idx++) {
-        var fileName = desktopFiles[idx];
+    let desktopFiles = await crdtuxp.dirScan(testDirPath);
+    let foundTestFile = false;
+    for (let idx = 0; ! foundTestFile && idx < desktopFiles.length; idx++) {
+        let fileName = desktopFiles[idx];
         foundTestFile = testFileName == fileName;
     }
 
@@ -109,31 +123,31 @@ async function testDirs() {
         retVal = false;
     }
 
-    var fileExists = await crdtuxp.fileExists(testFilePath);
+    let fileExists = await crdtuxp.fileExists(testFilePath);
     if (! fileExists) {
         await crdtuxp.logError(arguments, "fileExists failed");
         retVal = false;
     }
 
-    var fileAsDirExists = await crdtuxp.dirExists(testFilePath);
+    let fileAsDirExists = await crdtuxp.dirExists(testFilePath);
     if (fileAsDirExists) {
         await crdtuxp.logError(arguments, "dirExists should not return 'true' on a file (instead of a dir)");
         retVal = false;
     }
 
-    var success = await crdtuxp.fileDelete(testFilePath);
+    let success = await crdtuxp.fileDelete(testFilePath);
     if (! success) {
         await crdtuxp.logError(arguments, "fileDelete should return true");
         retVal = false;
     }
 
-    var tryAgainSuccess = await crdtuxp.fileDelete(testFilePath);
+    let tryAgainSuccess = await crdtuxp.fileDelete(testFilePath);
     if (tryAgainSuccess) {
         await crdtuxp.logError(arguments, "second fileDelete on same file should return false");
         retVal = false;
     }
 
-    var deletedFileExists = await crdtuxp.fileExists(testFilePath);
+    let deletedFileExists = await crdtuxp.fileExists(testFilePath);
     if (deletedFileExists) {
         await crdtuxp.logError(arguments, "file should not exist any more");
         retVal = false;
@@ -162,25 +176,25 @@ async function testDirs() {
 
 async function testEncrypt() {
 
-    var retVal = true;
+    let retVal = true;
 
-    var key = "my secret key";
+    let key = "my secret key";
 
-    var s = "Hello World☜✿\x00\x7Féøo";
-    var s1 = await crdtuxp.encrypt(s, key);
-    var s2 = await crdtuxp.encrypt(s, key);
+    let s = "Hello World☜✿\x00\x7Féøo";
+    let s1 = await crdtuxp.encrypt(s, key);
+    let s2 = await crdtuxp.encrypt(s, key);
     if (s1 == s2) {
         await crdtuxp.logError(arguments, "Encrypting the same string twice should give a different result");
         retVal = false;
     }
 
-    var sRoundTrip1 = await crdtuxp.decrypt(s1, key);
+    let sRoundTrip1 = await crdtuxp.decrypt(s1, key);
     if (sRoundTrip1 != s) {
         await crdtuxp.logError(arguments, "failed to decrypt s1");
         retVal = false;
     }
 
-    var sRoundTrip2 = await crdtuxp.decrypt(s2, key);
+    let sRoundTrip2 = await crdtuxp.decrypt(s2, key);
     if (sRoundTrip2 != s) {
         await crdtuxp.logError(arguments, "failed to decrypt s2");
         retVal = false;
@@ -191,17 +205,17 @@ async function testEncrypt() {
 
 async function testEnvironment() {
 
-    var retVal = true;
+    let retVal = true;
 
-    var homeDir = await crdtuxp.getDir(crdtuxp.HOME_DIR);
-    var homeDirExists = await crdtuxp.dirExists(homeDir);
+    let homeDir = await crdtuxp.getDir(crdtuxp.HOME_DIR);
+    let homeDirExists = await crdtuxp.dirExists(homeDir);
     if (! homeDirExists) {
         await crdtuxp.logError(arguments, "failed to verify existence of home dir");
         retVal = false;
     }
 
-    var environmentHomeDirVariableName;
-    var separator;
+    let environmentHomeDirVariableName;
+    let separator;
     if (crdtuxp.IS_MAC) {
         environmentHomeDirVariableName = "HOME";
         separator = "/";
@@ -210,16 +224,16 @@ async function testEnvironment() {
         environmentHomeDirVariableName = "USERPROFILE";
         separator = "\\";
     }
-    var environmentHomeDir = await crdtuxp.getEnvironment(environmentHomeDirVariableName);
+    let environmentHomeDir = await crdtuxp.getEnvironment(environmentHomeDirVariableName);
 
-    var homeDirSplit = homeDir.split(separator);
-    var homeDirSegmentIdx = homeDirSplit.length;
+    let homeDirSplit = homeDir.split(separator);
+    let homeDirSegmentIdx = homeDirSplit.length;
 
-    var environmentHomeDirSplit = environmentHomeDir.split(separator);
-    var environmentDirSegmentIdx = environmentHomeDirSplit.length;
+    let environmentHomeDirSplit = environmentHomeDir.split(separator);
+    let environmentDirSegmentIdx = environmentHomeDirSplit.length;
 
-    var matchSucceeded = false;
-    var matchFailed = false;
+    let matchSucceeded = false;
+    let matchFailed = false;
 
     while  (! matchSucceeded && ! matchFailed) {
 
@@ -251,7 +265,7 @@ async function testEnvironment() {
     }
 
     if (! matchSucceeded) {
-        await crdtuxp.logError(arguments, "HOME_DIR " + homeDir + " does not match env. var " + environmentHomeDirVariableName + " = " + environmentHomeDir);
+        await crdtuxp.logError(arguments, "HOME_DIR " + homeDir + " does not match env. let " + environmentHomeDirVariableName + " = " + environmentHomeDir);
         retVal = false;
     }
 
@@ -260,9 +274,9 @@ async function testEnvironment() {
 
 async function testIntPow() {
 
-    var retVal = true;
+    let retVal = true;
 
-    var x = crdtuxp.intPow(2, 10);
+    let x = crdtuxp.intPow(2, 10);
     if (x != 1024) {
         await crdtuxp.logError(arguments, "2^10 intPow failed");
         retVal = false;
@@ -286,9 +300,9 @@ async function testIntPow() {
 
 async function testLeftRightPad() {
 
-    var retVal = true;
+    let retVal = true;
 
-    var s = "1234567890";
+    let s = "1234567890";
     if (crdtuxp.rightPad(s, "x", 12) != s + "xx") {
         await crdtuxp.logError(arguments, "rightPad extension fails");
         retVal = false;
@@ -334,9 +348,9 @@ async function testLeftRightPad() {
 
 async function testQuoteDequote() {
 
-    var retVal = true;
+    let retVal = true;
 
-    var s = crdtuxp.dQ("");
+    let s = crdtuxp.dQ("");
     if (s != "\"\"") {
         await crdtuxp.logError(arguments, "failed to crdtuxp.dQ(\"\")");
         retVal = false;
@@ -388,7 +402,7 @@ async function testQuoteDequote() {
     }
 
     s = [];
-    for (var idx = 0; idx < 256; idx++) {
+    for (let idx = 0; idx < 256; idx++) {
         s.push(idx);
     }
 
@@ -399,13 +413,13 @@ async function testQuoteDequote() {
     }
 
     s = crdtuxp.deQuote(s);
-    var isOK = true;
+    let isOK = true;
     if (s.length != 256) {
         await crdtuxp.logError(arguments, "crdtuxp.deQuote wrong length");
         retVal = false;        
     }
     else {
-        for (var idx = 0; idx < 256; idx++) {
+        for (let idx = 0; idx < 256; idx++) {
             if (s[idx] != idx) {
                 await crdtuxp.logError(arguments, "crdtuxp.deQuote wrong byte #" + idx);
                 retVal = false;        
@@ -419,38 +433,38 @@ async function testQuoteDequote() {
 
 async function testPersistData() {
 
-    var retVal = true;
+    let retVal = true;
 
     do {
-        var sampleIssuerGUID = "3a0c0e2dfa2a4b24b4e5a6a97c2a4cdd";
-        var sampleDataKey = "My Data";
-        var key = "My" + "secret";
+        let sampleIssuerGUID = "3a0c0e2dfa2a4b24b4e5a6a97c2a4cdd";
+        let sampleDataKey = "My Data";
+        let key = "My" + "secret";
 
-        var now = new Date();
-        var nowTimestamp = now.getTime();
+        let now = new Date();
+        let nowTimestamp = now.getTime();
 
-        var persistData = await crdtuxp.getPersistData(sampleIssuerGUID, sampleDataKey, key);
+        let persistData = await crdtuxp.getPersistData(sampleIssuerGUID, sampleDataKey, key);
         if (! persistData) {
             persistData = nowTimestamp + "\t" + (nowTimestamp + 1000);
             await crdtuxp.setPersistData(sampleIssuerGUID, sampleDataKey, key, persistData);
         }
 
-        var splitTimestamps = persistData.split("\t");
+        let splitTimestamps = persistData.split("\t");
         if (splitTimestamps.length != 2) {
             await crdtuxp.logError(arguments, "failed to split timestamps");
             retVal = false;
             break;
         }
 
-        var lastSavedTimestamp = parseInt(splitTimestamps[0]);
-        var lastSavedTimestampPlus1000 = parseInt(splitTimestamps[1]);
+        let lastSavedTimestamp = parseInt(splitTimestamps[0]);
+        let lastSavedTimestampPlus1000 = parseInt(splitTimestamps[1]);
         if (lastSavedTimestamp + 1000 != lastSavedTimestampPlus1000) {
             await crdtuxp.logError(arguments, "failed to match timestamps");
             retVal = false;
             break;
         }
 
-        var secondsSinceLastRun = nowTimestamp - lastSavedTimestamp;
+        let secondsSinceLastRun = nowTimestamp - lastSavedTimestamp;
         if (secondsSinceLastRun < 0) {
             await crdtuxp.logError(arguments, "invalid secondsSinceLastRun");
             retVal = false;
@@ -465,7 +479,7 @@ async function testPersistData() {
 
 async function testToHex() {
 
-    var retVal = true;
+    let retVal = true;
 
     if (crdtuxp.toHex(10, 2) != "0a") {
         await crdtuxp.logError(arguments, "toHex(10,2) failed");
@@ -493,11 +507,11 @@ async function testToHex() {
 
 async function testUTFRoundTrip() {
 
-    var retVal = true;
+    let retVal = true;
 
-    var s = "Hello World☜✿\x00\x7Féøo";
-    var bytes = crdtuxp.strToUTF8(s);
-    var sRoundTrip = crdtuxp.binaryUTF8ToStr(bytes);
+    let s = "Hello World☜✿\x00\x7Féøo";
+    let bytes = crdtuxp.strToUTF8(s);
+    let sRoundTrip = crdtuxp.binaryUTF8ToStr(bytes);
     if (s != sRoundTrip) {
         await crdtuxp.logError(arguments, "failed to round trip a string to UTF8 and back");
         retVal = false;
@@ -506,7 +520,7 @@ async function testUTFRoundTrip() {
     return retVal;
 }
 
-var tests = [
+let tests = [
     testBase64,
     testDirs,
     testEncrypt,
@@ -523,18 +537,20 @@ async function run() {
 
     crdtuxp.pushLogLevel(crdtuxp.LOG_LEVEL_NOTE);
     
+    let success = true;
+
     try {
         await crdtuxp.logNote(arguments, "Starting crdtuxp_test");
 
         // You need something similar to this to enable CRDT
         // await crdtuxp.setIssuer("1186cb861234567377c49d7eade","my@email.com");
 
-        var success = true;
+        let result;
 
-        for (var idx = 0; idx < tests.length; idx++) {
+        for (let idx = 0; idx < tests.length; idx++) {
             try {
-                var ftn = tests[idx];
-                var result = await ftn();            
+                let ftn = tests[idx];
+                result = await ftn();            
                 if (! result) {
                     await crdtuxp.logError(arguments, "failed test " + ftn.name);
                 }
