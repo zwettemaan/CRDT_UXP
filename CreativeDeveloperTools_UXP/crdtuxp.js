@@ -286,6 +286,25 @@ const REGEXP_CICEROS_POINTS_REPLACE            = "$2";
 const RESOLVED_UNDEFINED_PROMISE               = Promise.resolve(undefined);
 const RESOLVED_ERROR_PROMISE                   = Promise.resolve({ error: true });
 
+const LOCALE_EN_US                             = "en_US";
+
+const DEFAULT_LOCALE                           = LOCALE_EN_US;
+
+const BTN_OK                                   = "BTN_OK";
+const TTL_DIALOG_ALERT                         = "TTL_DIALOG_ALERT";
+
+let LOCALE_STRINGS                             = {
+    BTN_OK: {
+        "en_US": "OK"
+    },
+    TTL_DIALOG_ALERT: {
+        "en_US": "Alert"
+    }
+};
+
+module.exports.LOCALE                          = DEFAULT_LOCALE;
+module.exports.LOCALE_STRINGS                  = LOCALE_STRINGS;
+
 //
 // UXP internally caches responses from the server - we need to avoid this as each script
 // run can return different results. `HTTP_CACHE_BUSTER` will be incremented after each use.
@@ -318,43 +337,60 @@ function alert(message) {
 
         if (appType == APP_TYPE_INDESIGN) {
         
+            // InDesign dialogs are not async - they stall the thread until they are closed
+
             const dlg = app.dialogs.add();
             const col = dlg.dialogColumns.add();
             const stText = col.staticTexts.add();
             stText.staticLabel = "" + message;
             dlg.canCancel = false;
-            retVal = dlg.show();
-            
-            const destroyDlg = () => { dlg.destroy(); };            
-            retVal.then(
-                () => destroyDlg, 
-                () => destroyDlg
-            );
-            
+			dlg.show();
+            dlg.destroy(); 
             break;
         }
         
         if (appType == APP_TYPE_PHOTOSHOP) {
         
             modalDialog = () => {
-            
+
                 const dlg = document.createElement("dialog");
                 const frm = document.createElement("form");
                 const bdy = document.createElement("sp-body");
                 bdy.textContent = message;
                 frm.appendChild(bdy);
+
+                const buttonContainer = document.createElement("div");
+                buttonContainer.style.display = "flex";
+                buttonContainer.style.justifyContent = "flex-end";
+                frm.appendChild(buttonContainer);
+                                
+                const btnOK = document.createElement("sp-button");
+                buttonContainer.appendChild(btnOK);
+                
+                btnOK.textContent = S(BTN_OK);
+
+                btnOK.onclick = () => {
+                    dlg.close();
+                };
+
                 dlg.appendChild(frm);
                 document.body.appendChild(dlg);			
                 return dlg.uxpShowModal(
                     {
-                        title: "Alert",
+                        title: S(TTL_DIALOG_ALERT),
                         resize: "none", 
-                        size: { width: 200, height: 100}	
+                        size: { width: 400, height: 100}	
                     }
                 );
             }
             
-            retVal = photoshop.core.executeAsModal(modalDialog, {"commandName": "alert message"});
+            retVal = 
+                photoshop.core.executeAsModal(
+                    modalDialog, 
+                    {
+                        "commandName": "alert message"
+                    }
+                );
                         
             break;
         }
@@ -2912,6 +2948,45 @@ function setIssuer(issuerGUID, issuerEmail) {
     return retVal;
 }
 module.exports.setIssuer = setIssuer;
+
+/**
+ * Fetch a localized string.
+ *
+ * @function s
+ *
+ * @param {string} stringCode - a token for the string to be localized (e.g. BTN_OK)
+ * @param {string?} locale - a locale. Optional - defaults to "en_US"
+ * @returns {string} a localized string. If the stringCode is not found, returns the stringCode itself.
+ */
+function S(stringCode, locale) {
+
+    let retVal = stringCode;
+
+    do {
+
+        if (! locale) {
+            locale = DEFAULT_LOCALE;
+        }
+
+        if (! (stringCode in LOCALE_STRINGS)) {
+            break;
+        }
+
+        const localeStrings = LOCALE_STRINGS[stringCode];
+        if (locale in localeStrings) {
+            retVal = localeStrings[locale];        
+        }
+        else if (LOCALE_EN_US in localeStrings) {
+            retVal = localeStrings[LOCALE_EN_US];
+        }
+
+    }
+    while (false);
+
+
+    return retVal;
+}
+module.exports.S = S;
 
 /**
  * Wrap a string or a byte array into single quotes, encoding any
