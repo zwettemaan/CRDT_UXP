@@ -38,36 +38,10 @@
  * @module crdtuxp
  */
 
-let appType = undefined;
-const APP_TYPE_PHOTOSHOP = "PHSH";
-const APP_TYPE_INDESIGN = "IDSN";
-const APP_TYPE_INDESIGN_SERVER = "IDSN_S";
-
-let app;
-let indesign;
-let photoshop;
-try {
-    // @ts-ignore
-    indesign = require("indesign");
-    app = indesign.app;
-    if (app.name.indexOf("Server") >= 0) {
-        appType = APP_TYPE_INDESIGN_SERVER;
-    }
-    else {
-        appType = APP_TYPE_INDESIGN;
-    }
-}
-catch (err) {
-}
-
-try {
-    // @ts-ignore
-    photoshop = require("photoshop");
-    app = photoshop.app;
-    appType = APP_TYPE_PHOTOSHOP;
-}
-catch (err) {    
-}
+const UXP_VARIANT_PHOTOSHOP_UXP                 = "UXP_VARIANT_PHOTOSHOP_UXP";
+const UXP_VARIANT_PHOTOSHOP_UXPSCRIPT           = "UXP_VARIANT_PHOTOSHOP_UXPSCRIPT";
+const UXP_VARIANT_INDESIGN_UXPSCRIPT            = "UXP_VARIANT_INDESIGN_UXPSCRIPT";
+const UXP_VARIANT_INDESIGN_SERVER_UXPSCRIPT     = "UXP_VARIANT_INDESIGN_SERVER_UXPSCRIPT";
 
 function getPlatformGlobals() {
     return global;
@@ -290,6 +264,7 @@ const REGEXP_CICEROS_REPLACE                   = "$1";
 const REGEXP_CICEROS_POINTS_REPLACE            = "$2";
 
 const RESOLVED_UNDEFINED_PROMISE               = Promise.resolve(undefined);
+const RESOLVED_TRUE_PROMISE                    = Promise.resolve(true);
 const RESOLVED_ERROR_PROMISE                   = Promise.resolve({ error: true });
 
 const LOCALE_EN_US                             = "en_US";
@@ -341,19 +316,21 @@ function alert(message) {
     
     do {
 
-        if (appType == APP_TYPE_INDESIGN_SERVER) {
+        var uxpContext = getUXPContext();
+
+        if (uxpContext.uxpVariant == UXP_VARIANT_INDESIGN_SERVER_UXPSCRIPT) {
             // We've lost access to the alert() function in InDesign Server, which writes
             // to stdout.
             // The only workaround I currently have is to pass through ExtendScript
-            app.doScript("alert(" + crdtuxp.dQ(message) + ")", indesign.ScriptLanguage.JAVASCRIPT);
+            crdtuxp.app.doScript("alert(" + crdtuxp.dQ(message) + ")", uxpContext.indesign.ScriptLanguage.JAVASCRIPT);
             break;
         }
 
-        if (appType == APP_TYPE_INDESIGN) {
+        if (uxpContext.uxpVariant == UXP_VARIANT_INDESIGN_UXPSCRIPT) {
         
             // InDesign dialogs are not async - they stall the thread until they are closed
 
-            const dlg = app.dialogs.add();
+            const dlg = crdtuxp.app.dialogs.add();
             const col = dlg.dialogColumns.add();
             const stText = col.staticTexts.add();
             stText.staticLabel = "" + message;
@@ -363,9 +340,9 @@ function alert(message) {
             break;
         }
         
-        if (appType == APP_TYPE_PHOTOSHOP) {
+        if (uxpContext.uxpVariant == UXP_VARIANT_PHOTOSHOP_UXP || uxpContext.uxpVariant == UXP_VARIANT_PHOTOSHOP_UXPSCRIPT) {
         
-            modalDialog = () => {
+            let modalDialog = () => {
 
                 const dlg = document.createElement("dialog");
                 const frm = document.createElement("form");
@@ -399,7 +376,7 @@ function alert(message) {
             }
             
             retVal = 
-                photoshop.core.executeAsModal(
+                uxpContext.photoshop.core.executeAsModal(
                     modalDialog, 
                     {
                         "commandName": "alert message"
@@ -420,7 +397,8 @@ module.exports.alert = alert;
 /**
  * Decode a string that was encoded using base64.
  *
- * This function has not been speed-tested;
+ * This function has not been speed-tested; it's mainly for testing things.
+ *
  * I suspect it might only be beneficial for very large long strings, if that. The overheads might be
  * larger than the speed benefit.
  *
@@ -434,6 +412,12 @@ function base64decode(base64Str) {
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
+
+        let uxpContext = getUXPContext();
+        if (! uxpContext.hasNetworkAccess) {
+            retVal = Promise.resolve(window.btoa(s_or_ByteArr));
+            break;
+        }
 
         const responsePromise = evalTQL("base64decode(" + dQ(base64Str) + ")");
         if (! responsePromise) {
@@ -460,7 +444,7 @@ module.exports.base64decode = base64decode;
 /**
  * Encode a string or an array of bytes using Base 64 encoding.
  *
- * This function has not been speed-tested.
+ * This function has not been speed-tested; it's mainly for testing things.
  *
  * I suspect it might only be beneficial for very large long strings, if that. The overheads might be
  * larger than the speed benefit.
@@ -476,6 +460,12 @@ function base64encode(s_or_ByteArr) {
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
+
+        let uxpContext = getUXPContext();
+        if (! uxpContext.hasNetworkAccess) {
+            retVal = Promise.resolve(window.btoa(s_or_ByteArr));
+            break;
+        }
 
         const responsePromise = evalTQL("base64encode(" + dQ(s_or_ByteArr) + ")");
         if (! responsePromise) {
@@ -904,6 +894,20 @@ function dirExists(dirPath) {
 
     do {
 
+        let uxpContext = getUXPContext();
+        if (uxpContext.hasDirectFileAccess) {
+            let stat = promisify(uxpContext.fs.stat);
+            retVal = stat(dirPath).then((err, stats) => { 
+                if (err) throw err; 
+                if (stats.isDirectory()) { 
+                    return true;
+                } else { 
+                    return false;
+                } 
+            }); 
+            break;
+        }
+
         const responsePromise = evalTQL("dirExists(" + dQ(dirPath) + ") ? \"true\" : \"false\"");
         if (! responsePromise) {
             break;
@@ -1167,6 +1171,11 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
 
     do {
 
+        let uxpContext = getUXPContext();
+        if (! uxpContext.hasNetworkAccess) {
+            break;
+        }
+
         if (! tqlScopeName) {
             tqlScopeName = TQL_SCOPE_NAME_DEFAULT;
         }
@@ -1237,6 +1246,12 @@ function fileAppendString(fileName, appendStr) {
 
     do {
 
+        let uxpContext = getUXPContext();
+        if (uxpContext.hasDirectFileAccess) {
+            uxpContext.fs.writeFileSync("file:" + fileName, appendStr);
+            break;
+        }
+
         const responsePromise = evalTQL(
             "var retVal = true;" + 
             "var handle = fileOpen(" + dQ(fileName) + ",'a');" +
@@ -1287,6 +1302,12 @@ function fileClose(fileHandle) {
 
     do {
 
+        let uxpContext = getUXPContext();
+        if (uxpContext.hasDirectFileAccess) {
+            retVal = RESOLVED_TRUE_PROMISE;
+            break;
+        }
+
         const responsePromise = evalTQL("fileClose(" + fileHandle + ") ? \"true\" : \"false\"");
         if (! responsePromise) {
             break;
@@ -1325,6 +1346,12 @@ function fileDelete(filePath) {
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
+
+        let uxpContext = getUXPContext();
+        if (uxpContext.hasDirectFileAccess) {
+            retVal = uxpContext.fs.promises.unlink(filePath);
+            break;
+        }
 
         const responsePromise = evalTQL("fileDelete(" + dQ(filePath) + ") ? \"true\" : \"false\"");
         if (! responsePromise) {
@@ -1715,6 +1742,44 @@ function getDir(dirTag) {
 
     do {
 
+        if (crdtuxp.context) {
+            
+            if (dirTag == module.exports.DESKTOP_DIR && crtdtuxp.context.PATH_DESKTOP) {
+                retVal = Promise.resolve(crtdtuxp.context.PATH_DESKTOP);
+                break;
+            }
+
+            if (dirTag == module.exports.DOCUMENTS_DIR && crtdtuxp.context.PATH_DOCUMENTS) {
+                retVal = Promise.resolve(crtdtuxp.context.PATH_DOCUMENTS);
+                break;
+            }
+
+            if (dirTag == module.exports.HOME_DIR && crtdtuxp.context.PATH_HOME) {
+                retVal = Promise.resolve(crtdtuxp.context.PATH_HOME);
+                break;
+            }
+
+            if (dirTag == module.exports.LOG_DIR && crtdtuxp.context.PATH_LOG) {
+                retVal = Promise.resolve(crtdtuxp.context.PATH_LOG);
+                break;
+            }
+
+            if (dirTag == module.exports.SYSTEMDATA_DIR && crtdtuxp.context.PATH_SYSTEMDATA) {
+                retVal = Promise.resolve(crtdtuxp.context.PATH_SYSTEMDATA);
+                break;
+            }
+
+            if (dirTag == module.exports.TMP_DIR && crtdtuxp.context.PATH_TMP) {
+                retVal = Promise.resolve(crtdtuxp.context.PATH_TMP);
+                break;
+            }
+
+            if (dirTag == module.exports.USERDATA_DIR && crtdtuxp.context.PATH_USERDATA) {
+                retVal = Promise.resolve(crtdtuxp.context.PATH_USERDATA);
+                break;
+            }
+        }
+
         const sysInfoPromise = getSysInfo__();
         if (! sysInfoPromise) {
             break;
@@ -1958,84 +2023,6 @@ function getIntValuesFromINI(in_valueStr) {
 module.exports.getIntValuesFromINI = getIntValuesFromINI;
 
 /**
- * Interpret a string extracted from some INI data as a unit name
- *
- * @function getUnitFromINI
- *
- * @param {string} in_value - ini value
- * @param {string} in_defaultUnit - default to use if no match is found
- * @returns {string} value
- */
-
-function getUnitFromINI(in_value, in_defaultUnit) {
-
-    const defaultUnit = (in_defaultUnit !== undefined) ? in_defaultUnit : crdtuxp.UNIT_NAME_NONE;
-
-    let retVal = defaultUnit;
-
-    const value = (in_value + "").replace(REGEXP_TRIM, REGEXP_TRIM_REPLACE).toLowerCase();
-
-    if (value == "\"" || value.substring(0,2) == "in") {
-        retVal = crdtuxp.UNIT_NAME_INCH;
-    }
-    else if (value == "cm" || value == "cms" || value.substr(0,4) == "cent") {
-        retVal = crdtuxp.UNIT_NAME_CM;
-    }
-    else if (value == "mm" || value == "mms" || value.substr(0,4) == "mill") {
-        retVal = crdtuxp.UNIT_NAME_MM;
-    }
-    else if (value.substring(0,3) == "cic") {
-        retVal = crdtuxp.UNIT_NAME_CICERO;
-    }
-    else if (value.substring(0,3) == "pic") {
-        retVal = crdtuxp.UNIT_NAME_PICA;
-    }
-    else if (value.substring(0,3) == "pix" || value == "px") {
-        retVal = crdtuxp.UNIT_NAME_PIXEL;
-    }
-    else if (value.substring(0,3) == "poi" || value == "pt") {
-        retVal = crdtuxp.UNIT_NAME_POINT;
-    }
-
-    return retVal;
-}
-module.exports.getUnitFromINI = getUnitFromINI;
-
-/**
- * Get file path to PluginInstaller if it is installed
- *
- * @function getPluginInstallerPath
- * @returns {Promise<string>} file path
-*/
-function getPluginInstallerPath() {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
-
-    do {
-
-        const responsePromise = evalTQL("getPluginInstallerPath()");
-        if (! responsePromise) {
-            break;
-        }
-
-        retVal = responsePromise.then(
-            response => {
-                let retVal;
-                if (response && ! response.error) {
-                    retVal = response.text;
-                }
-                return retVal;
-            }
-        );
-
-    }
-    while (false);
-
-    return retVal;
-}
-module.exports.getPluginInstallerPath = getPluginInstallerPath;
-
-/**
  * Query the daemon for persisted data
  *
  * Only available to paid developer accounts
@@ -2075,7 +2062,47 @@ function getPersistData(issuer, attribute, password) {
 }
 module.exports.getPersistData = getPersistData;
 
-// Internal function getSysInfo__: fetch the whole Tightener sysInfo structure
+/**
+ * Get file path to PluginInstaller if it is installed
+ *
+ * @function getPluginInstallerPath
+ * @returns {Promise<string>} file path
+*/
+function getPluginInstallerPath() {
+
+    let retVal = RESOLVED_UNDEFINED_PROMISE;
+
+    do {
+
+        const responsePromise = evalTQL("getPluginInstallerPath()");
+        if (! responsePromise) {
+            break;
+        }
+
+        retVal = responsePromise.then(
+            response => {
+                let retVal;
+                if (response && ! response.error) {
+                    retVal = response.text;
+                }
+                return retVal;
+            }
+        );
+
+    }
+    while (false);
+
+    return retVal;
+}
+module.exports.getPluginInstallerPath = getPluginInstallerPath;
+
+/**
+ * Internal function. Query the Tightener daemon for system information
+ *
+ * @function getSysInfo__
+ *
+ * @returns {object} system info
+ */
 
 function getSysInfo__() {
 
@@ -2130,6 +2157,118 @@ function getSysInfo__() {
 
     return retVal;
 }
+
+/**
+ * Interpret a string extracted from some INI data as a unit name
+ *
+ * @function getUnitFromINI
+ *
+ * @param {string} in_value - ini value
+ * @param {string} in_defaultUnit - default to use if no match is found
+ * @returns {string} value
+ */
+
+function getUnitFromINI(in_value, in_defaultUnit) {
+
+    const defaultUnit = (in_defaultUnit !== undefined) ? in_defaultUnit : crdtuxp.UNIT_NAME_NONE;
+
+    let retVal = defaultUnit;
+
+    const value = (in_value + "").replace(REGEXP_TRIM, REGEXP_TRIM_REPLACE).toLowerCase();
+
+    if (value == "\"" || value.substring(0,2) == "in") {
+        retVal = crdtuxp.UNIT_NAME_INCH;
+    }
+    else if (value == "cm" || value == "cms" || value.substr(0,4) == "cent") {
+        retVal = crdtuxp.UNIT_NAME_CM;
+    }
+    else if (value == "mm" || value == "mms" || value.substr(0,4) == "mill") {
+        retVal = crdtuxp.UNIT_NAME_MM;
+    }
+    else if (value.substring(0,3) == "cic") {
+        retVal = crdtuxp.UNIT_NAME_CICERO;
+    }
+    else if (value.substring(0,3) == "pic") {
+        retVal = crdtuxp.UNIT_NAME_PICA;
+    }
+    else if (value.substring(0,3) == "pix" || value == "px") {
+        retVal = crdtuxp.UNIT_NAME_PIXEL;
+    }
+    else if (value.substring(0,3) == "poi" || value == "pt") {
+        retVal = crdtuxp.UNIT_NAME_POINT;
+    }
+
+    return retVal;
+}
+module.exports.getUnitFromINI = getUnitFromINI;
+
+/**
+ * Get our bearings and figure out what context we're operating in. Depending on the context
+ * we will or won't have access to certain features
+ *
+ * @function getUXPContext
+ *
+ * @returns {object} context
+ */
+
+function getUXPContext() {
+
+    let retVal;
+
+    do {
+
+        if (crdtuxp.uxpContext) {
+            retVal = crdtuxp.uxpContext;
+            break;
+        }
+
+        let uxpContext = {};
+        crdtuxp.uxpContext = uxpContext;
+
+        uxpContext.fs = require("fs");
+        uxpContext.os = require("os");
+        uxpContext.uxp = require("uxp");
+
+        try {
+            // @ts-ignore
+            uxpContext.indesign = require("indesign");
+            uxpContext.app = uxpContext.indesign.app;
+            if (uxpContext.app.name.indexOf("Server") >= 0) {
+                uxpContext.uxpVariant = UXP_VARIANT_INDESIGN_SERVER_UXPSCRIPT;
+                uxpContext.hasNetworkAccess = true;
+            }
+            else {
+                uxpContext.uxpVariant = UXP_VARIANT_INDESIGN_UXPSCRIPT;
+                uxpContext.hasNetworkAccess = true;
+            }
+        }
+        catch (err) {
+        }
+
+        try {
+            // @ts-ignore
+            uxpContext.photoshop = require("photoshop");
+            uxpContext.app = uxpContext.photoshop.app;
+            let commandId = uxpContext.uxp?.script?.executionContext?.commandInfo?._manifestCommand?.commandId;
+            if (commandId == "scriptMainCommand") {
+                uxpContext.uxpVariant = UXP_VARIANT_PHOTOSHOP_UXPSCRIPT;
+                uxpContext.hasDirectFileAccess = true;
+            }
+            else {
+                uxpContext.uxpVariant = UXP_VARIANT_PHOTOSHOP_UXP;
+                uxpContext.hasNetworkAccess = true;
+            }
+        }
+        catch (err) {    
+        }
+
+        retVal = uxpContext;
+    }
+    while (false);
+
+    return retVal;
+}
+module.exports.getUXPContext = getUXPContext;
 
 /**
  * Calculate an integer power of an int value. Avoids using floating point, so
@@ -2622,6 +2761,37 @@ function popLogLevel() {
     return retVal;
 }
 module.exports.popLogLevel = popLogLevel;
+
+/**
+ * Convert a callback-based function into a Promise
+ *
+ * @function promisify
+ *
+ * @param {function} ftn - callback-based function
+ * @returns {Promise} promisified function
+ */
+
+function promisify(ftn) {
+
+   return (...args) => {
+
+     return new Promise((resolve, reject) => {
+
+        args.push(
+            (err, ...results) => {
+                if (err) {
+                    return reject(err)
+                }
+                return resolve(results.length === 1 ? results[0] : results);
+            }
+        );
+
+        ftn.call(this, ...args)
+      })
+
+   }
+}
+module.exports.promisify = promisify;
 
 /**
  * Save the previous log level and set a new log level
