@@ -97,6 +97,16 @@ let crdtuxp = module.exports;
 module.exports.IS_MAC = require('os').platform() == PLATFORM_MAC_OS_X;
 module.exports.IS_WINDOWS = ! module.exports.IS_MAC;
 
+module.exports.path = {};
+if (module.exports.IS_MAC) {
+    module.exports.path.SEPARATOR = "/";
+    module.exports.path.OTHER_PLATFORM_SEPARATOR = "\\";
+}
+else {
+    module.exports.path.SEPARATOR = "\\";
+    module.exports.path.OTHER_PLATFORM_SEPARATOR = "/";
+}
+
 /**
  * Setting log level to `LOG_LEVEL_OFF` causes all log output to be suppressed.
  *
@@ -303,6 +313,45 @@ let LOG_TO_FILEPATH           = undefined;
 let SYS_INFO;
 
 /**
+ * Make sure a path ends in a trailing separator (helps identify directory paths)
+ *
+ * @function addTrailingSeparator
+ *
+ * @param {string} filePath - a file path 
+ * @param {string} separator - optional: the separator to use. If omitted, will try 
+ * guess the separator.
+ * @returns file path with a terminating separator
+ */
+
+function addTrailingSeparator(filePath, separator) {
+
+    let retVal = filePath;
+    
+    do {
+
+        if (! filePath) {
+            break;            
+        }
+
+        const lastChar = filePath.substr(-1);        
+        if (lastChar == crdtuxp.path.SEPARATOR || lastChar == crdtuxp.path.OTHER_PLATFORM_SEPARATOR) {
+            break;
+        }
+
+        if (! separator) {
+            separator = crdtuxp.path.SEPARATOR;
+        }
+
+        retVal += separator;
+    }
+    while (false);
+
+    return retVal;
+}
+
+module.exports.path.addTrailingSeparator = addTrailingSeparator;
+
+/**
  * Show an alert.
  *
  * @function alert
@@ -335,7 +384,7 @@ function alert(message) {
             const stText = col.staticTexts.add();
             stText.staticLabel = "" + message;
             dlg.canCancel = false;
-			dlg.show();
+            dlg.show();
             dlg.destroy(); 
             break;
         }
@@ -365,12 +414,12 @@ function alert(message) {
                 };
 
                 dlg.appendChild(frm);
-                document.body.appendChild(dlg);			
+                document.body.appendChild(dlg);         
                 return dlg.uxpShowModal(
                     {
                         title: S(TTL_DIALOG_ALERT),
                         resize: "none", 
-                        size: { width: 400, height: 100}	
+                        size: { width: 400, height: 100}    
                     }
                 );
             }
@@ -405,21 +454,32 @@ module.exports.alert = alert;
  * @function base64decode
  *
  * @param {string} base64Str - base64 encoded string
- * @returns {Promise<string|undefined>} decoded string
+ * @param {object=} options - options: { isBinary: true/false, default false }
+ * @returns {Promise<string|array|undefined>} decoded string
  */
-function base64decode(base64Str) {
+function base64decode(base64Str, options) {
 
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
 
+        let isBinary = options && options.isBinary;
+        
         let uxpContext = getUXPContext();
         if (! uxpContext.hasNetworkAccess) {
-            retVal = Promise.resolve(window.btoa(s_or_ByteArr));
+        
+            let rawString = window.atob(base64Str);
+            let byteArray = rawStringToByteArray(rawString);
+            if (isBinary) {
+                retVal = Promise.resolve(byteArray);
+            }
+            else {
+                retVal = Promise.resolve(binaryUTF8ToStr(byteArray));
+            }
             break;
         }
 
-        const responsePromise = evalTQL("base64decode(" + dQ(base64Str) + ")");
+        let responsePromise = evalTQL("base64decode(" + dQ(base64Str) + ")",isBinary);
         if (! responsePromise) {
             break;
         }
@@ -428,7 +488,12 @@ function base64decode(base64Str) {
             response => {
                 let retVal;
                 if (response && ! response.error) {
-                    retVal = response.text;
+                    if (isBinary) {
+                        retVal = deQuote(response.text);
+                    }
+                    else {
+                        retVal = response.text;
+                    }
                 }
                 return retVal;
             }
@@ -463,7 +528,19 @@ function base64encode(s_or_ByteArr) {
 
         let uxpContext = getUXPContext();
         if (! uxpContext.hasNetworkAccess) {
-            retVal = Promise.resolve(window.btoa(s_or_ByteArr));
+        
+            let byteArray;
+            if ("string" == typeof s_or_ByteArr) {
+                byteArray = strToUTF8(s_or_ByteArr);
+            }
+            else {
+                byteArray = s_or_ByteArr;
+            }
+            
+            let rawString = byteArrayToRawString(byteArray);            
+            
+            retVal = Promise.resolve(window.btoa(rawString));
+            
             break;
         }
 
@@ -488,6 +565,36 @@ function base64encode(s_or_ByteArr) {
     return retVal;    
 }
 module.exports.base64encode = base64encode;
+
+/**
+ * Get the last segment of a path
+ *
+ * @function baseName
+ *
+ * @param {string} filePath - a file path 
+ * @param {string} separator - optional: the separator to use. If omitted, will try 
+ * guess the separator.
+ * @returns the last segment of the path
+ */
+
+function baseName(filePath, separator) {    
+
+    let endSegment;
+
+    if (! separator) {
+        separator = crdtuxp.path.SEPARATOR;
+    }
+
+    // toString() handles cases where filePath is not a real string
+    let splitPath = filePath.toString().split(separator);
+    do {
+        endSegment = splitPath.pop();   
+    }
+    while (splitPath.length > 0 && endSegment == "");
+
+    return endSegment;
+}
+module.exports.path.baseName = baseName;
 
 /**
  * Decode an array of bytes that contains a UTF-8 encoded string.
@@ -834,6 +941,69 @@ function deQuote(quotedString) {
 module.exports.deQuote = deQuote;
 
 /**
+ * Create a directory.
+ *
+ * Not restricted by the UXP security sandbox.
+ *
+ * @function dirCreate
+ *
+ * @param {string} filePath
+ * @returns {Promise<boolean|undefined>} success or failure
+ */
+
+function dirCreate(filePath) {
+
+    let retVal = RESOLVED_UNDEFINED_PROMISE;
+
+    do {
+
+        let uxpContext = getUXPContext();
+        if (uxpContext.hasDirectFileAccess) {
+            
+            let parentPath = crdtuxp.path.dirName(filePath);            
+            let baseName = crdtuxp.path.baseName(filePath);         
+            retVal = 
+                uxpContext.lfs.getEntryWithUrl("file:" + parentPath).then(
+                    parentEntry => {
+                        parentEntry.createFolder(baseName).then(
+                            folderEntry => {
+                                return true;
+                            },
+                            error => {
+                                return false;
+                            }
+                        );
+                    },
+                    error => {
+                        return false;
+                    }
+                )                       
+            break;
+        }
+
+        const responsePromise = evalTQL("dirCreate(" + dQ(filePath) + ") ? \"true\" : \"false\"");
+        if (! responsePromise) {
+            break;
+        }
+
+        retVal = responsePromise.then(
+            response => {
+                let retVal;
+                if (response && ! response.error) {
+                    retVal = response.text == "true";
+                }
+                return retVal;
+            }
+        );
+
+    }
+    while (false);
+    
+    return retVal;
+}
+module.exports.dirCreate = dirCreate;
+
+/**
  * Delete a directory.
  *
  * Not restricted by the UXP security sandbox.
@@ -852,6 +1022,94 @@ function dirDelete(filePath, recurse) {
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
+
+        let uxpContext = getUXPContext();
+        
+        if (uxpContext.hasDirectFileAccess) {
+            
+            function deleteRecursively(entry) {
+
+                if (entry.isFile) {
+                    retVal = entry.delete().then(
+                        () => {
+                            return true;
+                        },
+                        error => {
+                            return false;
+                        }
+                    )
+                }
+                else if (entry.isFolder) {
+                    entry.getEntries().then(
+                        contents => {
+                            let promises = [];
+                            for (const contentEntry of contents) {
+                                // Recursively delete each entry in the folder
+                                promises.push(deleteRecursively(contentEntry));
+                            }
+                            Promise.all(promises).then(
+                                () => {
+                                    entry.delete().then(
+                                        () => {
+                                            return true;
+                                        },
+                                        error => {
+                                            return false;
+                                        }
+                                    );
+                                },
+                                error => {
+                                    return false;
+                                }
+                            );
+                        },
+                        error => {
+                            return false;
+                        }
+                    );
+                }
+                else {
+                    return false;
+                }
+            }
+            
+            retVal = 
+                uxpContext.lfs.getEntryWithPath(filePath).then(
+                    dirEntry => {
+                    
+                        if (! dirEntry.isFolder) {
+                            return false;
+                        }
+                        
+                        if (recurse) {
+                            deleteRecursively(dirEntry).then(
+                                () => {
+                                    return true;
+                                },
+                                error => {
+                                    return false;
+                                }
+                            )
+                        }
+                        else {
+                            dirEntry.delete().then(
+                                () => {
+                                    return true;
+                                },
+                                error => {
+                                    return false;
+                                }
+                            )
+                        }
+                    },
+                    error => {
+                        return undefined;
+                    }
+                );  
+            
+            break;
+        }
+
 
         const responsePromise = evalTQL("dirDelete(" + dQ(filePath) + "," + (recurse ? "true" : "false") + ") ? \"true\" : \"false\"");
         if (! responsePromise) {
@@ -896,15 +1154,15 @@ function dirExists(dirPath) {
 
         let uxpContext = getUXPContext();
         if (uxpContext.hasDirectFileAccess) {
-            let stat = promisify(uxpContext.fs.stat);
-            retVal = stat(dirPath).then((err, stats) => { 
-                if (err) throw err; 
-                if (stats.isDirectory()) { 
-                    return true;
-                } else { 
-                    return false;
-                } 
-            }); 
+            retVal = 
+                uxpContext.lfs.getEntryWithUrl("file:" + dirPath).then(
+                    dirEntry => {
+                        return dirEntry.isFolder;
+                    },
+                    error => {
+                        return undefined;
+                    }
+                );
             break;
         }
 
@@ -931,43 +1189,37 @@ function dirExists(dirPath) {
 module.exports.dirExists = dirExists;
 
 /**
- * Create a directory.
+ * Get the parent directory of a path
  *
- * Not restricted by the UXP security sandbox.
+ * @function dirName
  *
- * @function dirCreate
- *
- * @param {string} filePath
- * @returns {Promise<boolean|undefined>} success or failure
+ * @param {string} filePath - a file path 
+ * @param {string} separator - optional: the separator to use. If omitted, will try 
+ * guess the separator.
+ * @returns the parent of the path
  */
 
-function dirCreate(filePath) {
+function dirName(filePath, separator) {    
 
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+    let retVal;
 
-    do {
-
-        const responsePromise = evalTQL("dirCreate(" + dQ(filePath) + ") ? \"true\" : \"false\"");
-        if (! responsePromise) {
-            break;
-        }
-
-        retVal = responsePromise.then(
-            response => {
-                let retVal;
-                if (response && ! response.error) {
-                    retVal = response.text == "true";
-                }
-                return retVal;
-            }
-        );
-
+    if (! separator) {
+        separator = crdtuxp.path.SEPARATOR;
     }
-    while (false);
-    
+
+    // toString() handles cases where filePath is not a real string
+    let splitPath = filePath.toString().split(separator);
+    let endSegment;
+    do {
+        endSegment = splitPath.pop();   
+    }
+    while (splitPath.length > 0 && endSegment == "");
+
+    retVal = splitPath.join(separator);
+
     return retVal;
 }
-module.exports.dirCreate = dirCreate;
+module.exports.path.dirName = dirName;
 
 /**
  * Scan a directory.
@@ -985,6 +1237,35 @@ function dirScan(filePath) {
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
+
+        let uxpContext = getUXPContext();
+        if (uxpContext.hasDirectFileAccess) {
+            
+            retVal = 
+                uxpContext.lfs.getEntryWithPath(filePath).then(
+                    dirEntry => {
+                    
+                        if (! dirEntry.isFolder) {
+                            return false;
+                        }
+                        
+                        dirEntry.getEntries().then(
+                            contents => {
+                                return contents;
+                            },
+                            error => {
+                                return false;
+                            }
+                        );
+
+                    },
+                    error => {
+                        return undefined;
+                    }
+                );  
+            
+            break;
+        }
 
         const responsePromise = evalTQL("enquote(dirScan(" + dQ(filePath) + ").toString())");
         if (! responsePromise) {
@@ -1248,7 +1529,25 @@ function fileAppendString(fileName, appendStr) {
 
         let uxpContext = getUXPContext();
         if (uxpContext.hasDirectFileAccess) {
-            uxpContext.fs.writeFileSync("file:" + fileName, appendStr);
+
+            let appendByteArr;
+            if ("string" == typeof appendStr) {
+                appendByteArr = strToUTF8(appendStr);
+            }
+            else {
+                appendByteArr = appendStr;
+            }
+
+            let writeFile = promisifyWithContext(uxpContext.fs.writeFile, uxpContext.fs);
+            
+            retVal = 
+                writeFile(
+                    fileName, 
+                    appendByteArr, 
+                    {
+                        flush: true
+                    }
+                );
             break;
         }
 
@@ -1415,6 +1714,33 @@ function fileExists(filePath) {
     return retVal;
 }
 module.exports.fileExists = fileExists;
+
+/**
+ * Get the file name extension of a path
+ *
+ * @function fileNameExtension
+ *
+ * @param {string} filePath - a file path 
+ * @param {string} separator - optional: the separator to use. If omitted, will try 
+ * guess the separator.
+ * @returns the lowercased file name extension, without leading period
+ */
+
+function fileNameExtension(filePath, separator) {
+
+    let retVal;
+
+    let splitName = crdtuxp.path.baseName(filePath).split(".");
+    let extension = "";
+    if (splitName.length > 1) {
+        extension = splitName.pop();
+    }
+
+    retVal = extension.toLowerCase();
+
+    return retVal;
+}
+module.exports.path.fileNameExtension = fileNameExtension;
 
 /**
  * Open a binary file and return a handle
@@ -1744,38 +2070,38 @@ function getDir(dirTag) {
 
         if (crdtuxp.context) {
             
-            if (dirTag == module.exports.DESKTOP_DIR && crtdtuxp.context.PATH_DESKTOP) {
-                retVal = Promise.resolve(crtdtuxp.context.PATH_DESKTOP);
+            if (dirTag == module.exports.DESKTOP_DIR && crdtuxp.context.PATH_DESKTOP) {
+                retVal = Promise.resolve(crdtuxp.context.PATH_DESKTOP);
                 break;
             }
 
-            if (dirTag == module.exports.DOCUMENTS_DIR && crtdtuxp.context.PATH_DOCUMENTS) {
-                retVal = Promise.resolve(crtdtuxp.context.PATH_DOCUMENTS);
+            if (dirTag == module.exports.DOCUMENTS_DIR && crdtuxp.context.PATH_DOCUMENTS) {
+                retVal = Promise.resolve(crdtuxp.context.PATH_DOCUMENTS);
                 break;
             }
 
-            if (dirTag == module.exports.HOME_DIR && crtdtuxp.context.PATH_HOME) {
-                retVal = Promise.resolve(crtdtuxp.context.PATH_HOME);
+            if (dirTag == module.exports.HOME_DIR && crdtuxp.context.PATH_HOME) {
+                retVal = Promise.resolve(crdtuxp.context.PATH_HOME);
                 break;
             }
 
-            if (dirTag == module.exports.LOG_DIR && crtdtuxp.context.PATH_LOG) {
-                retVal = Promise.resolve(crtdtuxp.context.PATH_LOG);
+            if (dirTag == module.exports.LOG_DIR && crdtuxp.context.PATH_LOG) {
+                retVal = Promise.resolve(crdtuxp.context.PATH_LOG);
                 break;
             }
 
-            if (dirTag == module.exports.SYSTEMDATA_DIR && crtdtuxp.context.PATH_SYSTEMDATA) {
-                retVal = Promise.resolve(crtdtuxp.context.PATH_SYSTEMDATA);
+            if (dirTag == module.exports.SYSTEMDATA_DIR && crdtuxp.context.PATH_SYSTEMDATA) {
+                retVal = Promise.resolve(crdtuxp.context.PATH_SYSTEMDATA);
                 break;
             }
 
-            if (dirTag == module.exports.TMP_DIR && crtdtuxp.context.PATH_TMP) {
-                retVal = Promise.resolve(crtdtuxp.context.PATH_TMP);
+            if (dirTag == module.exports.TMP_DIR && crdtuxp.context.PATH_TMP) {
+                retVal = Promise.resolve(crdtuxp.context.PATH_TMP);
                 break;
             }
 
-            if (dirTag == module.exports.USERDATA_DIR && crtdtuxp.context.PATH_USERDATA) {
-                retVal = Promise.resolve(crtdtuxp.context.PATH_USERDATA);
+            if (dirTag == module.exports.USERDATA_DIR && crdtuxp.context.PATH_USERDATA) {
+                retVal = Promise.resolve(crdtuxp.context.PATH_USERDATA);
                 break;
             }
         }
@@ -2227,7 +2553,9 @@ function getUXPContext() {
 
         uxpContext.fs = require("fs");
         uxpContext.os = require("os");
-        uxpContext.uxp = require("uxp");
+        uxpContext.uxp = require("uxp");       
+        let storage = uxpContext.uxp.storage;
+        uxpContext.lfs = storage.localFileSystem;
 
         try {
             // @ts-ignore
@@ -2768,7 +3096,7 @@ module.exports.popLogLevel = popLogLevel;
  * @function promisify
  *
  * @param {function} ftn - callback-based function
- * @returns {Promise} promisified function
+ * @returns {function} promisified function
  */
 
 function promisify(ftn) {
@@ -2785,13 +3113,42 @@ function promisify(ftn) {
                 return resolve(results.length === 1 ? results[0] : results);
             }
         );
-
         ftn.call(this, ...args)
       })
 
    }
 }
 module.exports.promisify = promisify;
+
+/**
+ * Convert a callback-based member function into a Promise
+ *
+ * @function promisifyWithContext
+ *
+ * @param {function} ftn - callback-based function
+ * @returns {function} promisified function
+ */
+
+function promisifyWithContext(ftn, context) {
+
+   return (...args) => {
+
+     return new Promise((resolve, reject) => {
+
+        args.push(
+            (err, ...results) => {
+                if (err) {
+                    return reject(err)
+                }
+                return resolve(results.length === 1 ? results[0] : results);
+            }
+        );
+        ftn.call(context, ...args)
+      })
+
+   }
+}
+module.exports.promisifyWithContext = promisifyWithContext;
 
 /**
  * Save the previous log level and set a new log level
@@ -3095,6 +3452,45 @@ function rightPad(s, padChar, len) {
 module.exports.rightPad = rightPad;
 
 /**
+ * Fetch a localized string.
+ *
+ * @function s
+ *
+ * @param {string} stringCode - a token for the string to be localized (e.g. BTN_OK)
+ * @param {string=} locale - a locale. Optional - defaults to "en_US"
+ * @returns {string} a localized string. If the stringCode is not found, returns the stringCode itself.
+ */
+function S(stringCode, locale) {
+
+    let retVal = stringCode;
+
+    do {
+
+        if (! locale) {
+            locale = DEFAULT_LOCALE;
+        }
+
+        if (! (stringCode in LOCALE_STRINGS)) {
+            break;
+        }
+
+        const localeStrings = LOCALE_STRINGS[stringCode];
+        if (locale in localeStrings) {
+            retVal = localeStrings[locale];        
+        }
+        else if (LOCALE_EN_US in localeStrings) {
+            retVal = localeStrings[LOCALE_EN_US];
+        }
+
+    }
+    while (false);
+
+
+    return retVal;
+}
+module.exports.S = S;
+
+/**
  * Send in activation data so the daemon can determine whether some software is currently activated or not.
  *
  * Needs to be followed by a `sublicense()` call
@@ -3132,45 +3528,6 @@ function setIssuer(issuerGUID, issuerEmail) {
     return retVal;
 }
 module.exports.setIssuer = setIssuer;
-
-/**
- * Fetch a localized string.
- *
- * @function s
- *
- * @param {string} stringCode - a token for the string to be localized (e.g. BTN_OK)
- * @param {string?} locale - a locale. Optional - defaults to "en_US"
- * @returns {string} a localized string. If the stringCode is not found, returns the stringCode itself.
- */
-function S(stringCode, locale) {
-
-    let retVal = stringCode;
-
-    do {
-
-        if (! locale) {
-            locale = DEFAULT_LOCALE;
-        }
-
-        if (! (stringCode in LOCALE_STRINGS)) {
-            break;
-        }
-
-        const localeStrings = LOCALE_STRINGS[stringCode];
-        if (locale in localeStrings) {
-            retVal = localeStrings[locale];        
-        }
-        else if (LOCALE_EN_US in localeStrings) {
-            retVal = localeStrings[LOCALE_EN_US];
-        }
-
-    }
-    while (false);
-
-
-    return retVal;
-}
-module.exports.S = S;
 
 /**
  * Wrap a string or a byte array into single quotes, encoding any
@@ -3235,6 +3592,88 @@ function setPersistData(issuer, attribute, password, data) {
     return retVal;
 }
 module.exports.setPersistData = setPersistData;
+
+/**
+ * Remove a trailing separator, if any, from a path
+ *
+ * @function stripTrailingSeparator
+ *
+ * @param {string} filePath - a file path 
+ * @param {string} separator - optional: the separator to use. If omitted, will try 
+ * guess the separator.
+ * @returns the file path without trailing separator
+ */
+
+function stripTrailingSeparator(filePath, separator) {    
+
+    let retVal = filePath;
+
+    do {
+
+        if (! filePath) {
+            break;            
+        }
+
+        const lastChar = filePath.substr(-1);        
+        if (! separator) {
+            if (lastChar == crdtuxp.path.SEPARATOR || lastChar == crdtuxp.path.OTHER_PLATFORM_SEPARATOR) {
+                retVal = filePath.substr(0, filePath.length - 1); 
+            }
+        }
+        else {
+            if (lastChar == separator) {
+                retVal = filePath.substr(0, filePath.length - 1);
+            }
+        }
+
+    }
+    while (false);
+
+    return retVal;
+}
+
+/**
+ * Make a byte array into a 'fake string'. Not UTF8-aware
+ *
+ * @function byteArrayToRawString
+ *
+ * @param {string} in_byteArray - a byte array
+ * @returns {string|undefined} a string with the exact same bytes
+ */
+function byteArrayToRawString(in_array) {
+
+    let retVal = "";
+    for (let idx = 0; idx < in_array.length; idx++) {
+        retVal += String.fromCharCode(in_array[idx]);
+    }
+
+    return retVal;
+}
+module.exports.byteArrayToRawString = byteArrayToRawString;
+
+/**
+ * Make a 'fake string' into a byte array. Not UTF8-aware
+ *
+ * @function rawStringToByteArray
+ *
+ * @param {string} in_str - a raw string (possibly invalid UTF-8)
+ * @returns {array|undefined} an array of bytes
+ */
+function rawStringToByteArray(in_str) {
+
+    let retVal = [];
+    for (let idx = 0; idx < in_str.length; idx++) {
+        let c = in_str.charCodeAt(idx);
+        if (c > 255) {
+            retVal = undefined;
+            break;
+        }
+        retVal.push(c);
+    }
+
+    return retVal;
+}
+module.exports.rawStringToByteArray = rawStringToByteArray;
 
 /**
  * Encode a string into an byte array using UTF-8
