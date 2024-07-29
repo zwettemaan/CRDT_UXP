@@ -62,7 +62,7 @@ async function testDirs() {
     let testFilePath3 = testDirPath + testFileName3;
 
     let fileContentAsString = "Hello World☜✿\x00\x7Féøo";
-    let fileContentAsUTF8 = await crdtuxp.strToUTF8(fileContentAsString);
+    let fileContentAsUTF8 = crdtuxp.strToUTF8(fileContentAsString);
 
     await crdtuxp.fileAppendString(testFilePath3, fileContentAsString);
 

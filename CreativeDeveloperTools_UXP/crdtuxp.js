@@ -38,10 +38,22 @@
  * @module crdtuxp
  */
 
+const DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS   = 1000;
+const DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS    = 10000;
+
 const UXP_VARIANT_PHOTOSHOP_UXP                 = "UXP_VARIANT_PHOTOSHOP_UXP";
 const UXP_VARIANT_PHOTOSHOP_UXPSCRIPT           = "UXP_VARIANT_PHOTOSHOP_UXPSCRIPT";
 const UXP_VARIANT_INDESIGN_UXPSCRIPT            = "UXP_VARIANT_INDESIGN_UXPSCRIPT";
 const UXP_VARIANT_INDESIGN_SERVER_UXPSCRIPT     = "UXP_VARIANT_INDESIGN_SERVER_UXPSCRIPT";
+
+const FILE_NAME_EXTENSION_JSON                  = "json";
+const FILE_NAME_SUFFIX_TQL_REQUEST              = "q";
+const FILE_NAME_SUFFIX_TQL_RESPONSE             = "r";
+
+// Some functions can be either resolved internally or via the daemon.
+// Choose what we prefer
+
+const DEFAULT_PREFER_DAEMON_OVER_INTERNAL      = false;
 
 function getPlatformGlobals() {
     return global;
@@ -318,13 +330,13 @@ let SYS_INFO;
  * @function addTrailingSeparator
  *
  * @param {string} filePath - a file path 
- * @param {string} separator - optional: the separator to use. If omitted, will try 
+ * @param {string=} separator - the separator to use. If omitted, will try 
  * guess the separator.
  * @returns file path with a terminating separator
  */
 
 function addTrailingSeparator(filePath, separator) {
-
+// coderstate: function
     let retVal = filePath;
     
     do {
@@ -334,7 +346,11 @@ function addTrailingSeparator(filePath, separator) {
         }
 
         const lastChar = filePath.substr(-1);        
-        if (lastChar == crdtuxp.path.SEPARATOR || lastChar == crdtuxp.path.OTHER_PLATFORM_SEPARATOR) {
+        if (
+            lastChar == crdtuxp.path.SEPARATOR 
+        || 
+            lastChar == crdtuxp.path.OTHER_PLATFORM_SEPARATOR
+        ) {
             break;
         }
 
@@ -357,10 +373,11 @@ module.exports.path.addTrailingSeparator = addTrailingSeparator;
  * @function alert
  *
  * @param {string} message - string to display
+ * @returns {Promise<any>}
  */
 
 function alert(message) {
-
+// coderstate: promisor
     let retVal = RESOLVED_UNDEFINED_PROMISE;
     
     do {
@@ -371,13 +388,17 @@ function alert(message) {
             // We've lost access to the alert() function in InDesign Server, which writes
             // to stdout.
             // The only workaround I currently have is to pass through ExtendScript
-            crdtuxp.app.doScript("alert(" + crdtuxp.dQ(message) + ")", uxpContext.indesign.ScriptLanguage.JAVASCRIPT);
+            crdtuxp.app.doScript(
+                "alert(" + crdtuxp.dQ(message) + ")", 
+                uxpContext.indesign.ScriptLanguage.JAVASCRIPT);
+            retVal = RESOLVED_TRUE_PROMISE;
             break;
         }
 
         if (uxpContext.uxpVariant == UXP_VARIANT_INDESIGN_UXPSCRIPT) {
         
-            // InDesign dialogs are not async - they stall the thread until they are closed
+            // InDesign dialogs are not async - they stall the thread until they 
+            // are closed
 
             const dlg = crdtuxp.app.dialogs.add();
             const col = dlg.dialogColumns.add();
@@ -386,10 +407,15 @@ function alert(message) {
             dlg.canCancel = false;
             dlg.show();
             dlg.destroy(); 
+            retVal = RESOLVED_TRUE_PROMISE;
             break;
         }
         
-        if (uxpContext.uxpVariant == UXP_VARIANT_PHOTOSHOP_UXP || uxpContext.uxpVariant == UXP_VARIANT_PHOTOSHOP_UXPSCRIPT) {
+        if (
+            uxpContext.uxpVariant == UXP_VARIANT_PHOTOSHOP_UXP 
+        || 
+            uxpContext.uxpVariant == UXP_VARIANT_PHOTOSHOP_UXPSCRIPT
+        ) {
         
             let modalDialog = () => {
 
@@ -424,18 +450,26 @@ function alert(message) {
                 );
             }
             
+            const resolver = () => {
+                return true;
+            };
+            const rejector = (error) => {
+                return undefined;
+            };
+            
             retVal = 
                 uxpContext.photoshop.core.executeAsModal(
                     modalDialog, 
                     {
                         "commandName": "alert message"
                     }
-                );
+                ).then(
+                    resolver,
+                    rejector);
                         
             break;
         }
 
-        throw "Unsupported app type";
     }
     while (false);
     
@@ -446,10 +480,11 @@ module.exports.alert = alert;
 /**
  * Decode a string that was encoded using base64.
  *
- * This function has not been speed-tested; it's mainly for testing things.
+ * The evalTQL variant of the function has not been speed-tested; it's mainly for 
+ * testing things.
  *
- * I suspect it might only be beneficial for very large long strings, if that. The overheads might be
- * larger than the speed benefit.
+ * I suspect it might only be beneficial for very large long strings, if that. 
+ * The overheads might be larger than the speed benefit.
  *
  * @function base64decode
  *
@@ -458,15 +493,15 @@ module.exports.alert = alert;
  * @returns {Promise<string|array|undefined>} decoded string
  */
 function base64decode(base64Str, options) {
-
+// coderstate: promisor
     let retVal = RESOLVED_UNDEFINED_PROMISE;
-
+debugger;
     do {
 
         let isBinary = options && options.isBinary;
         
         let uxpContext = getUXPContext();
-        if (! uxpContext.hasNetworkAccess) {
+        if (! uxpContext.hasNetworkAccess || ! uxpContext.preferDaemonOverInternal) {
         
             let rawString = window.atob(base64Str);
             let byteArray = rawStringToByteArray(rawString);
@@ -479,25 +514,32 @@ function base64decode(base64Str, options) {
             break;
         }
 
-        let responsePromise = evalTQL("base64decode(" + dQ(base64Str) + ")",isBinary);
+        let responsePromise = 
+            evalTQL("base64decode(" + dQ(base64Str) + ")",isBinary);
         if (! responsePromise) {
             break;
         }
 
-        retVal = responsePromise.then(
-            response => {
-                let retVal;
-                if (response && ! response.error) {
-                    if (isBinary) {
-                        retVal = deQuote(response.text);
-                    }
-                    else {
-                        retVal = response.text;
-                    }
+        const rejector = (error) => {
+            return undefined;
+        };
+        
+        const resolver = (response) => {
+            let retVal;
+            if (response && ! response.error) {
+                if (isBinary) {
+                    retVal = deQuote(response.text);
                 }
-                return retVal;
+                else {
+                    retVal = response.text;
+                }
             }
-        );
+            return retVal;
+        };
+        
+        retVal = responsePromise.then(
+            resolver,
+            rejector);
 
     }
     while (false);
@@ -509,10 +551,11 @@ module.exports.base64decode = base64decode;
 /**
  * Encode a string or an array of bytes using Base 64 encoding.
  *
- * This function has not been speed-tested; it's mainly for testing things.
+ * The evalTQL variant of the function has not been speed-tested; it's mainly for 
+ * testing things.
  *
- * I suspect it might only be beneficial for very large long strings, if that. The overheads might be
- * larger than the speed benefit.
+ * I suspect it might only be beneficial for very large long strings, if that. 
+ * The overheads might be larger than the speed benefit.
  *
  * @function base64encode
  *
@@ -521,13 +564,13 @@ module.exports.base64decode = base64decode;
  *
  */
 function base64encode(s_or_ByteArr) {
-
+// coderstate: promisor
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
 
         let uxpContext = getUXPContext();
-        if (! uxpContext.hasNetworkAccess) {
+        if (! uxpContext.hasNetworkAccess || ! uxpContext.preferDaemonOverInternal) {
         
             let byteArray;
             if ("string" == typeof s_or_ByteArr) {
@@ -549,15 +592,21 @@ function base64encode(s_or_ByteArr) {
             break;
         }
 
-        retVal = responsePromise.then(
-            response => {
-                let retVal;
-                if (response && ! response.error) {
-                    retVal = response.text;
-                }
-                return retVal;
+        const rejector = (error) => {
+            return undefined;
+        };
+        
+        const resolver = (response) => {
+            let retVal;
+            if (response && ! response.error) {
+                retVal = response.text;
             }
-        );
+            return retVal;
+        };
+
+        retVal = responsePromise.then(
+            resolver,
+            rejector);
 
     }
     while (false);
@@ -572,13 +621,13 @@ module.exports.base64encode = base64encode;
  * @function baseName
  *
  * @param {string} filePath - a file path 
- * @param {string} separator - optional: the separator to use. If omitted, will try 
+ * @param {string=} separator - the separator to use. If omitted, will try 
  * guess the separator.
- * @returns the last segment of the path
+ * @returns {string} the last segment of the path
  */
 
 function baseName(filePath, separator) {    
-
+// coderstate: function
     let endSegment;
 
     if (! separator) {
@@ -606,7 +655,7 @@ module.exports.path.baseName = baseName;
  * @returns {string|undefined} a string or undefined if the UTF-8 is not valid
  */
 function binaryUTF8ToStr(in_byteArray) {
-
+// coderstate: function
     let retVal = undefined;
 
     try {
@@ -642,7 +691,11 @@ function binaryUTF8ToStr(in_byteArray) {
                         let bit4 = (byte & 0x1F) >> 4;
                         if (! bit4) {
                             // U+0800 - U+FFFF
-                            c = String.fromCharCode(((byte & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F));
+                            c = String.fromCharCode(
+                                    ((byte & 0x0F) << 12) | 
+                                    ((byte2 & 0x3F) << 6) | 
+                                    (byte3 & 0x3F)
+                                );
                         }
                         else {
                             // Not handled U+10000 - U+10FFFF
@@ -666,11 +719,17 @@ function binaryUTF8ToStr(in_byteArray) {
 }
 module.exports.binaryUTF8ToStr = binaryUTF8ToStr;
 
-// charCodeToUTF8__: internal function: convert a Unicode character code to a 1 to 3 byte UTF8 byte sequence
-// returns undefined if invalid in_charCode
+/**
+ * Internal: convert a Unicode character code to a 1 to 3 byte UTF8 byte sequence
+ *
+ * @function charCodeToUTF8__
+ *
+ * @param {number} in_charCode - a Unicode character code 
+ * @returns {array} an array with 1 to 3 bytes
+ */
 
 function charCodeToUTF8__(in_charCode) {
-
+// coderstate: function
     let retVal = undefined;
 
     try {
@@ -719,8 +778,9 @@ function charCodeToUTF8__(in_charCode) {
  * @returns {boolean} success/failure
  */
 function configLogger(logInfo) {
-
+// coderstate: function
     let retVal = false;
+
     try {
         if (logInfo) {
             if ("logLevel" in logInfo) {
@@ -761,7 +821,7 @@ module.exports.configLogger = configLogger;
  */
 
 function decrypt(s_or_ByteArr, aesKey, aesIV) {
-
+// coderstate: promisor
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
@@ -770,20 +830,32 @@ function decrypt(s_or_ByteArr, aesKey, aesIV) {
             aesIV = "";
         }
         
-        const responsePromise = evalTQL("decrypt(" + dQ(s_or_ByteArr) + ", " + dQ(aesKey) + ", " + dQ(aesIV) + ")");
+        const responsePromise = 
+            evalTQL(
+                "decrypt(" + 
+                dQ(s_or_ByteArr) + ", " + 
+                dQ(aesKey) + ", " + 
+                dQ(aesIV) + ")"
+            );
         if (! responsePromise) {
             break;
         }
 
-        retVal = responsePromise.then(
-            response => {
-                let retVal;
-                if (response && ! response.error) {
-                    retVal = response.text;
-                }
-                return retVal;
+        const rejector = (error) => {
+            return undefined;
+        };
+        
+        const resolver = (response) => {
+            let retVal;
+            if (response && ! response.error) {
+                retVal = response.text;
             }
-        );
+            return retVal;
+        };
+
+        retVal = responsePromise.then(
+            resolver,
+            rejector);
 
     }
     while (false);
@@ -791,6 +863,37 @@ function decrypt(s_or_ByteArr, aesKey, aesIV) {
     return retVal;
 }
 module.exports.decrypt = decrypt;
+
+/**
+ * Delayed execution of a function
+ *
+ * @function delayFunction
+ *
+ * @param {number} delayTimeMilliseconds - a delay in milliseconds
+ * @param {function} ftn - a function
+ * @param {any=} args - optional args for function
+ * @returns {Promise<any>}
+ */
+function delayFunction(delayTimeMilliseconds, ftn, ...args) {
+// coderstate: promisor
+debugger;
+
+    const executor = (resolve) => {
+        // coderstate: executor
+        setTimeout(
+            () => {
+                // coderstate: executor
+                resolve(ftn(...args));
+            }, 
+            delayTimeMilliseconds
+        );
+    };
+
+    retVal = new Promise(executor);
+    
+    return retVal;
+}
+module.exports.delayFunction = delayFunction;
 
 /**
  * Reverse the operation of `dQ()` or `sQ()`.
@@ -802,7 +905,7 @@ module.exports.decrypt = decrypt;
  * these are first re-encoded using UTF-8 before storing them into the byte array.
  */
 function deQuote(quotedString) {
-
+// coderstate: function
     let retVal = [];
 
     let state = 0;
@@ -952,49 +1055,71 @@ module.exports.deQuote = deQuote;
  */
 
 function dirCreate(filePath) {
-
+// coderstate: promisor
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
 
         let uxpContext = getUXPContext();
         if (uxpContext.hasDirectFileAccess) {
+
+            let parentPath = crdtuxp.path.dirName(filePath);
+            let baseName = crdtuxp.path.baseName(filePath);
             
-            let parentPath = crdtuxp.path.dirName(filePath);            
-            let baseName = crdtuxp.path.baseName(filePath);         
+            const parentEntryRejector = (error) => {
+                return false;
+            };
+            
+            const createEntryRejector = (error) => {
+                return false;
+            };
+
+            const createEntryResolver = (folderEntry) => {
+                return true;
+            };
+            
+            const parentEntryResolver = (parentEntry) => {
+                if (! parentEntry.isFolder) {
+                    return false;
+                }
+                else {                      
+                    return uxpContext.lfs.createEntryWithUrl(
+                        "file:" + filePath, 
+                        { type: uxpContext.uxp.storage.types.folder }
+                    ).then(
+                        createEntryResolver,
+                        createEntryRejector);
+                }
+            };
+            
             retVal = 
                 uxpContext.lfs.getEntryWithUrl("file:" + parentPath).then(
-                    parentEntry => {
-                        parentEntry.createFolder(baseName).then(
-                            folderEntry => {
-                                return true;
-                            },
-                            error => {
-                                return false;
-                            }
-                        );
-                    },
-                    error => {
-                        return false;
-                    }
-                )                       
+                    parentEntryResolver,
+                    parentEntryRejector);
             break;
         }
 
-        const responsePromise = evalTQL("dirCreate(" + dQ(filePath) + ") ? \"true\" : \"false\"");
+        const responsePromise = 
+            evalTQL("dirCreate(" + dQ(filePath) + ") ? \"true\" : \"false\"");
         if (! responsePromise) {
             break;
         }
 
-        retVal = responsePromise.then(
-            response => {
-                let retVal;
-                if (response && ! response.error) {
-                    retVal = response.text == "true";
-                }
-                return retVal;
+        const rejector = (error) => {
+            return undefined;
+        };
+        
+        const resolver = (response) => {
+            let retVal;
+            if (response && ! response.error) {
+                retVal = response.text == "true";
             }
-        );
+            return retVal;
+        };
+
+        retVal = responsePromise.then(
+            resolver,
+            rejector);
 
     }
     while (false);
@@ -1008,7 +1133,8 @@ module.exports.dirCreate = dirCreate;
  *
  * Not restricted by the UXP security sandbox.
  *
- * Be very careful with the `recurse` parameter! It is very easy to delete the wrong directory.
+ * Be very careful with the `recurse` parameter! It is very easy to delete the wrong 
+ * directory.
  *
  * @function dirDelete
  *
@@ -1018,7 +1144,7 @@ module.exports.dirCreate = dirCreate;
  */
 
 function dirDelete(filePath, recurse) {
-
+// coderstate: promisor
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
@@ -1027,104 +1153,113 @@ function dirDelete(filePath, recurse) {
         
         if (uxpContext.hasDirectFileAccess) {
             
-            function deleteRecursively(entry) {
+            const deleteResolver = () => {
+                return true;
+            };
 
-                if (entry.isFile) {
-                    retVal = entry.delete().then(
-                        () => {
-                            return true;
-                        },
-                        error => {
-                            return false;
-                        }
-                    )
+            const deleteRejector = (error) => {
+                return false;
+            };
+
+            const allEntriesDeletedResolver = () => {
+                return entry.delete().then(
+                    deleteResolver,
+                    deleteRejector);
+            };
+            
+            const getEntriesResolver = (entries) => {
+                let deleteSubEntryPromises = [];
+                for (const subEntry of entries) {
+                    // Recursively delete each entry in the folder
+                    deleteSubEntryPromises.push(deleteDirRecursivelyPromisor(subEntry));
                 }
-                else if (entry.isFolder) {
-                    entry.getEntries().then(
-                        contents => {
-                            let promises = [];
-                            for (const contentEntry of contents) {
-                                // Recursively delete each entry in the folder
-                                promises.push(deleteRecursively(contentEntry));
-                            }
-                            Promise.all(promises).then(
-                                () => {
-                                    entry.delete().then(
-                                        () => {
-                                            return true;
-                                        },
-                                        error => {
-                                            return false;
-                                        }
-                                    );
-                                },
-                                error => {
-                                    return false;
-                                }
-                            );
-                        },
-                        error => {
-                            return false;
-                        }
-                    );
-                }
-                else {
+                return Promise.all(deleteSubEntryPromises).then(
+                    allEntriesDeletedResolver,
+                    deleteRejector
+                );
+            };
+
+            const deleteDirRecursivelyPromisor = (entry) => {
+
+                let retVal = RESOLVED_UNDEFINED_PROMISE;
+                
+                do {
+
+                    if (entry.isFile) {
+                        retVal = entry.delete().then(
+                            deleteResolver,
+                            deleteRejector);
+                        break;
+                    }
+                    
+                    if (entry.isFolder) {
+                        entry.getEntries().then(
+                            getEntriesResolver,
+                            deleteRejector);
+                        break;
+                    }
+                    
+                } 
+                while (false);
+                return retVal;
+            }
+            
+            const getDirEntryRejector = (error) => {
+                return undefined;
+            };
+            
+            const getDirEntryResolver = (dirEntry) => {
+                if (! dirEntry.isFolder) {
                     return false;
                 }
-            }
+                
+                if (recurse) {
+                    return deleteDirRecursivelyPromisor(dirEntry).then(
+                        deleteResolver,
+                        deleteRejector);
+                }
+                else {
+                    return dirEntry.delete().then(
+                        deleteResolver,
+                        deleteRejector);
+                }
+            };
             
             retVal = 
                 uxpContext.lfs.getEntryWithPath(filePath).then(
-                    dirEntry => {
-                    
-                        if (! dirEntry.isFolder) {
-                            return false;
-                        }
-                        
-                        if (recurse) {
-                            deleteRecursively(dirEntry).then(
-                                () => {
-                                    return true;
-                                },
-                                error => {
-                                    return false;
-                                }
-                            )
-                        }
-                        else {
-                            dirEntry.delete().then(
-                                () => {
-                                    return true;
-                                },
-                                error => {
-                                    return false;
-                                }
-                            )
-                        }
-                    },
-                    error => {
-                        return undefined;
-                    }
-                );  
-            
+                    getDirEntryResolver,
+                    getDirEntryRejector);
+
             break;
         }
 
-
-        const responsePromise = evalTQL("dirDelete(" + dQ(filePath) + "," + (recurse ? "true" : "false") + ") ? \"true\" : \"false\"");
+        const responsePromise = 
+            evalTQL(
+                "dirDelete(" + 
+                dQ(filePath) + 
+                "," + 
+                (recurse ? "true" : "false") + 
+                ") ? \"true\" : \"false\""
+            );
         if (! responsePromise) {
             break;
         }
 
-        retVal = responsePromise.then(
-            response => {
-                let retVal;
-                if (response && ! response.error) {
-                    retVal = response.text == "true";
-                }
-                return retVal;
+        const rejector = (error) => {
+            return undefined;
+        };
+        
+        const resolver = (response) => {
+            let retVal;
+            if (response && ! response.error) {
+                retVal = response.text == "true";
             }
-        );
+            return retVal;
+        };
+
+        retVal = responsePromise.then(
+            resolver,
+            rejector);
 
     }
     while (false);
@@ -1134,7 +1269,8 @@ function dirDelete(filePath, recurse) {
 module.exports.dirDelete = dirDelete;
 
 /**
- * Verify whether a directory exists. Will return `false` if the path points to a file (instead of a directory).
+ * Verify whether a directory exists. Will return `false` if the path points to a file 
+ * (instead of a directory).
  *
  * Also see `fileExists()`.
  *
@@ -1147,39 +1283,49 @@ module.exports.dirDelete = dirDelete;
  */
 
 function dirExists(dirPath) {
-
+// coderstate: promisor
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
 
         let uxpContext = getUXPContext();
         if (uxpContext.hasDirectFileAccess) {
+        
+            const dirEntryResolver = (dirEntry) => {
+                return dirEntry.isFolder;
+            };
+            const dirEntryRejector = (dirEntry) => {
+                return false;
+            };
+            
             retVal = 
                 uxpContext.lfs.getEntryWithUrl("file:" + dirPath).then(
-                    dirEntry => {
-                        return dirEntry.isFolder;
-                    },
-                    error => {
-                        return undefined;
-                    }
-                );
+                    dirEntryResolver,
+                    dirEntryRejector);
             break;
         }
 
-        const responsePromise = evalTQL("dirExists(" + dQ(dirPath) + ") ? \"true\" : \"false\"");
+        const responsePromise = 
+            evalTQL("dirExists(" + dQ(dirPath) + ") ? \"true\" : \"false\"");
         if (! responsePromise) {
             break;
         }
 
-        retVal = responsePromise.then(
-            response => {
-                let retVal;
-                if (response && ! response.error) {
-                    retVal = response.text == "true";
-                }
-                return retVal;
+        const rejector = (error) => {
+            return undefined;
+        };
+        
+        const resolver = (response) => {
+            let retVal;
+            if (response && ! response.error) {
+                retVal = response.text == "true";
             }
-        );
+            return retVal;
+        };
+
+        retVal = responsePromise.then(
+            resolver,
+            rejector);
 
     }
     while (false);
@@ -1194,14 +1340,26 @@ module.exports.dirExists = dirExists;
  * @function dirName
  *
  * @param {string} filePath - a file path 
- * @param {string} separator - optional: the separator to use. If omitted, will try 
- * guess the separator.
+ * @param {object=} options - options: 
+ * { 
+ *   addTrailingSeparator: true/false, default false,
+ *   separator: separatorchar. the separator to use. If omitted, will try to guess the 
+ *   separator.
+ * }
+ * @param {string=} separator - 
  * @returns the parent of the path
  */
 
-function dirName(filePath, separator) {    
-
+function dirName(filePath, options) {    
+// coderstate: function
     let retVal;
+
+    let separator;
+    if (options) {
+        if (options.separator) {
+            separator = options.separator;
+        }
+    }
 
     if (! separator) {
         separator = crdtuxp.path.SEPARATOR;
@@ -1216,6 +1374,9 @@ function dirName(filePath, separator) {
     while (splitPath.length > 0 && endSegment == "");
 
     retVal = splitPath.join(separator);
+    if (options && options.addTrailingSeparator) {
+        retVal += separator;
+     }
 
     return retVal;
 }
@@ -1233,7 +1394,7 @@ module.exports.path.dirName = dirName;
  */
 
 function dirScan(filePath) {
-
+// coderstate: promisor
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
@@ -1241,70 +1402,82 @@ function dirScan(filePath) {
         let uxpContext = getUXPContext();
         if (uxpContext.hasDirectFileAccess) {
             
+            const dirEntryRejector = (error) => {
+                return undefined;
+            };
+            
+            const gotSubEntriesResolver = (subEntries) => {
+                let retVal = [];
+                for (let idx = 0; idx < subEntries.length; idx++) {
+                    let subEntry = subEntries[idx];
+                    retVal.push(subEntry.name);
+                }
+                return retVal;
+            };
+            
+            const dirEntryResolver = (dirEntry) => {
+            
+                if (! dirEntry.isFolder) {
+                    return false;
+                }
+                
+                return dirEntry.getEntries().then(
+                    gotSubEntriesResolver,
+                    dirEntryRejector);
+            };
+
             retVal = 
                 uxpContext.lfs.getEntryWithPath(filePath).then(
-                    dirEntry => {
-                    
-                        if (! dirEntry.isFolder) {
-                            return false;
-                        }
-                        
-                        dirEntry.getEntries().then(
-                            contents => {
-                                return contents;
-                            },
-                            error => {
-                                return false;
-                            }
-                        );
+                    dirEntryResolver,
+                    dirEntryRejector);
 
-                    },
-                    error => {
-                        return undefined;
-                    }
-                );  
-            
             break;
         }
 
-        const responsePromise = evalTQL("enquote(dirScan(" + dQ(filePath) + ").toString())");
+        const responsePromise = 
+            evalTQL("enquote(dirScan(" + dQ(filePath) + ").toString())");
         if (! responsePromise) {
             break;
         }
 
+        const rejector = (error) => {
+            return undefined;
+        };
+        
+        const resolver = (response) => {
+
+            let retVal = undefined;
+
+            do {
+                if (! response || response.error) {
+                    break;
+                }
+        
+                const responseText = response.text;
+                if (! responseText) {
+                    break;
+                }
+        
+                const deQuotedResponseText = deQuote(responseText);
+                if (! deQuotedResponseText) {
+                    break;
+                }
+                
+                const binaryResponse = binaryUTF8ToStr(deQuotedResponseText);
+                if (! binaryResponse) {
+                    break;
+                }
+        
+                retVal = JSON.parse(binaryResponse);
+            } 
+            while (false);
+
+            return retVal;
+        };
+
         retVal = responsePromise.then(
-
-            response => {
-
-                let retVal;
-
-                do {
-                    if (! response || response.error) {
-                        break;
-                    }
-            
-                    const responseText = response.text;
-                    if (! responseText) {
-                        break;
-                    }
-            
-                    const deQuotedResponseText = deQuote(responseText);
-                    if (! deQuotedResponseText) {
-                        break;
-                    }
-                    
-                    const binaryResponse = binaryUTF8ToStr(deQuotedResponseText);
-                    if (! binaryResponse) {
-                        break;
-                    }
-            
-                    retVal = JSON.parse(binaryResponse);
-                } 
-                while (false);
-
-                return retVal;
-            }
-        );
+            resolver,
+            rejector);
 
     }
     while (false);
@@ -1333,6 +1506,7 @@ module.exports.dirScan = dirScan;
  * `let script = "a=b(" + dQ(somedata) + ");";`
  */
 function dQ(s_or_ByteArr) {
+// coderstate: function
     return enQuote__(s_or_ByteArr, "\"");
 }
 module.exports.dQ = dQ;
@@ -1353,7 +1527,7 @@ module.exports.dQ = dQ;
  */
 
 function encrypt(s_or_ByteArr, aesKey, aesIV) {
-
+// coderstate: promisor
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
@@ -1361,21 +1535,32 @@ function encrypt(s_or_ByteArr, aesKey, aesIV) {
         if (! aesIV) {
             aesIV = "";
         }
-        
-        const responsePromise = evalTQL("encrypt(" + dQ(s_or_ByteArr) + ", "+ dQ(aesKey) + ", " + dQ(aesIV) + ")");
+
+        const responsePromise = 
+          evalTQL(
+            "encrypt(" + 
+                dQ(s_or_ByteArr) + ", " + 
+                dQ(aesKey) + ", " + 
+                dQ(aesIV) + ")");
         if (! responsePromise) {
             break;
         }
 
-        retVal = responsePromise.then(
-            response => {
-                let retVal;
-                if (response && ! response.error) {
-                    retVal = response.text;
-                }
-                return retVal;
+        const rejector = (error) => {
+            return undefined;
+        };
+        
+        const resolver = (response) => {
+            let retVal;
+            if (response && ! response.error) {
+                retVal = response.text;
             }
-        );
+            return retVal;
+        };
+        
+        retVal = responsePromise.then(
+            resolver,
+            rejector);
 
     }
     while (false);
@@ -1388,7 +1573,7 @@ module.exports.encrypt = encrypt;
 // enQuote__: Internal helper function. Escape and wrap a string in quotes
 //
 function enQuote__(s_or_ByteArr, quoteChar) {
-
+// coderstate: function
     let retVal = "";
 
     const quoteCharCode = quoteChar.charCodeAt(0);
@@ -1441,19 +1626,138 @@ function enQuote__(s_or_ByteArr, quoteChar) {
  * @function evalTQL
  *
  * @param {string} tqlScript - a script to run
- * @param {string=} tqlScopeName - a scope name to use. Scopes are persistent for the duration of the daemon process and can
- * be used to pass data between different processes
- * @param {boolean=} resultIsRawBinary - whether the resulting data is raw binary, or can be decoded as a string
+ * @param {string=} tqlScopeName - a scope name to use. Scopes are persistent for the 
+ * duration of the daemon process and can be used to pass data between different 
+ * processes
+ * @param {boolean=} resultIsRawBinary - whether the resulting data is raw binary,
+ * or can be decoded as a string
  * @returns {Promise<any>} a string or a byte array
  */
 function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
-
+// coderstate: promisor
     let retVal = RESOLVED_ERROR_PROMISE;
 
     do {
 
         let uxpContext = getUXPContext();
+        
+        if (! uxpContext.hasNetworkAccess && ! uxpContext.hasDirectFileAccess) {
+            // Need either network access or direct file access - cannot do
+            // without
+            break;
+        }
+        
         if (! uxpContext.hasNetworkAccess) {
+            
+            if (! uxpContext.tqlRequestID) {
+                uxpContext.tqlRequestID = 0;
+                uxpContext.tqlRequestsByID = {};
+            }
+
+            let validUntil = (new Date()).getTime() + DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS;
+
+            let tqlRequest = {
+                validUntil: validUntil,
+                sessionID: uxpContext.sessionID,
+                requestID: ++uxpContext.tqlRequestID,
+                tqlScript: tqlScript,
+                tqlScopeName: tqlScopeName
+            };
+            uxpContext.tqlRequestsByID[tqlRequest.requestID] = tqlRequest;
+            
+            let tqlRequestJSON = JSON.stringify(tqlRequest);
+            let byteArray = strToUTF8(tqlRequestJSON);
+        
+            let tqlSharedFilePathPrefix = 
+                crdtuxp.context.PATH_EVAL_TQL + 
+                tqlRequest.sessionID + 
+                crdtuxp.leftPad(tqlRequest.requestID, "0", 8);
+
+            let requestFilePath = 
+                tqlSharedFilePathPrefix + 
+                FILE_NAME_SUFFIX_TQL_REQUEST + 
+                "." + 
+                FILE_NAME_EXTENSION_JSON;
+                
+            let responseFilePath = 
+                tqlSharedFilePathPrefix + 
+                FILE_NAME_SUFFIX_TQL_RESPONSE + 
+                "." + 
+                FILE_NAME_EXTENSION_JSON;
+                
+            const cannotWriteRequestRejector = (error) => {
+                return "cannot write EvalTQL file";
+            };
+            
+            const cannotReadResponseRejector = (error) => {
+                return "cannot read EvalTQL response file";
+            };
+            
+            const noResponseRejector = (error) => {
+                return undefined;
+            };
+            
+            const responseFileEntryReadResolver = (data) => {
+                return data;
+            };
+            
+            const responseFileEntryResolver = (responseFileEntry) => {
+            
+                let retVal = undefined;
+                
+                do {                
+                    if (! fileEntry.isFile) {
+                        break;
+                    }
+                    
+                    retVal = fileEntry.read().then(
+                        responseFileEntryReadResolver,
+                        noResponseRejector);
+                }
+                while (false);
+                
+                return retVal;
+            };
+            
+            const responseWaitResolver = (responseFileState) => {
+            
+                let retVal = undefined;
+                
+                do {
+                
+                    if (! responseFileState) {
+                        break;
+                    }
+                    
+                    retVal = 
+                        uxpContext.lfs.getEntryWithUrl("file:" + responseFilePath).then(
+                            responseFileEntryResolver,
+                            noResponseRejector);
+                }
+                while (false);
+                
+                return retVal;
+            };
+            
+            const requestFileEntryWriteResolver = () => {
+                return crdtuxp.waitForFile(responseFilePath).then(
+                    responseWaitResolver,
+                    cannotReadResponseRejector
+                );
+            };
+            
+            const requestFileEntryResolver = (requestFileEntry) => {            
+                let rawStr = byteArrayToRawString(byteArray);               
+                return byteArray.write(rawStr).then(
+                    requestFileEntryWriteResolver,
+                    cannotWriteRequestRejector);
+            };
+            
+            retVal = 
+                uxpContext.lfs.createEntryWithUrl("file:" + requestFilePath).then(
+                    requestFileEntryResolver,
+                    cannotWriteRequestRejector);
+                 
             break;
         }
 
@@ -1466,7 +1770,8 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
             body: tqlScript
         };
 
-        const responsePromise = fetch(LOCALHOST_URL + "/" + tqlScopeName + "?" + HTTP_CACHE_BUSTER, init);
+        const responsePromise = 
+            fetch(LOCALHOST_URL + "/" + tqlScopeName + "?" + HTTP_CACHE_BUSTER, init);
         HTTP_CACHE_BUSTER = HTTP_CACHE_BUSTER + 1;
 
         if (! responsePromise) {
@@ -1474,7 +1779,7 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 const responseTextPromise = response.text();
                 return responseTextPromise.then(
                     responseText => {
@@ -1492,12 +1797,12 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
                         };
                         return retVal;
                     },
-                    error => {
+                    (error) => {
                         return "CRDT daemon is probably not running. Use PluginInstaller to verify CRDT is activated, then use the Preferences screen to start it";
                     }
                 );
             },
-            error => {
+            (error) => {
                 return "CRDT daemon is probably not running. Use PluginInstaller to verify CRDT is activated, then use the Preferences screen to start it";
             }
         );
@@ -1521,43 +1826,22 @@ module.exports.evalTQL = evalTQL;
  * @returns {Promise<boolean|undefined>} success or failure
  */
 
-function fileAppendString(fileName, appendStr) {
-
+function fileAppendString(fileName, in_appendStr) {
+// coderstate: promisor
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
 
-        let uxpContext = getUXPContext();
-        if (uxpContext.hasDirectFileAccess) {
-
-            let appendByteArr;
-            if ("string" == typeof appendStr) {
-                appendByteArr = strToUTF8(appendStr);
-            }
-            else {
-                appendByteArr = appendStr;
-            }
-
-            let writeFile = promisifyWithContext(uxpContext.fs.writeFile, uxpContext.fs);
-            
-            retVal = 
-                writeFile(
-                    fileName, 
-                    appendByteArr, 
-                    {
-                        flush: true
-                    }
-                );
-            break;
-        }
-
+        // Don't try direct file access - Photoshop UXPScript lacks an 
+        // append function
+         
         const responsePromise = evalTQL(
             "var retVal = true;" + 
             "var handle = fileOpen(" + dQ(fileName) + ",'a');" +
             "if (! handle) {" + 
                 "retVal = false;" + 
             "}" + 
-            "else if (! fileWrite(handle, " + dQ(appendStr) + ")) {" +
+            "else if (! fileWrite(handle, " + dQ(in_appendStr) + ")) {" +
                 "retVal = false;" + 
             "}" + 
             "if (! fileClose(handle)) {" +
@@ -1569,7 +1853,7 @@ function fileAppendString(fileName, appendStr) {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -1613,7 +1897,7 @@ function fileClose(fileHandle) {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -1658,7 +1942,7 @@ function fileDelete(filePath) {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -1693,13 +1977,27 @@ function fileExists(filePath) {
 
     do {
 
+        let uxpContext = getUXPContext();
+        if (uxpContext.hasDirectFileAccess) {
+            retVal = 
+                uxpContext.lfs.getEntryWithUrl("file:" + filePath).then(
+                    dirEntry => {
+                        return dirEntry.isFile;
+                    },
+                    (error) => {
+                        return false;
+                    }
+                );
+            break;
+        }
+    
         const responsePromise = evalTQL("fileExists(" + dQ(filePath) + ") ? \"true\" : \"false\"");
         if (! responsePromise) {
             break;
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -1721,7 +2019,7 @@ module.exports.fileExists = fileExists;
  * @function fileNameExtension
  *
  * @param {string} filePath - a file path 
- * @param {string} separator - optional: the separator to use. If omitted, will try 
+ * @param {string=} separator - the separator to use. If omitted, will try 
  * guess the separator.
  * @returns the lowercased file name extension, without leading period
  */
@@ -1749,30 +2047,88 @@ module.exports.path.fileNameExtension = fileNameExtension;
  *
  * @function fileOpen
  *
- * @param {string} fileName - a native full file path to the file
+ * @param {string} filePath - a native full file path to the file
  * @param {string} mode - one of `'a'`, `'r'`, `'w'` (append, read, write)
  * @returns {Promise<Number|undefined>} file handle
  */
 
-function fileOpen(fileName, mode) {
+function fileOpen(filePath, mode) {
 
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
 
+        let uxpContext = getUXPContext();
+        if (uxpContext.hasDirectFileAccess) {
+            let parentPath = crdtuxp.path.dirName(filePath);            
+            let baseName = crdtuxp.path.baseName(filePath); 
+            if (! uxpContext.uniqueFileHandle) {
+                uxpContext.uniqueFileHandle = 0;
+                uxpContext.fileInfoByFileHandle = {};
+            }
+                      
+            if (mode == 'w' || mode == 'a') {
+                retVal = 
+                    uxpContext.lfs.getEntryWithUrl("file:" + parentPath).then(
+                        dirEntry => {
+                            if (! dirEntry.isFolder) {
+                                return undefined;
+                            }
+                            else {
+                                let uniqueFileHandleID = ++uxpContext.uniqueFileHandleID;  
+                                let fileInfo = {
+                                    fileHandle: uniqueFileHandleID,
+                                    filePath: filePath,
+                                    mode: mode
+                                }
+                                uxpContext.fileInfoByFileHandle[uniqueFileHandleID] = fileInfo;
+                                return uniqueFileHandleID;
+                            }
+                        },
+                        (error) => {
+                            return undefined;
+                        }
+                    );
+            }     
+            else if (mode == 'r') {
+                retVal = 
+                    uxpContext.lfs.getEntryWithUrl("file:" + filePath).then(
+                        dirEntry => {
+                            if (! dirEntry.isFile) {
+                                return undefined;
+                            }
+                            else {
+                                let uniqueFileHandleID = ++uxpContext.uniqueFileHandleID;  
+                                let fileInfo = {
+                                    fileHandle: uniqueFileHandleID,
+                                    filePath: filePath,
+                                    mode: mode
+                                }
+                                uxpContext.fileInfoByFileHandle[uniqueFileHandleID] = fileInfo;
+                                return uniqueFileHandleID;
+                            }
+                        },
+                        (error) => {
+                            return undefined;
+                        }
+                    );
+            }
+            break;
+        }
+    
         let responsePromise;
         if (mode) {
-            responsePromise = evalTQL("enquote(fileOpen(" + dQ(fileName) + "," + dQ(mode) + "))");
+            responsePromise = evalTQL("enquote(fileOpen(" + dQ(filePath) + "," + dQ(mode) + "))");
         }
         else {
-            responsePromise = evalTQL("enquote(fileOpen(" + dQ(fileName) + "))");
+            responsePromise = evalTQL("enquote(fileOpen(" + dQ(filePath) + "))");
         }
         if (! responsePromise) {
             break;
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
 
                 let retVal;
 
@@ -1822,6 +2178,48 @@ function fileRead(fileHandle, isBinary) {
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
+    
+        let uxpContext = getUXPContext();
+        if (uxpContext.hasDirectFileAccess) {
+        
+            if (! uxpContext.fileInfoByFileHandle) {
+                break;
+            }       
+
+            let fileInfo = uxpContext.fileInfoByFileHandle[fileHandle];
+            if (! fileInfo) {
+                break;
+            }       
+                      
+            if (fileInfo.mode != 'r') {
+                break;
+            }
+
+            retVal = 
+                uxpContext.lfs.getEntryWithUrl("file:" + fileInfo.filePath).then(
+                    (fileEntry) => {
+                        if (! fileEntry.isFile) {
+                            return undefined;
+                        }
+                        else {
+                            return fileEntry.read().then(
+                                (data) => {
+                                    return data;
+                                },
+                                (error) => {
+                                    return undefined;
+                                }                           
+                            );
+                        }
+                    },
+                    (error) => {
+                        return false;
+                    }
+                );
+
+            break;
+        }
+            
         const responsePromise = evalTQL("enquote(fileRead(" + fileHandle + "))", undefined, true);;
         if (! responsePromise) {
             break;
@@ -1829,7 +2227,7 @@ function fileRead(fileHandle, isBinary) {
 
         retVal = responsePromise.then(
             
-            response => {
+            (response) => {
 
                 let retVal;
 
@@ -1893,13 +2291,57 @@ function fileWrite(fileHandle, s_or_ByteArr) {
             byteArray = s_or_ByteArr;
         }
 
+        let uxpContext = getUXPContext();
+        if (uxpContext.hasDirectFileAccess) {
+        
+            if (! uxpContext.fileInfoByFileHandle) {
+                break;
+            }       
+
+            let fileInfo = uxpContext.fileInfoByFileHandle[fileHandle];
+            if (! fileInfo) {
+                break;
+            }       
+                      
+            if (fileInfo.mode != 'w' && fileInfo.mode != 'a') {
+                break;
+            }
+
+            retVal = 
+                uxpContext.lfs.getEntryWithUrl("file:" + fileInfo.filePath).then(
+                    (fileEntry) => {
+                        if (! fileEntry.isFile) {
+                            return undefined;
+                        }
+                        else {
+                            let rawStr = byteArrayToRawString(byteArray);
+                            return fileEntry.write(rawStr).then(
+                                () => {
+                                    return true;
+                                },
+                                (error) => {
+                                    return undefined;
+                                }                           
+                            );
+                        }
+                    },
+                    (error) => {
+                        return false;
+                    }
+                );
+
+         
+
+            break;
+        }
+            
         const responsePromise = evalTQL("fileWrite(" + fileHandle + "," + dQ(byteArray) + ") ? \"true\" : \"false\"");
         if (! responsePromise) {
             break;
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -1989,7 +2431,7 @@ function getCapability(issuer, capabilityCode, encryptionKey) {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text;
@@ -2027,7 +2469,7 @@ function getCreativeDeveloperToolsLevel() {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = parseInt(response.text, 10);
@@ -2152,7 +2594,7 @@ function getEnvironment(envVarName) {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text;
@@ -2175,7 +2617,7 @@ module.exports.getEnvironment = getEnvironment;
  * @function getFloatWithUnitFromINI
  *
  * @param {string} in_valueStr - ini value
- * @param {string} in_convertToUnit - default to use if no match is found
+ * @param {string=} in_convertToUnit - default to use if no match is found
  * @returns {number} value
  */
 
@@ -2372,7 +2814,7 @@ function getPersistData(issuer, attribute, password) {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text;
@@ -2406,7 +2848,7 @@ function getPluginInstallerPath() {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text;
@@ -2447,7 +2889,7 @@ function getSysInfo__() {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 do {
                     if (! response || response.error) {
@@ -2551,11 +2993,14 @@ function getUXPContext() {
         let uxpContext = {};
         crdtuxp.uxpContext = uxpContext;
 
+        uxpContext.preferDaemonOverInternal = DEFAULT_PREFER_DAEMON_OVER_INTERNAL;
+
         uxpContext.fs = require("fs");
         uxpContext.os = require("os");
-        uxpContext.uxp = require("uxp");       
+        uxpContext.uxp = require("uxp");   
         let storage = uxpContext.uxp.storage;
         uxpContext.lfs = storage.localFileSystem;
+        uxpContext.sessionID = window.crypto.randomUUID().replace(/-/g,"");
 
         try {
             // @ts-ignore
@@ -3014,7 +3459,7 @@ function machineGUID() {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text;
@@ -3050,7 +3495,7 @@ function pluginInstaller() {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -3513,7 +3958,7 @@ function setIssuer(issuerGUID, issuerEmail) {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -3577,7 +4022,7 @@ function setPersistData(issuer, attribute, password, data) {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -3599,7 +4044,7 @@ module.exports.setPersistData = setPersistData;
  * @function stripTrailingSeparator
  *
  * @param {string} filePath - a file path 
- * @param {string} separator - optional: the separator to use. If omitted, will try 
+ * @param {string=} separator - the separator to use. If omitted, will try 
  * guess the separator.
  * @returns the file path without trailing separator
  */
@@ -3735,7 +4180,7 @@ function sublicense(key, activation) {
         }
 
         retVal = responsePromise.then(
-            response => {
+            (response) => {
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -3815,7 +4260,7 @@ module.exports.toHex = toHex;
  * @function unitToInchFactor
  *
  * @param {string} in_unit - unit name (`crdtes.UNIT_NAME...`)
- * @returns { number } conversion factor or 1.0 if unknown/not applicable
+ * @returns {number} conversion factor or 1.0 if unknown/not applicable
  */
 
 function unitToInchFactor(in_unit) {
@@ -3846,3 +4291,74 @@ function unitToInchFactor(in_unit) {
     return retVal;
 }
 module.exports.unitToInchFactor = unitToInchFactor;
+
+/**
+ * Wait for a file to appear. Only works in UXP contexts with direct file access
+ *
+ * @function waitForFile
+ *
+ * @param {string} filePath - file that needs to appear
+ * @param {number=} interval - how often to check for file (milliseconds)
+ * @param {number=} timeout - how long to wait for file (milliseconds)
+ * @returns {Promise<boolean|undefined>} whether file appeared or not
+ */
+
+function waitForFile(
+    filePath, 
+    interval = DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS, 
+    timeout = DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS) {
+// coderstate: promisor
+debugger;
+    let retVal = RESOLVED_UNDEFINED_PROMISE;
+
+    do {
+    
+        var uxpContext = getUXPContext();
+        if (! uxpContext.hasDirectFileAccess) {
+            break;
+        }
+
+        let endTime = (new Date()).getTime() + timeout;
+
+        const checkFile = () => {
+            // coderstate: promisor
+
+            let retVal;
+            let now = (new Date()).getTime();
+            if (endTime < now) {
+                retVal = undefined;
+            }
+            else {
+                let retVal = uxpContext.lfs.getEntryWithUrl("file:" + filePath).then(
+                    fileEntryResolver,
+                    fileEntryRejector);
+            }
+            return retVal;
+        };
+        
+        const fileEntryRejector = (error) => {
+            return undefined;
+        };
+        
+        const fileEntryResolver = (fileEntry) => {
+            // coderstate: resolver
+            if (file.exists) {
+                retVal = true;
+            } 
+            else {
+                retVal = 
+                    delayFunction(
+                        DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS,
+                        checkFile);
+            }
+            return retVal;
+        };
+
+        retVal = checkFile();
+    }
+    while (false);
+    
+    return retVal;  
+    
+}
+module.exports.waitForFile = waitForFile;
