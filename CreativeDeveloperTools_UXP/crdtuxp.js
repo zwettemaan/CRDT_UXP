@@ -39,7 +39,7 @@
  */
 
 const DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS   = 1000;
-const DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS    = 10000;
+const DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS    = 60000;
 
 const UXP_VARIANT_PHOTOSHOP_UXP                 = "UXP_VARIANT_PHOTOSHOP_UXP";
 const UXP_VARIANT_PHOTOSHOP_UXPSCRIPT           = "UXP_VARIANT_PHOTOSHOP_UXPSCRIPT";
@@ -49,6 +49,8 @@ const UXP_VARIANT_INDESIGN_SERVER_UXPSCRIPT     = "UXP_VARIANT_INDESIGN_SERVER_U
 const FILE_NAME_EXTENSION_JSON                  = "json";
 const FILE_NAME_SUFFIX_TQL_REQUEST              = "q";
 const FILE_NAME_SUFFIX_TQL_RESPONSE             = "r";
+
+const LENGTH_REQUEST_ID                         =  10;
 
 // Some functions can be either resolved internally or via the daemon.
 // Choose what we prefer
@@ -287,6 +289,7 @@ const REGEXP_CICEROS_POINTS_REPLACE            = "$2";
 
 const RESOLVED_UNDEFINED_PROMISE               = Promise.resolve(undefined);
 const RESOLVED_TRUE_PROMISE                    = Promise.resolve(true);
+const RESOLVED_FALSE_PROMISE                   = Promise.resolve(false);
 const RESOLVED_ERROR_PROMISE                   = Promise.resolve({ error: true });
 
 const LOCALE_EN_US                             = "en_US";
@@ -495,7 +498,7 @@ module.exports.alert = alert;
 function base64decode(base64Str, options) {
 // coderstate: promisor
     let retVal = RESOLVED_UNDEFINED_PROMISE;
-debugger;
+
     do {
 
         let isBinary = options && options.isBinary;
@@ -656,14 +659,22 @@ module.exports.path.baseName = baseName;
  */
 function binaryUTF8ToStr(in_byteArray) {
 // coderstate: function
+
     let retVal = undefined;
 
     try {
         let idx = 0;
-        const len = in_byteArray.length;
+        let byteArray;
+        if (in_byteArray instanceof ArrayBuffer) {
+            byteArray = new Uint8Array(in_byteArray);
+        }
+        else {
+            byteArray = in_byteArray;
+        }
+        let len = byteArray.length;
         let c;
         while (idx < len) {
-            let byte = in_byteArray[idx];
+            let byte = byteArray[idx];
             idx++;
             let bit7 = byte >> 7;
             if (! bit7) {
@@ -678,7 +689,7 @@ function binaryUTF8ToStr(in_byteArray) {
                     break;
                 }
                 else {
-                    let byte2 = in_byteArray[idx];
+                    let byte2 = byteArray[idx];
                     idx++;
                     let bit5 = (byte & 0x3F) >> 5;
                     if (! bit5) {
@@ -686,7 +697,7 @@ function binaryUTF8ToStr(in_byteArray) {
                         c = String.fromCharCode(((byte & 0x1F) << 6) | (byte2 & 0x3F));
                     }
                     else {
-                        let byte3 = in_byteArray[idx];
+                        let byte3 = byteArray[idx];
                         idx++;
                         let bit4 = (byte & 0x1F) >> 4;
                         if (! bit4) {
@@ -871,27 +882,38 @@ module.exports.decrypt = decrypt;
  *
  * @param {number} delayTimeMilliseconds - a delay in milliseconds
  * @param {function} ftn - a function
- * @param {any=} args - optional args for function
+ * @param {...*} args - optional args for function
  * @returns {Promise<any>}
  */
 function delayFunction(delayTimeMilliseconds, ftn, ...args) {
 // coderstate: promisor
-debugger;
 
-    const executor = (resolve) => {
+    console.log("delayFunction()");
+
+    const executor = (resolve, reject) => {
         // coderstate: executor
+        console.log("delayFunction executor()");
         setTimeout(
             () => {
+                console.log("delayFunction setTimeout executor()");
                 // coderstate: executor
-                resolve(ftn(...args));
+                try {
+                    let result = ftn(...args);
+                    if (result instanceof Promise) {
+                        result.then(resolve).catch(reject);
+                    }
+                    else {
+                        resolve(result);
+                    }
+                } catch (error) {
+                    reject(error);
+                }                    
             }, 
             delayTimeMilliseconds
         );
     };
 
-    retVal = new Promise(executor);
-    
-    return retVal;
+    return new Promise(executor);
 }
 module.exports.delayFunction = delayFunction;
 
@@ -1065,37 +1087,42 @@ function dirCreate(filePath) {
 
             let parentPath = crdtuxp.path.dirName(filePath);
             let baseName = crdtuxp.path.baseName(filePath);
-            
-            const parentEntryRejector = (error) => {
-                return false;
-            };
-            
-            const createEntryRejector = (error) => {
-                return false;
-            };
 
-            const createEntryResolver = (folderEntry) => {
-                return true;
-            };
-            
-            const parentEntryResolver = (parentEntry) => {
-                if (! parentEntry.isFolder) {
-                    return false;
+            // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+            try {
+                const stats = uxpContext.fs.lstatSync(parentPath);
+                if (! stats || ! stats.isDirectory()) {
+                    retVal = RESOLVED_FALSE_PROMISE;
+                    break;
+                }                
+            }
+            catch (err) {
+                break;
+            }
+
+            try {
+                const stats = uxpContext.fs.lstatSync(filePath);
+                if (stats) {
+                    retVal = RESOLVED_FALSE_PROMISE;
+                    break;
                 }
-                else {                      
-                    return uxpContext.lfs.createEntryWithUrl(
-                        "file:" + filePath, 
-                        { type: uxpContext.uxp.storage.types.folder }
-                    ).then(
-                        createEntryResolver,
-                        createEntryRejector);
-                }
-            };
-            
-            retVal = 
-                uxpContext.lfs.getEntryWithUrl("file:" + parentPath).then(
-                    parentEntryResolver,
-                    parentEntryRejector);
+            }
+            catch (err) {
+            }
+
+            try {
+                retVal = uxpContext.fs.mkdir(filePath).then(
+                    () => {
+                        return true;
+                    },
+                    (reason) => {
+                        return false;
+                    }
+                )
+            }
+            catch (err) {
+            }
+
             break;
         }
 
@@ -1153,83 +1180,92 @@ function dirDelete(filePath, recurse) {
         
         if (uxpContext.hasDirectFileAccess) {
             
-            const deleteResolver = () => {
-                return true;
-            };
-
-            const deleteRejector = (error) => {
-                return false;
-            };
-
-            const allEntriesDeletedResolver = () => {
-                return entry.delete().then(
-                    deleteResolver,
-                    deleteRejector);
-            };
+            // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
             
-            const getEntriesResolver = (entries) => {
-                let deleteSubEntryPromises = [];
-                for (const subEntry of entries) {
-                    // Recursively delete each entry in the folder
-                    deleteSubEntryPromises.push(deleteDirRecursivelyPromisor(subEntry));
+            try {
+                const stats = uxpContext.fs.lstatSync(filePath);
+                if (! stats || ! stats.isDirectory()) {
+                    retVal = RESOLVED_FALSE_PROMISE;
+                    break;
                 }
-                return Promise.all(deleteSubEntryPromises).then(
-                    allEntriesDeletedResolver,
-                    deleteRejector
-                );
-            };
+            }
+            catch (err) {
+                retVal = RESOLVED_FALSE_PROMISE;
+                break;
+            }
 
-            const deleteDirRecursivelyPromisor = (entry) => {
+            let entries = [];
+            try {
+                entries = uxpContext.fs.readdirSync(filePath);
+            }
+            catch (err) {
+                retVal = RESOLVED_FALSE_PROMISE;
+                break;
+            }
 
-                let retVal = RESOLVED_UNDEFINED_PROMISE;
+            if (! recurse) {
+            
+                if (entries.length > 0) {
+                    retVal = RESOLVED_FALSE_PROMISE;
+                    break;
+                }
                 
-                do {
-
-                    if (entry.isFile) {
-                        retVal = entry.delete().then(
-                            deleteResolver,
-                            deleteRejector);
-                        break;
-                    }
-                    
-                    if (entry.isFolder) {
-                        entry.getEntries().then(
-                            getEntriesResolver,
-                            deleteRejector);
-                        break;
-                    }
-                    
-                } 
-                while (false);
-                return retVal;
+                retVal = uxpContext.fs.rmdir(filePath).then(
+                    () => {
+                        return true;
+                    },
+                    (reason) => {
+                        return false;
+                    }                    
+                );
+                break;
             }
             
-            const getDirEntryRejector = (error) => {
-                return undefined;
-            };
-            
-            const getDirEntryResolver = (dirEntry) => {
-                if (! dirEntry.isFolder) {
-                    return false;
+            const dirPathPrefix = addTrailingSeparator(filePath);
+            let promises = [];
+            for (let idx = 0; idx < entries.length; idx++) {
+                let entryPath = dirPathPrefix + entries[idx];
+                try {
+                    const stats = uxpContext.fs.lstatSync(entryPath);
+                    if (! stats) {
+                        promises = undefined;
+                        break;
+                    }
+                    let deletePromise;
+                    if (stats.isDirectory()) {
+                        deletePromise = dirDelete(entryPath, true).then(
+                            () => {
+                                return true;
+                            },
+                            (reason) => {
+                                return false;
+                            }                    
+                        );
+                    }
+                    else {
+                        deletePromise =  uxpContext.fs.unlink(entryPath).then(
+                            () => {
+                                return true;
+                            },
+                            (reason) => {
+                                return false;
+                            }                    
+                        );
+                    }
+                    promises.push(deletePromise);
                 }
-                
-                if (recurse) {
-                    return deleteDirRecursivelyPromisor(dirEntry).then(
-                        deleteResolver,
-                        deleteRejector);
-                }
-                else {
-                    return dirEntry.delete().then(
-                        deleteResolver,
-                        deleteRejector);
-                }
-            };
-            
-            retVal = 
-                uxpContext.lfs.getEntryWithPath(filePath).then(
-                    getDirEntryResolver,
-                    getDirEntryRejector);
+                catch (err) {
+                    promises = undefined;
+                    break;
+                }                
+            }
 
+            if (! promises) {
+                retVal = RESOLVED_FALSE_PROMISE;
+            }
+            
+            retVal = Promise.allSettled(promises);
+            
             break;
         }
 
@@ -1291,17 +1327,13 @@ function dirExists(dirPath) {
         let uxpContext = getUXPContext();
         if (uxpContext.hasDirectFileAccess) {
         
-            const dirEntryResolver = (dirEntry) => {
-                return dirEntry.isFolder;
-            };
-            const dirEntryRejector = (dirEntry) => {
-                return false;
-            };
+            const stats = uxpContext.fs.lstatSync(dirPath);
+            if (! stats || ! stats.isDirectory()) {
+                retVal = RESOLVED_FALSE_PROMISE;
+                break;
+            }
             
-            retVal = 
-                uxpContext.lfs.getEntryWithUrl("file:" + dirPath).then(
-                    dirEntryResolver,
-                    dirEntryRejector);
+            retVal = RESOLVED_TRUE_PROMISE;
             break;
         }
 
@@ -1399,38 +1431,20 @@ function dirScan(filePath) {
 
     do {
 
+        // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+        
         let uxpContext = getUXPContext();
         if (uxpContext.hasDirectFileAccess) {
             
-            const dirEntryRejector = (error) => {
-                return undefined;
-            };
-            
-            const gotSubEntriesResolver = (subEntries) => {
-                let retVal = [];
-                for (let idx = 0; idx < subEntries.length; idx++) {
-                    let subEntry = subEntries[idx];
-                    retVal.push(subEntry.name);
-                }
-                return retVal;
-            };
-            
-            const dirEntryResolver = (dirEntry) => {
-            
-                if (! dirEntry.isFolder) {
-                    return false;
-                }
-                
-                return dirEntry.getEntries().then(
-                    gotSubEntriesResolver,
-                    dirEntryRejector);
-            };
-
-            retVal = 
-                uxpContext.lfs.getEntryWithPath(filePath).then(
-                    dirEntryResolver,
-                    dirEntryRejector);
-
+            let entries = [];
+            try {
+                entries = uxpContext.fs.readdirSync(filePath);
+            }
+            catch (err) {
+                retVal = RESOLVED_FALSE_PROMISE;
+                break;
+            }
+            retVal = Promise.resolve(entries);
             break;
         }
 
@@ -1578,16 +1592,25 @@ function enQuote__(s_or_ByteArr, quoteChar) {
 
     const quoteCharCode = quoteChar.charCodeAt(0);
 
-    const isString = ("string" == typeof s_or_ByteArr);
-    const sLen = s_or_ByteArr.length;
+    let isString;
+    let byteSequence;
+    if (s_or_ByteArr instanceof ArrayBuffer) {
+        byteSequence = new Uint8Array(in_byteArray);
+    }
+    else {
+        isString = ("string" == typeof s_or_ByteArr);
+        byteSequence = s_or_ByteArr;
+    }
+
+    const sLen = byteSequence.length;
     let escapedS = "";
     for (let charIdx = 0; charIdx < sLen; charIdx++) {
         let cCode;
         if (isString) {
-            cCode = s_or_ByteArr.charCodeAt(charIdx);
+            cCode = byteSequence.charCodeAt(charIdx);
         }
         else {
-            cCode = s_or_ByteArr[charIdx];
+            cCode = byteSequence[charIdx];
         }
         if (cCode == 0x5C) {
             escapedS += '\\\\';
@@ -1648,30 +1671,40 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
         }
         
         if (! uxpContext.hasNetworkAccess) {
+
+            // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+            
+            if (! crdtuxp.context.PATH_EVAL_TQL) 
+            {
+                // Need to know where to put the packet
+                break;
+            }
             
             if (! uxpContext.tqlRequestID) {
                 uxpContext.tqlRequestID = 0;
                 uxpContext.tqlRequestsByID = {};
             }
 
-            let validUntil = (new Date()).getTime() + DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS;
+            let validUntil = 
+                (new Date()).getTime() + DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS;
 
             let tqlRequest = {
                 validUntil: validUntil,
                 sessionID: uxpContext.sessionID,
                 requestID: ++uxpContext.tqlRequestID,
-                tqlScript: tqlScript,
+                tqlRequest: tqlScript,
                 tqlScopeName: tqlScopeName
             };
             uxpContext.tqlRequestsByID[tqlRequest.requestID] = tqlRequest;
             
             let tqlRequestJSON = JSON.stringify(tqlRequest);
-            let byteArray = strToUTF8(tqlRequestJSON);
+            let tqlRequestByteArray = strToUTF8(tqlRequestJSON);
+            let tqlRequestRawStr = byteArrayToRawString(tqlRequestByteArray);
         
             let tqlSharedFilePathPrefix = 
                 crdtuxp.context.PATH_EVAL_TQL + 
                 tqlRequest.sessionID + 
-                crdtuxp.leftPad(tqlRequest.requestID, "0", 8);
+                crdtuxp.leftPad(tqlRequest.requestID, "0", LENGTH_REQUEST_ID);
 
             let requestFilePath = 
                 tqlSharedFilePathPrefix + 
@@ -1685,79 +1718,41 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
                 "." + 
                 FILE_NAME_EXTENSION_JSON;
                 
-            const cannotWriteRequestRejector = (error) => {
-                return "cannot write EvalTQL file";
-            };
-            
             const cannotReadResponseRejector = (error) => {
-                return "cannot read EvalTQL response file";
-            };
-            
-            const noResponseRejector = (error) => {
                 return undefined;
             };
-            
-            const responseFileEntryReadResolver = (data) => {
-                return data;
-            };
-            
-            const responseFileEntryResolver = (responseFileEntry) => {
-            
-                let retVal = undefined;
-                
-                do {                
-                    if (! fileEntry.isFile) {
-                        break;
-                    }
-                    
-                    retVal = fileEntry.read().then(
-                        responseFileEntryReadResolver,
-                        noResponseRejector);
-                }
-                while (false);
-                
-                return retVal;
-            };
-            
+
             const responseWaitResolver = (responseFileState) => {
-            
+
                 let retVal = undefined;
-                
+
                 do {
-                
+
                     if (! responseFileState) {
                         break;
                     }
-                    
-                    retVal = 
-                        uxpContext.lfs.getEntryWithUrl("file:" + responseFilePath).then(
-                            responseFileEntryResolver,
-                            noResponseRejector);
+
+                    let replyRawStr =  uxpContext.fs.readFileSync(responseFilePath);
+                    retVal = uxpContext.fs.unlink(responseFilePath).then(
+                        (resolve) => {
+                            return binaryUTF8ToStr(replyRawStr);
+                        },
+                        (error) => {
+                            return binaryUTF8ToStr(replyRawStr);
+                        }
+                    ); 
                 }
                 while (false);
-                
+
                 return retVal;
             };
-            
-            const requestFileEntryWriteResolver = () => {
-                return crdtuxp.waitForFile(responseFilePath).then(
-                    responseWaitResolver,
-                    cannotReadResponseRejector
-                );
-            };
-            
-            const requestFileEntryResolver = (requestFileEntry) => {            
-                let rawStr = byteArrayToRawString(byteArray);               
-                return byteArray.write(rawStr).then(
-                    requestFileEntryWriteResolver,
-                    cannotWriteRequestRejector);
-            };
-            
-            retVal = 
-                uxpContext.lfs.createEntryWithUrl("file:" + requestFilePath).then(
-                    requestFileEntryResolver,
-                    cannotWriteRequestRejector);
-                 
+
+            uxpContext.fs.writeFileSync(requestFilePath, tqlRequestRawStr);
+
+            retVal = crdtuxp.waitForFile(responseFilePath).then(
+                responseWaitResolver,
+                cannotReadResponseRejector);
+
             break;
         }
 
@@ -1932,7 +1927,15 @@ function fileDelete(filePath) {
 
         let uxpContext = getUXPContext();
         if (uxpContext.hasDirectFileAccess) {
-            retVal = uxpContext.fs.promises.unlink(filePath);
+            // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+            // If no callback given, returns a Promise
+            retVal = uxpContext.fs.unlink(filePath).then(
+                (resolve) => {
+                    return true;
+                },
+                (error) => {
+                    return false;
+                });
             break;
         }
 
@@ -1979,15 +1982,20 @@ function fileExists(filePath) {
 
         let uxpContext = getUXPContext();
         if (uxpContext.hasDirectFileAccess) {
-            retVal = 
-                uxpContext.lfs.getEntryWithUrl("file:" + filePath).then(
-                    dirEntry => {
-                        return dirEntry.isFile;
-                    },
-                    (error) => {
-                        return false;
-                    }
-                );
+
+            // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+            try {
+                const stats = uxpContext.fs.lstatSync(filePath);
+                if (! stats || ! stats.isFile()) {
+                    retVal = RESOLVED_FALSE_PROMISE;
+                    break;
+                }                
+            }
+            catch (err) {
+                break;
+            }
+
+            retVal =  RESOLVED_TRUE_PROMISE;
             break;
         }
     
@@ -2068,50 +2076,48 @@ function fileOpen(filePath, mode) {
             }
                       
             if (mode == 'w' || mode == 'a') {
-                retVal = 
-                    uxpContext.lfs.getEntryWithUrl("file:" + parentPath).then(
-                        dirEntry => {
-                            if (! dirEntry.isFolder) {
-                                return undefined;
-                            }
-                            else {
-                                let uniqueFileHandleID = ++uxpContext.uniqueFileHandleID;  
-                                let fileInfo = {
-                                    fileHandle: uniqueFileHandleID,
-                                    filePath: filePath,
-                                    mode: mode
-                                }
-                                uxpContext.fileInfoByFileHandle[uniqueFileHandleID] = fileInfo;
-                                return uniqueFileHandleID;
-                            }
-                        },
-                        (error) => {
-                            return undefined;
-                        }
-                    );
+
+                // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+                try {
+                    const stats = uxpContext.fs.lstatSync(parentPath);
+                    if (! stats || ! stats.isDirectory()) {
+                        break;
+                    }                
+                }
+                catch (err) {
+                    break;
+                }
+
+                let uniqueFileHandleID = ++uxpContext.uniqueFileHandleID;  
+                let fileInfo = {
+                    fileHandle: uniqueFileHandleID,
+                    filePath: filePath,
+                    mode: mode
+                }
+                uxpContext.fileInfoByFileHandle[uniqueFileHandleID] = fileInfo;
+                retVal = Promise.resolve(uniqueFileHandleID);
+            
             }     
             else if (mode == 'r') {
-                retVal = 
-                    uxpContext.lfs.getEntryWithUrl("file:" + filePath).then(
-                        dirEntry => {
-                            if (! dirEntry.isFile) {
-                                return undefined;
-                            }
-                            else {
-                                let uniqueFileHandleID = ++uxpContext.uniqueFileHandleID;  
-                                let fileInfo = {
-                                    fileHandle: uniqueFileHandleID,
-                                    filePath: filePath,
-                                    mode: mode
-                                }
-                                uxpContext.fileInfoByFileHandle[uniqueFileHandleID] = fileInfo;
-                                return uniqueFileHandleID;
-                            }
-                        },
-                        (error) => {
-                            return undefined;
-                        }
-                    );
+
+                try {
+                    const stats = uxpContext.fs.lstatSync(filePath);
+                    if (! stats || ! stats.isFile()) {
+                        break;
+                    }                
+                }
+                catch (err) {
+                    break;
+                }
+                
+                let uniqueFileHandleID = ++uxpContext.uniqueFileHandleID;  
+                let fileInfo = {
+                    fileHandle: uniqueFileHandleID,
+                    filePath: filePath,
+                    mode: mode
+                }
+                uxpContext.fileInfoByFileHandle[uniqueFileHandleID] = fileInfo;
+                retVal = Promise.resolve(uniqueFileHandleID);
             }
             break;
         }
@@ -2195,28 +2201,13 @@ function fileRead(fileHandle, isBinary) {
                 break;
             }
 
-            retVal = 
-                uxpContext.lfs.getEntryWithUrl("file:" + fileInfo.filePath).then(
-                    (fileEntry) => {
-                        if (! fileEntry.isFile) {
-                            return undefined;
-                        }
-                        else {
-                            return fileEntry.read().then(
-                                (data) => {
-                                    return data;
-                                },
-                                (error) => {
-                                    return undefined;
-                                }                           
-                            );
-                        }
-                    },
-                    (error) => {
-                        return false;
-                    }
-                );
-
+            let replyByteArray =  uxpContext.fs.readFileSync(fileInfo.filePath);
+            if (isBinary) {
+                retVal = Promise.resolve(replyByteArray);
+                break;
+            }
+            
+            retVal = Promise.resolve(binaryUTF8ToStr(replyByteArray));
             break;
         }
             
@@ -2307,30 +2298,10 @@ function fileWrite(fileHandle, s_or_ByteArr) {
                 break;
             }
 
-            retVal = 
-                uxpContext.lfs.getEntryWithUrl("file:" + fileInfo.filePath).then(
-                    (fileEntry) => {
-                        if (! fileEntry.isFile) {
-                            return undefined;
-                        }
-                        else {
-                            let rawStr = byteArrayToRawString(byteArray);
-                            return fileEntry.write(rawStr).then(
-                                () => {
-                                    return true;
-                                },
-                                (error) => {
-                                    return undefined;
-                                }                           
-                            );
-                        }
-                    },
-                    (error) => {
-                        return false;
-                    }
-                );
-
-         
+            let rawStr = byteArrayToRawString(byteArray);
+            let lengthWritten = uxpContext.fs.writeFileSync(fileInfo.filePath, rawStr);
+            
+            retVal = Promise.resolve(lengthWritten == rawStr.length);
 
             break;
         }
@@ -4308,7 +4279,6 @@ function waitForFile(
     interval = DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS, 
     timeout = DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS) {
 // coderstate: promisor
-debugger;
     let retVal = RESOLVED_UNDEFINED_PROMISE;
 
     do {
@@ -4320,40 +4290,40 @@ debugger;
 
         let endTime = (new Date()).getTime() + timeout;
 
-        const checkFile = () => {
-            // coderstate: promisor
+         const checkFile = () => {
+             // coderstate: promisor
 
-            let retVal;
-            let now = (new Date()).getTime();
-            if (endTime < now) {
-                retVal = undefined;
-            }
-            else {
-                let retVal = uxpContext.lfs.getEntryWithUrl("file:" + filePath).then(
-                    fileEntryResolver,
-                    fileEntryRejector);
-            }
-            return retVal;
+            console.log("checkFile()");
+
+            const checkFileExecutor = (resolve, reject) => {
+                console.log("checkFile executor()");
+                const now = Date.now();
+                if (endTime < now) {
+                    console.log("Timed Out");
+                    resolve(undefined);
+                } else {
+                    try {
+                        // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+                        const stats = uxpContext.fs.lstatSync(filePath);
+                        if (stats) {
+                            resolve(true);
+                        } else {
+                            delayFunction(interval, checkFile).
+                                then(resolve).
+                                catch(reject);
+                        }
+                    } 
+                    catch (err) {
+                        delayFunction(interval, checkFile).
+                            then(resolve).
+                            catch(reject);
+                    }
+                }
+            };
+            
+            return new Promise(checkFileExecutor);
         };
         
-        const fileEntryRejector = (error) => {
-            return undefined;
-        };
-        
-        const fileEntryResolver = (fileEntry) => {
-            // coderstate: resolver
-            if (file.exists) {
-                retVal = true;
-            } 
-            else {
-                retVal = 
-                    delayFunction(
-                        DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS,
-                        checkFile);
-            }
-            return retVal;
-        };
-
         retVal = checkFile();
     }
     while (false);
