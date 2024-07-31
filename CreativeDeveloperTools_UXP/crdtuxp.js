@@ -664,17 +664,10 @@ function binaryUTF8ToStr(in_byteArray) {
 
     try {
         let idx = 0;
-        let byteArray;
-        if (in_byteArray instanceof ArrayBuffer) {
-            byteArray = new Uint8Array(in_byteArray);
-        }
-        else {
-            byteArray = in_byteArray;
-        }
-        let len = byteArray.length;
+        let len = in_byteArray.length;
         let c;
         while (idx < len) {
-            let byte = byteArray[idx];
+            let byte = in_byteArray[idx];
             idx++;
             let bit7 = byte >> 7;
             if (! bit7) {
@@ -689,7 +682,7 @@ function binaryUTF8ToStr(in_byteArray) {
                     break;
                 }
                 else {
-                    let byte2 = byteArray[idx];
+                    let byte2 = in_byteArray[idx];
                     idx++;
                     let bit5 = (byte & 0x3F) >> 5;
                     if (! bit5) {
@@ -697,7 +690,7 @@ function binaryUTF8ToStr(in_byteArray) {
                         c = String.fromCharCode(((byte & 0x1F) << 6) | (byte2 & 0x3F));
                     }
                     else {
-                        let byte3 = byteArray[idx];
+                        let byte3 = in_byteArray[idx];
                         idx++;
                         let bit4 = (byte & 0x1F) >> 4;
                         if (! bit4) {
@@ -729,6 +722,25 @@ function binaryUTF8ToStr(in_byteArray) {
     return retVal;
 }
 module.exports.binaryUTF8ToStr = binaryUTF8ToStr;
+
+/**
+ * Make a byte array into a 'fake string'. Not UTF8-aware
+ *
+ * @function byteArrayToRawString
+ *
+ * @param {string} in_byteArray - a byte array
+ * @returns {string|undefined} a string with the exact same bytes
+ */
+function byteArrayToRawString(in_array) {
+
+    let retVal = "";
+    for (let idx = 0; idx < in_array.length; idx++) {
+        retVal += String.fromCharCode(in_array[idx]);
+    }
+
+    return retVal;
+}
+module.exports.byteArrayToRawString = byteArrayToRawString;
 
 /**
  * Internal: convert a Unicode character code to a 1 to 3 byte UTF8 byte sequence
@@ -1111,6 +1123,7 @@ function dirCreate(filePath) {
             }
 
             try {
+                // If no callback given, returns a Promise
                 retVal = uxpContext.fs.mkdir(filePath).then(
                     () => {
                         return true;
@@ -1210,14 +1223,21 @@ function dirDelete(filePath, recurse) {
                     break;
                 }
                 
-                retVal = uxpContext.fs.rmdir(filePath).then(
-                    () => {
-                        return true;
-                    },
-                    (reason) => {
-                        return false;
-                    }                    
-                );
+                try {
+                    // If no callback given, returns a Promise
+                    retVal = uxpContext.fs.rmdir(filePath).then(
+                        () => {
+                            return true;
+                        },
+                        (reason) => {
+                            return false;
+                        }                    
+                    );
+                }
+                catch (err) {
+                    retVal = RESOLVED_FALSE_PROMISE;
+                }
+                
                 break;
             }
             
@@ -1243,6 +1263,7 @@ function dirDelete(filePath, recurse) {
                         );
                     }
                     else {
+                        // If no callback given, returns a Promise
                         deletePromise =  uxpContext.fs.unlink(entryPath).then(
                             () => {
                                 return true;
@@ -1264,7 +1285,27 @@ function dirDelete(filePath, recurse) {
                 retVal = RESOLVED_FALSE_PROMISE;
             }
             
-            retVal = Promise.allSettled(promises);
+            retVal = Promise.allSettled(promises).then(
+                () => {
+                    try {
+                        // If no callback given, returns a Promise
+                        retVal = uxpContext.fs.rmdir(filePath).then(
+                            () => {
+                                return true;
+                            },
+                            (reason) => {
+                                return false;
+                            }                    
+                        );
+                    }
+                    catch (err) {
+                        retVal = RESOLVED_FALSE_PROMISE;
+                    }
+                },
+                (reason) => {
+                    return false;
+                }
+            );
             
             break;
         }
@@ -1327,8 +1368,14 @@ function dirExists(dirPath) {
         let uxpContext = getUXPContext();
         if (uxpContext.hasDirectFileAccess) {
         
-            const stats = uxpContext.fs.lstatSync(dirPath);
-            if (! stats || ! stats.isDirectory()) {
+            try {
+                const stats = uxpContext.fs.lstatSync(dirPath);
+                if (! stats || ! stats.isDirectory()) {
+                    retVal = RESOLVED_FALSE_PROMISE;
+                    break;
+                }
+            }
+            catch (err) {
                 retVal = RESOLVED_FALSE_PROMISE;
                 break;
             }
@@ -1699,7 +1746,6 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
             
             let tqlRequestJSON = JSON.stringify(tqlRequest);
             let tqlRequestByteArray = strToUTF8(tqlRequestJSON);
-            let tqlRequestRawStr = byteArrayToRawString(tqlRequestByteArray);
         
             let tqlSharedFilePathPrefix = 
                 crdtuxp.context.PATH_EVAL_TQL + 
@@ -1732,22 +1778,31 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
                         break;
                     }
 
-                    let replyRawStr =  uxpContext.fs.readFileSync(responseFilePath);
-                    retVal = uxpContext.fs.unlink(responseFilePath).then(
-                        (resolve) => {
-                            return binaryUTF8ToStr(replyRawStr);
-                        },
-                        (error) => {
-                            return binaryUTF8ToStr(replyRawStr);
-                        }
-                    ); 
+                    try {
+                        let replyByteArray = new Uint8Array(uxpContext.fs.readFileSync(responseFilePath));
+                        retVal = uxpContext.fs.unlink(responseFilePath).then(
+                            () => {
+                                return binaryUTF8ToStr(replyByteArray);
+                            },
+                            () => {
+                                return binaryUTF8ToStr(replyByteArray);
+                            }
+                        ); 
+                    }
+                    catch (err) {
+                    }
                 }
                 while (false);
 
                 return retVal;
             };
 
-            uxpContext.fs.writeFileSync(requestFilePath, tqlRequestRawStr);
+            try {
+                uxpContext.fs.writeFileSync(requestFilePath, new Uint8Array(tqlRequestByteArray));
+            }
+            catch (err) {
+                break;
+            }
 
             retVal = crdtuxp.waitForFile(responseFilePath).then(
                 responseWaitResolver,
@@ -1882,6 +1937,11 @@ function fileClose(fileHandle) {
 
         let uxpContext = getUXPContext();
         if (uxpContext.hasDirectFileAccess) {
+            let fileInfo = uxpContext.fileInfoByFileHandle[fileHandle];
+            if (! fileInfo) {
+                break;
+            }
+            delete uxpContext.fileInfoByFileHandle[fileHandle];
             retVal = RESOLVED_TRUE_PROMISE;
             break;
         }
@@ -1927,15 +1987,31 @@ function fileDelete(filePath) {
 
         let uxpContext = getUXPContext();
         if (uxpContext.hasDirectFileAccess) {
+        
             // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
-            // If no callback given, returns a Promise
-            retVal = uxpContext.fs.unlink(filePath).then(
-                (resolve) => {
-                    return true;
-                },
-                (error) => {
-                    return false;
-                });
+            try {
+                const stats = uxpContext.fs.lstatSync(filePath);
+                if (! stats || ! stats.isFile()) {
+                    retVal = RESOLVED_FALSE_PROMISE;
+                    break;
+                }                
+            }
+            catch (err) {
+                break;
+            }
+
+            try {
+                // If no callback given, returns a Promise
+                retVal = uxpContext.fs.unlink(filePath).then(
+                    (resolve) => {
+                        return true;
+                    },
+                    (error) => {
+                        return false;
+                    });
+            }
+            catch (err) {
+            }
             break;
         }
 
@@ -2070,8 +2146,8 @@ function fileOpen(filePath, mode) {
         if (uxpContext.hasDirectFileAccess) {
             let parentPath = crdtuxp.path.dirName(filePath);            
             let baseName = crdtuxp.path.baseName(filePath); 
-            if (! uxpContext.uniqueFileHandle) {
-                uxpContext.uniqueFileHandle = 0;
+            if (! uxpContext.uniqueFileHandleID) {
+                uxpContext.uniqueFileHandleID = 0;
                 uxpContext.fileInfoByFileHandle = {};
             }
                       
@@ -2201,9 +2277,15 @@ function fileRead(fileHandle, isBinary) {
                 break;
             }
 
-            let replyByteArray =  uxpContext.fs.readFileSync(fileInfo.filePath);
-            if (isBinary) {
-                retVal = Promise.resolve(replyByteArray);
+            let replyByteArray;
+            try {
+                replyByteArray = new Uint8Array(uxpContext.fs.readFileSync(fileInfo.filePath));
+                if (isBinary) {
+                    retVal = Promise.resolve(replyByteArray);
+                    break;
+                }
+            }
+            catch (err) {
                 break;
             }
             
@@ -2298,10 +2380,15 @@ function fileWrite(fileHandle, s_or_ByteArr) {
                 break;
             }
 
-            let rawStr = byteArrayToRawString(byteArray);
-            let lengthWritten = uxpContext.fs.writeFileSync(fileInfo.filePath, rawStr);
-            
-            retVal = Promise.resolve(lengthWritten == rawStr.length);
+            let lengthWritten = 0;
+            try {
+                lengthWritten = uxpContext.fs.writeFileSync(fileInfo.filePath, new Uint8Array(byteArray));
+            }
+            catch (err) {
+                break;
+            }
+
+            retVal = Promise.resolve(lengthWritten == byteArray.length);
 
             break;
         }
@@ -3313,7 +3400,13 @@ function logMessage(reportingFunctionArguments, logLevel, message) {
             }
 
             if (LOG_TO_FILEPATH) {
-                promises.push(fileAppendString(LOG_TO_FILEPATH, logLine + "\n"));
+                let uxpContext = getUXPContext();
+                let appendPromise = fileAppendString(LOG_TO_FILEPATH, logLine + "\n");
+                if (uxpContext.hasNetworkAccess) {
+                    // Don't wait for it to resolve if we don't have network access
+                    // Otherwise logging slows down to a crawl
+                    promises.push(appendPromise);
+                }
             }
             
             if (promises.length) {
@@ -3586,6 +3679,30 @@ function pushLogLevel(newLogLevel) {
     return retVal;
 }
 module.exports.pushLogLevel = pushLogLevel;
+
+/**
+ * Make a 'fake string' into a byte array. Not UTF8-aware
+ *
+ * @function rawStringToByteArray
+ *
+ * @param {string} in_str - a raw string (possibly invalid UTF-8)
+ * @returns {array|undefined} an array of bytes
+ */
+function rawStringToByteArray(in_str) {
+
+    let retVal = [];
+    for (let idx = 0; idx < in_str.length; idx++) {
+        let c = in_str.charCodeAt(idx);
+        if (c > 255) {
+            retVal = undefined;
+            break;
+        }
+        retVal.push(c);
+    }
+
+    return retVal;
+}
+module.exports.rawStringToByteArray = rawStringToByteArray;
 
 /**
  * Read a bunch of text and try to extract structured information in .INI format
@@ -4047,49 +4164,6 @@ function stripTrailingSeparator(filePath, separator) {
 
     return retVal;
 }
-
-/**
- * Make a byte array into a 'fake string'. Not UTF8-aware
- *
- * @function byteArrayToRawString
- *
- * @param {string} in_byteArray - a byte array
- * @returns {string|undefined} a string with the exact same bytes
- */
-function byteArrayToRawString(in_array) {
-
-    let retVal = "";
-    for (let idx = 0; idx < in_array.length; idx++) {
-        retVal += String.fromCharCode(in_array[idx]);
-    }
-
-    return retVal;
-}
-module.exports.byteArrayToRawString = byteArrayToRawString;
-
-/**
- * Make a 'fake string' into a byte array. Not UTF8-aware
- *
- * @function rawStringToByteArray
- *
- * @param {string} in_str - a raw string (possibly invalid UTF-8)
- * @returns {array|undefined} an array of bytes
- */
-function rawStringToByteArray(in_str) {
-
-    let retVal = [];
-    for (let idx = 0; idx < in_str.length; idx++) {
-        let c = in_str.charCodeAt(idx);
-        if (c > 255) {
-            retVal = undefined;
-            break;
-        }
-        retVal.push(c);
-    }
-
-    return retVal;
-}
-module.exports.rawStringToByteArray = rawStringToByteArray;
 
 /**
  * Encode a string into an byte array using UTF-8
