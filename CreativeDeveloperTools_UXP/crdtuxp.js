@@ -900,14 +900,10 @@ module.exports.decrypt = decrypt;
 function delayFunction(delayTimeMilliseconds, ftn, ...args) {
 // coderstate: promisor
 
-    console.log("delayFunction()");
-
     const executor = (resolve, reject) => {
         // coderstate: executor
-        console.log("delayFunction executor()");
         setTimeout(
             () => {
-                console.log("delayFunction setTimeout executor()");
                 // coderstate: executor
                 try {
                     let result = ftn(...args);
@@ -1768,6 +1764,51 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
                 return undefined;
             };
 
+            const handleResponseData = (replyByteArray) => {
+
+                let retVal = undefined;
+                
+                let responseText;
+                do {
+                    try {
+                        let jsonResponse = binaryUTF8ToStr(replyByteArray);
+                        
+                        let response;
+                        try {
+                            response = JSON.parse(jsonResponse);
+                        }
+                        catch (err) {
+                            break;
+                        }
+                        
+                        if (! response || response.result === undefined) {
+                            break;
+                        }
+                        
+                        responseText = response.result;
+                    }
+                    catch (err) {
+                        break;
+                    }
+
+                }
+                while (false);
+                
+                if (resultIsRawBinary) {
+                    responseTextUnwrapped = responseText;
+                }
+                else {
+                    responseTextUnwrapped = binaryUTF8ToStr(deQuote(responseText));
+                }
+        
+                retVal = {
+                    error: false,
+                    text: responseTextUnwrapped
+                };
+                
+                return retVal;
+            }
+            
             const responseWaitResolver = (responseFileState) => {
 
                 let retVal = undefined;
@@ -1781,11 +1822,11 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
                     try {
                         let replyByteArray = new Uint8Array(uxpContext.fs.readFileSync(responseFilePath));
                         retVal = uxpContext.fs.unlink(responseFilePath).then(
-                            () => {
-                                return binaryUTF8ToStr(replyByteArray);
+                            () => {                                
+                                return handleResponseData(replyByteArray);
                             },
-                            () => {
-                                return binaryUTF8ToStr(replyByteArray);
+                            (error) => {
+                                return handleResponseData(replyByteArray);
                             }
                         ); 
                     }
@@ -3402,9 +3443,10 @@ function logMessage(reportingFunctionArguments, logLevel, message) {
             if (LOG_TO_FILEPATH) {
                 let uxpContext = getUXPContext();
                 let appendPromise = fileAppendString(LOG_TO_FILEPATH, logLine + "\n");
+                // Only wait for it to resolve if we have network access
+                // Otherwise logging slows down to a crawl because of the polling
+                // mechanism used to communicate with the daemon
                 if (uxpContext.hasNetworkAccess) {
-                    // Don't wait for it to resolve if we don't have network access
-                    // Otherwise logging slows down to a crawl
                     promises.push(appendPromise);
                 }
             }
@@ -4367,13 +4409,9 @@ function waitForFile(
          const checkFile = () => {
              // coderstate: promisor
 
-            console.log("checkFile()");
-
             const checkFileExecutor = (resolve, reject) => {
-                console.log("checkFile executor()");
                 const now = Date.now();
                 if (endTime < now) {
-                    console.log("Timed Out");
                     resolve(undefined);
                 } else {
                     try {
