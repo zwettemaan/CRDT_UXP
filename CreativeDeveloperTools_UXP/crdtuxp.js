@@ -2039,12 +2039,10 @@ function evalTQL(tqlScript, options) {
 
                         let replyByteArray;
                         function unlinkResolveFtn() { 
-                            console.log("unlinked " + responseFilePath);
                             // coderstate: resolver
                             return handleResponseData(replyByteArray);
                         };
                         function unlinkRejectFtn(reason) {
-                            console.log("rejected " + reason);
                             // coderstate: rejector
                             crdtuxp.logError(arguments, "rejected for " + reason);
                             return handleResponseData(replyByteArray);
@@ -3543,7 +3541,7 @@ function getSysInfo__() {
         try {
 
             if (SYS_INFO) {
-                retVal = SYS_INFO;
+                retVal = Promise.resolve(SYS_INFO);
                 break;
             }
 
