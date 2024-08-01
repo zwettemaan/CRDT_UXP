@@ -1954,6 +1954,7 @@ function evalTQL(tqlScript, options) {
 
                 let tqlRequest = {
                     validUntil: validUntil,
+                    wait: wait ? 1 : 0,
                     sessionID: uxpContext.sessionID,
                     requestID: ++uxpContext.tqlRequestID,
                     tqlRequest: tqlScript,
@@ -2038,10 +2039,12 @@ function evalTQL(tqlScript, options) {
 
                         let replyByteArray;
                         function unlinkResolveFtn() { 
+                            console.log("unlinked " + responseFilePath);
                             // coderstate: resolver
                             return handleResponseData(replyByteArray);
                         };
                         function unlinkRejectFtn(reason) {
+                            console.log("rejected " + reason);
                             // coderstate: rejector
                             crdtuxp.logError(arguments, "rejected for " + reason);
                             return handleResponseData(replyByteArray);
