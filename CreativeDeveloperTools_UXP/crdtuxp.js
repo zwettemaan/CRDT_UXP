@@ -336,27 +336,34 @@ let SYS_INFO;
 function addTrailingSeparator(filePath, separator) {
 // coderstate: function
     let retVal = filePath;
-    
+
     do {
 
-        if (! filePath) {
-            break;            
-        }
+        try {
 
-        const lastChar = filePath.substr(-1);        
-        if (
-            lastChar == crdtuxp.path.SEPARATOR 
-        || 
-            lastChar == crdtuxp.path.OTHER_PLATFORM_SEPARATOR
-        ) {
-            break;
-        }
+            if (! filePath) {
+                break; 
+            }
 
-        if (! separator) {
-            separator = crdtuxp.path.SEPARATOR;
-        }
+            const lastChar = filePath.substr(-1); 
+            if (
+                lastChar == crdtuxp.path.SEPARATOR 
+            || 
+                lastChar == crdtuxp.path.OTHER_PLATFORM_SEPARATOR
+            ) {
+                break;
+            }
 
-        retVal += separator;
+            if (! separator) {
+                separator = crdtuxp.path.SEPARATOR;
+            }
+
+            retVal += separator;
+
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -377,97 +384,108 @@ module.exports.path.addTrailingSeparator = addTrailingSeparator;
 function alert(message) {
 // coderstate: promisor
     let retVal;
-    
+
     do {
 
-        var uxpContext = getUXPContext();
+        try {
 
-        if (uxpContext.uxpVariant == UXP_VARIANT_INDESIGN_SERVER_UXPSCRIPT) {
-            // We've lost access to the alert() function in InDesign Server, which writes
-            // to stdout.
-            // The only workaround I currently have is to pass through ExtendScript
-            crdtuxp.app.doScript(
-                "alert(" + crdtuxp.dQ(message) + ")", 
-                uxpContext.indesign.ScriptLanguage.JAVASCRIPT);
-            retVal = true;
-            break;
-        }
+            var uxpContext = getUXPContext();
 
-        if (uxpContext.uxpVariant == UXP_VARIANT_INDESIGN_UXPSCRIPT) {
-        
-            // InDesign dialogs are not async - they stall the thread until they 
-            // are closed
+            if (uxpContext.uxpVariant == UXP_VARIANT_INDESIGN_SERVER_UXPSCRIPT) {
+                // We've lost access to the alert() function in InDesign Server, which writes
+                // to stdout.
+                // The only workaround I currently have is to pass through ExtendScript
+                crdtuxp.app.doScript(
+                    "alert(" + crdtuxp.dQ(message) + ")", 
+                    uxpContext.indesign.ScriptLanguage.JAVASCRIPT);
+                retVal = true;
+                break;
+            }
 
-            const dlg = crdtuxp.app.dialogs.add();
-            const col = dlg.dialogColumns.add();
-            const stText = col.staticTexts.add();
-            stText.staticLabel = "" + message;
-            dlg.canCancel = false;
-            dlg.show();
-            dlg.destroy(); 
-            retVal = true;
-            break;
-        }
-        
-        if (
-            uxpContext.uxpVariant == UXP_VARIANT_PHOTOSHOP_UXP 
-        || 
-            uxpContext.uxpVariant == UXP_VARIANT_PHOTOSHOP_UXPSCRIPT
-        ) {
-        
-            let modalDialog = () => {
+            if (uxpContext.uxpVariant == UXP_VARIANT_INDESIGN_UXPSCRIPT) {
 
-                const dlg = document.createElement("dialog");
-                const frm = document.createElement("form");
-                const bdy = document.createElement("sp-body");
-                bdy.textContent = message;
-                frm.appendChild(bdy);
+                // InDesign dialogs are not async - they stall the thread until they 
+                // are closed
 
-                const buttonContainer = document.createElement("div");
-                buttonContainer.style.display = "flex";
-                buttonContainer.style.justifyContent = "flex-end";
-                frm.appendChild(buttonContainer);
-                                
-                const btnOK = document.createElement("sp-button");
-                buttonContainer.appendChild(btnOK);
-                
-                btnOK.textContent = S(BTN_OK);
+                const dlg = crdtuxp.app.dialogs.add();
+                const col = dlg.dialogColumns.add();
+                const stText = col.staticTexts.add();
+                stText.staticLabel = "" + message;
+                dlg.canCancel = false;
+                dlg.show();
+                dlg.destroy(); 
+                retVal = true;
+                break;
+            }
 
-                btnOK.onclick = () => {
-                    dlg.close();
+            if (
+                uxpContext.uxpVariant == UXP_VARIANT_PHOTOSHOP_UXP 
+            || 
+                uxpContext.uxpVariant == UXP_VARIANT_PHOTOSHOP_UXPSCRIPT
+            ) {
+
+                function modalDialog() {
+
+                    const dlg = document.createElement("dialog");
+                    const frm = document.createElement("form");
+                    const bdy = document.createElement("sp-body");
+                    bdy.textContent = message;
+                    frm.appendChild(bdy);
+
+                    const buttonContainer = document.createElement("div");
+                    buttonContainer.style.display = "flex";
+                    buttonContainer.style.justifyContent = "flex-end";
+                    frm.appendChild(buttonContainer);
+
+                    const btnOK = document.createElement("sp-button");
+                    buttonContainer.appendChild(btnOK);
+
+                    btnOK.textContent = S(BTN_OK);
+
+                    btnOK.onclick = function onClick() {
+                        dlg.close();
+                    };
+
+                    dlg.appendChild(frm);
+                    document.body.appendChild(dlg); 
+                    return dlg.uxpShowModal(
+                        {
+                            title: S(TTL_DIALOG_ALERT),
+                            resize: "none", 
+                            size: { width: 400, height: 100} 
+                        }
+                    );
+                }
+
+                function executeAsModalResolveFtn() {
+                    // coderstate: resolver
+                    return true;
+                };                
+                function executeAsModalRejectFtn(reason) {
+                    // coderstate: rejector
+                    crdtuxp.logError(arguments, "rejected for " + reason);
+                    return undefined;
                 };
 
-                dlg.appendChild(frm);
-                document.body.appendChild(dlg);         
-                return dlg.uxpShowModal(
-                    {
-                        title: S(TTL_DIALOG_ALERT),
-                        resize: "none", 
-                        size: { width: 400, height: 100}    
-                    }
-                );
-            }
-            
-            const resolveFtn = () => {
-                // coderstate: resolver
-                return true;
-            };
-            
-            retVal = 
-                uxpContext.photoshop.core.executeAsModal(
-                    modalDialog, 
-                    {
-                        "commandName": "alert message"
-                    }
-                ).then(
-                    resolveFtn);
-                        
-            break;
-        }
+                retVal = 
+                    uxpContext.photoshop.core.executeAsModal(
+                        modalDialog, 
+                        {
+                            "commandName": "alert message"
+                        }
+                    ).then(
+                        executeAsModalResolveFtn,
+                        executeAsModalRejectFtn);
 
+                break;
+            }
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.alert = alert;
@@ -493,49 +511,66 @@ function base64decode(base64Str, options) {
 
     do {
 
-        let isBinary = options && options.isBinary;
-        
-        let uxpContext = getUXPContext();
-        if (! uxpContext.hasNetworkAccess || ! uxpContext.preferDaemonOverInternal) {
-        
-            let rawString = window.atob(base64Str);
-            let byteArray = rawStringToByteArray(rawString);
-            if (isBinary) {
-                retVal = byteArray;
-            }
-            else {
-                retVal = binaryUTF8ToStr(byteArray);
-            }
-            break;
-        }
+        try {
 
-        let responsePromise = 
-            evalTQL("base64decode(" + dQ(base64Str) + ")",isBinary);
-        if (! responsePromise) {
-            break;
-        }
+            let isBinary = options && options.isBinary;
+            let evalTQLOptions = {
+                isBinary: isBinary
+            };
 
-        const resolveFtn = (response) => {
-            // coderstate: resolver
-            let retVal;
-            if (response && ! response.error) {
+            let uxpContext = getUXPContext();
+            if (! uxpContext.hasNetworkAccess || ! uxpContext.preferDaemonOverInternal) {
+
+                let rawString = window.atob(base64Str);
+                let byteArray = rawStringToByteArray(rawString);
                 if (isBinary) {
-                    retVal = deQuote(response.text);
+                    retVal = byteArray;
                 }
                 else {
-                    retVal = response.text;
+                    retVal = binaryUTF8ToStr(byteArray);
                 }
+                break;
             }
-            return retVal;
-        };
-        
-        retVal = responsePromise.then(
-            resolveFtn);
 
+            let responsePromise = 
+                evalTQL(
+                    "base64decode(" + dQ(base64Str) + ")",
+                    evalTQLOptions
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
+                // coderstate: resolver
+                let retVal;
+                if (response && ! response.error) {
+                    if (isBinary) {
+                        retVal = deQuote(response.text);
+                    }
+                    else {
+                        retVal = response.text;
+                    }
+                }
+                return retVal;
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+            
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn);
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
-    
-    return retVal;  
+
+    return retVal; 
 }
 module.exports.base64decode = base64decode;
 
@@ -560,45 +595,59 @@ function base64encode(s_or_ByteArr) {
 
     do {
 
-        let uxpContext = getUXPContext();
-        if (! uxpContext.hasNetworkAccess || ! uxpContext.preferDaemonOverInternal) {
-        
-            let byteArray;
-            if ("string" == typeof s_or_ByteArr) {
-                byteArray = strToUTF8(s_or_ByteArr);
+        try {
+
+            let uxpContext = getUXPContext();
+            if (! uxpContext.hasNetworkAccess || ! uxpContext.preferDaemonOverInternal) {
+
+                let byteArray;
+                if ("string" == typeof s_or_ByteArr) {
+                    byteArray = strToUTF8(s_or_ByteArr);
+                }
+                else {
+                    byteArray = s_or_ByteArr;
+                }
+
+                let rawString = byteArrayToRawString(byteArray);
+
+                retVal = window.btoa(rawString);
+
+                break;
             }
-            else {
-                byteArray = s_or_ByteArr;
+
+            const responsePromise = 
+                evalTQL(
+                    "base64encode(" + dQ(s_or_ByteArr) + ")"
+                );
+            if (! responsePromise) {
+                break;
             }
-            
-            let rawString = byteArrayToRawString(byteArray);            
-            
-            retVal = window.btoa(rawString);
-            
-            break;
+
+            function evalTQLResolveFtn(response) {
+                // coderstate: resolver
+                let retVal;
+                if (response && ! response.error) {
+                    retVal = response.text;
+                }
+                return retVal;
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn);
         }
-
-        const responsePromise = evalTQL("base64encode(" + dQ(s_or_ByteArr) + ")");
-        if (! responsePromise) {
-            break;
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
         }
-
-        const resolveFtn = (response) => {
-            // coderstate: resolver
-            let retVal;
-            if (response && ! response.error) {
-                retVal = response.text;
-            }
-            return retVal;
-        };
-
-        retVal = responsePromise.then(
-            resolveFtn);
-
     }
     while (false);
-    
-    return retVal;    
+
+    return retVal; 
 }
 module.exports.base64encode = base64encode;
 
@@ -613,20 +662,25 @@ module.exports.base64encode = base64encode;
  * @returns {string} the last segment of the path
  */
 
-function baseName(filePath, separator) {    
+function baseName(filePath, separator) { 
 // coderstate: function
     let endSegment;
 
-    if (! separator) {
-        separator = crdtuxp.path.SEPARATOR;
-    }
+    try {
+        if (! separator) {
+            separator = crdtuxp.path.SEPARATOR;
+        }
 
-    // toString() handles cases where filePath is not a real string
-    let splitPath = filePath.toString().split(separator);
-    do {
-        endSegment = splitPath.pop();   
+        // toString() handles cases where filePath is not a real string
+        let splitPath = filePath.toString().split(separator);
+        do {
+            endSegment = splitPath.pop(); 
+        }
+        while (splitPath.length > 0 && endSegment == "");
     }
-    while (splitPath.length > 0 && endSegment == "");
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
+    }
 
     return endSegment;
 }
@@ -700,6 +754,7 @@ function binaryUTF8ToStr(in_byteArray) {
         }
     }
     catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
         retVal = undefined;
     }
 
@@ -718,8 +773,16 @@ module.exports.binaryUTF8ToStr = binaryUTF8ToStr;
 function byteArrayToRawString(in_array) {
 
     let retVal = "";
-    for (let idx = 0; idx < in_array.length; idx++) {
-        retVal += String.fromCharCode(in_array[idx]);
+
+    try {
+
+        for (let idx = 0; idx < in_array.length; idx++) {
+            retVal += String.fromCharCode(in_array[idx]);
+        }
+
+    }
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
     }
 
     return retVal;
@@ -763,6 +826,7 @@ function charCodeToUTF8__(in_charCode) {
         }
     }
     catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
         // anything weird, we return undefined
         retVal = undefined;
     }
@@ -788,8 +852,13 @@ function configLogger(logInfo) {
 // coderstate: function
     let retVal = false;
 
-    try {
-        if (logInfo) {
+    do {
+        try {
+
+            if (! logInfo) {
+                break;
+            }
+
             if ("logLevel" in logInfo) {
                 LOG_LEVEL = logInfo.logLevel;
             }
@@ -807,9 +876,11 @@ function configLogger(logInfo) {
             }
             retVal = true;
         }
+        catch (err) {
+            console.log("configLogger throws " + err);
+        }
     }
-    catch (err) {        
-    }
+    while (false);
 
     return retVal;
 }
@@ -833,36 +904,49 @@ function decrypt(s_or_ByteArr, aesKey, aesIV) {
 
     do {
 
-        if (! aesIV) {
-            aesIV = "";
-        }
-        
-        const responsePromise = 
-            evalTQL(
-                "decrypt(" + 
-                dQ(s_or_ByteArr) + ", " + 
-                dQ(aesKey) + ", " + 
-                dQ(aesIV) + ")"
-            );
-        if (! responsePromise) {
-            break;
-        }
+        try {
 
-        const resolveFtn = (response) => {
-            // coderstate: resolver
-            let retVal;
-            if (response && ! response.error) {
-                retVal = response.text;
+            if (! aesIV) {
+                aesIV = "";
             }
-            return retVal;
-        };
 
-        retVal = responsePromise.then(
-            resolveFtn);
+            const responsePromise = 
+                evalTQL(
+                    "decrypt(" + 
+                        dQ(s_or_ByteArr) + ", " + 
+                        dQ(aesKey) + ", " + 
+                        dQ(aesIV) + 
+                    ")"
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
+                // coderstate: resolver
+                let retVal;
+                if (response && ! response.error) {
+                    retVal = response.text;
+                }
+                return retVal;
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn);
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
 
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.decrypt = decrypt;
@@ -880,17 +964,20 @@ module.exports.decrypt = decrypt;
 function delayFunction(delayTimeMilliseconds, ftn, ...args) {
 // coderstate: promisor
 
-    const executor = (resolveFtn, rejectFtn) => {
-        // coderstate: executor
-        setTimeout(
-            () => {
+    let retVal;
+
+    try {
+
+        function executor(resolveFtn, rejectFtn) {
+            // coderstate: executor
+
+            function timeoutFtn() {
                 // coderstate: executor
                 try {
                     let result = ftn(...args);
                     if (result instanceof Promise) {
                         result.then(
-                            resolveFtn
-                        ).catch(
+                            resolveFtn,
                             rejectFtn
                         );
                     }
@@ -900,13 +987,21 @@ function delayFunction(delayTimeMilliseconds, ftn, ...args) {
                 } 
                 catch (err) {
                     rejectFtn(err);
-                }                    
-            }, 
-            delayTimeMilliseconds
-        );
-    };
+                } 
+            };
+            setTimeout(
+                timeoutFtn,
+                delayTimeMilliseconds
+            );
+        };
 
-    return new Promise(executor);
+        retVal = new Promise(executor);
+    }
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
+    }
+
+    return retVal;
 }
 module.exports.delayFunction = delayFunction;
 
@@ -928,124 +1023,130 @@ function deQuote(quotedString) {
 
     do {
 
-        let qLen = quotedString.length;
-        if (qLen < 2) {
-            break;
-        }
+        try {
 
-        const quoteChar = quotedString.charAt(0);
-        qLen -= 1;
-        if (quoteChar != quotedString.charAt(qLen)) {
-            break;
-        }
-
-        if (quoteChar != '"' && quoteChar != "'") {
-            break;
-        }
-
-        let cCode = 0;
-        for (let charIdx = 1; charIdx < qLen; charIdx++) {
-
-            if (state == -1) {
+            let qLen = quotedString.length;
+            if (qLen < 2) {
                 break;
             }
 
-            const c = quotedString.charAt(charIdx);
-            switch (state) {
-            case 0:
-                if (c == '\\') {
-                    state = 1;
-                }
-                else {
-                    buffer.push(c.charCodeAt(0));
-                }
+            const quoteChar = quotedString.charAt(0);
+            qLen -= 1;
+            if (quoteChar != quotedString.charAt(qLen)) {
                 break;
-            case 1:
-                if (c == 'x') {
-                    // state 2->3->0
-                    state = 2;
-                }
-                else if (c == 'u') {
-                    // state 4->5->6->7->0
-                    state = 4;
-                }
-                else if (c == 't') {
-                    buffer.push(0x09);
-                    state = 0;
-                }
-                else if (c == 'r') {
-                    buffer.push(0x0D);
-                    state = 0;
-                }
-                else if (c == 'n') {
-                    buffer.push(0x0A);
-                    state = 0;
-                }
-                else {
-                    buffer.push(c.charCodeAt(0));
-                    state = 0;
-                }
-                break;
-            case 2:
-            case 4:
-                if (c >= '0' && c <= '9') {
-                    cCode = c.charCodeAt(0)      - 0x30;
-                    state++;
-                }
-                else if (c >= 'A' && c <= 'F') {
-                    cCode = c.charCodeAt(0) + 10 - 0x41;
-                    state++;
-                }
-                else if (c >= 'a' && c <= 'f') {
-                    cCode = c.charCodeAt(0) + 10 - 0x61;
-                    state++;
-                }
-                else {
-                    state = -1;
-                }
-                break;
-            case 3:
-            case 5:
-            case 6:
-            case 7:
+            }
 
-                if (c >= '0' && c <= '9') {
-                    cCode = (cCode << 4) + c.charCodeAt(0)      - 0x30;
-                }
-                else if (c >= 'A' && c <= 'F') {
-                    cCode = (cCode << 4) + c.charCodeAt(0) + 10 - 0x41;
-                }
-                else if (c >= 'a' && c <= 'f') {
-                    cCode = (cCode << 4) + c.charCodeAt(0) + 10 - 0x61;
-                }
-                else {
-                    state = -1;
+            if (quoteChar != '"' && quoteChar != "'") {
+                break;
+            }
+
+            let cCode = 0;
+            for (let charIdx = 1; charIdx < qLen; charIdx++) {
+
+                if (state == -1) {
+                    break;
                 }
 
-                if (state == 3)  {
-                    // Done with \xHH
-                    buffer.push(cCode);
-                    state = 0;
-                }
-                else if (state == 7) {
-                    // Done with \uHHHHH - convert using UTF-8
-                    let bytes = charCodeToUTF8__(cCode);
-                    if (! bytes) {
-                        state = -1
+                const c = quotedString.charAt(charIdx);
+                switch (state) {
+                case 0:
+                    if (c == '\\') {
+                        state = 1;
                     }
                     else {
-                        for (let byteIdx = 0; byteIdx < bytes.length; byteIdx++) {
-                            buffer.push(bytes[byteIdx]);
-                        }
+                        buffer.push(c.charCodeAt(0));
+                    }
+                    break;
+                case 1:
+                    if (c == 'x') {
+                        // state 2->3->0
+                        state = 2;
+                    }
+                    else if (c == 'u') {
+                        // state 4->5->6->7->0
+                        state = 4;
+                    }
+                    else if (c == 't') {
+                        buffer.push(0x09);
                         state = 0;
                     }
+                    else if (c == 'r') {
+                        buffer.push(0x0D);
+                        state = 0;
+                    }
+                    else if (c == 'n') {
+                        buffer.push(0x0A);
+                        state = 0;
+                    }
+                    else {
+                        buffer.push(c.charCodeAt(0));
+                        state = 0;
+                    }
+                    break;
+                case 2:
+                case 4:
+                    if (c >= '0' && c <= '9') {
+                        cCode = c.charCodeAt(0)      - 0x30;
+                        state++;
+                    }
+                    else if (c >= 'A' && c <= 'F') {
+                        cCode = c.charCodeAt(0) + 10 - 0x41;
+                        state++;
+                    }
+                    else if (c >= 'a' && c <= 'f') {
+                        cCode = c.charCodeAt(0) + 10 - 0x61;
+                        state++;
+                    }
+                    else {
+                        state = -1;
+                    }
+                    break;
+                case 3:
+                case 5:
+                case 6:
+                case 7:
+
+                    if (c >= '0' && c <= '9') {
+                        cCode = (cCode << 4) + c.charCodeAt(0)      - 0x30;
+                    }
+                    else if (c >= 'A' && c <= 'F') {
+                        cCode = (cCode << 4) + c.charCodeAt(0) + 10 - 0x41;
+                    }
+                    else if (c >= 'a' && c <= 'f') {
+                        cCode = (cCode << 4) + c.charCodeAt(0) + 10 - 0x61;
+                    }
+                    else {
+                        state = -1;
+                    }
+
+                    if (state == 3)  {
+                        // Done with \xHH
+                        buffer.push(cCode);
+                        state = 0;
+                    }
+                    else if (state == 7) {
+                        // Done with \uHHHHH - convert using UTF-8
+                        let bytes = charCodeToUTF8__(cCode);
+                        if (! bytes) {
+                            state = -1
+                        }
+                        else {
+                            for (let byteIdx = 0; byteIdx < bytes.length; byteIdx++) {
+                                buffer.push(bytes[byteIdx]);
+                            }
+                            state = 0;
+                        }
+                    }
+                    else {
+                        // Next state: 2->3, 4->5->6->7
+                        state++;
+                    }
+                    break;
                 }
-                else {
-                    // Next state: 2->3, 4->5->6->7
-                    state++;
-                }
-                break;
             }
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
         }
     }
     while (false);
@@ -1075,75 +1176,97 @@ function dirCreate(filePath) {
 
     do {
 
-        let uxpContext = getUXPContext();
-        if (uxpContext.hasDirectFileAccess) {
+        try {
 
-            let parentPath = crdtuxp.path.dirName(filePath);
-            let baseName = crdtuxp.path.baseName(filePath);
+            let uxpContext = getUXPContext();
+            if (uxpContext.hasDirectFileAccess) {
 
-            // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
-            try {
-                const stats = uxpContext.fs.lstatSync(parentPath);
-                if (! stats || ! stats.isDirectory()) {
-                    retVal = false;
+                let parentPath = crdtuxp.path.dirName(filePath);
+                let baseName = crdtuxp.path.baseName(filePath);
+
+                // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+                try {
+                    const stats = uxpContext.fs.lstatSync(parentPath);
+                    if (! stats || ! stats.isDirectory()) {
+                        retVal = false;
+                        break;
+                    } 
+                }
+                catch (err) {
+                    if (err != -2) {
+                        crdtuxp.logNote(arguments, "throws " + err);
+                    }
                     break;
-                }                
-            }
-            catch (err) {
+                }
+
+                try {
+                    const stats = uxpContext.fs.lstatSync(filePath);
+                    if (stats) {
+                        retVal = false;
+                        break;
+                    }
+                }
+                catch (err) {
+                    if (err != -2) {
+                        crdtuxp.logNote(arguments, "throws " + err);
+                    }
+                }
+
+                try {
+                    function mkdirResolveFtn() {
+                        // coderstate: resolver
+                        return true;
+                    };
+                    function mkdirRejectFtn(reason) {
+                        // coderstate: rejector
+                        crdtuxp.logError(arguments, "rejected for " + reason);
+                        return false;
+                    };
+                    // If no callback given, returns a Promise
+                    retVal = uxpContext.fs.mkdir(filePath).then(
+                        mkdirResolveFtn,
+                        mkdirRejectFtn
+                    );
+                }
+                catch (err) {
+                    crdtuxp.logError(arguments, "throws " + err);
+                }
                 break;
             }
 
-            try {
-                const stats = uxpContext.fs.lstatSync(filePath);
-                if (stats) {
-                    retVal = false;
-                    break;
-                }
-            }
-            catch (err) {
-            }
-
-            try {
-                // If no callback given, returns a Promise
-                retVal = uxpContext.fs.mkdir(filePath).then(
-                    () => {
-                        // coderstate: resolver
-                        return true;
-                    }
-                ).catch(
-                    (reason) => {
-                        // coderstate: resolver
-                        return false;
-                    }
+            const responsePromise = 
+                evalTQL(
+                    "dirCreate(" + dQ(filePath) + ") ? \"true\" : \"false\""
                 );
-            }
-            catch (err) {
+            if (! responsePromise) {
+                break;
             }
 
-            break;
+            function evalTQLResolveFtn(response) {
+                // coderstate: resolver
+                let retVal;
+                if (response && ! response.error) {
+                    retVal = response.text == "true";
+                }
+                return retVal;
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn);
         }
-
-        const responsePromise = 
-            evalTQL("dirCreate(" + dQ(filePath) + ") ? \"true\" : \"false\"");
-        if (! responsePromise) {
-            break;
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
         }
-
-        const resolveFtn = (response) => {
-            // coderstate: resolver
-            let retVal;
-            if (response && ! response.error) {
-                retVal = response.text == "true";
-            }
-            return retVal;
-        };
-
-        retVal = responsePromise.then(
-            resolveFtn);
 
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.dirCreate = dirCreate;
@@ -1169,175 +1292,201 @@ function dirDelete(filePath, recurse) {
 
     do {
 
-        let uxpContext = getUXPContext();
-        
-        if (uxpContext.hasDirectFileAccess) {
-            
-            // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
-            
-            try {
-                const stats = uxpContext.fs.lstatSync(filePath);
-                if (! stats || ! stats.isDirectory()) {
-                    retVal = false;
-                    break;
-                }
-            }
-            catch (err) {
-                retVal = false;
-                break;
-            }
+        try {
 
-            let entries = [];
-            try {
-                entries = uxpContext.fs.readdirSync(filePath);
-            }
-            catch (err) {
-                retVal = false;
-                break;
-            }
+            let uxpContext = getUXPContext();
 
-            if (! recurse) {
-            
-                if (entries.length > 0) {
-                    retVal = false;
-                    break;
-                }
-                
+            if (uxpContext.hasDirectFileAccess) {
+
+                // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+
                 try {
-                    // If no callback given, returns a Promise
-                    retVal = uxpContext.fs.rmdir(filePath).then(
-                        () => {
-                            // coderstate: resolver
-                            return true;
-                        }
-                    ).catch(
-                        (reason) => {
-                            // coderstate: resolver
-                            return false;
-                        }
-                    );
-                }
-                catch (err) {
-                    retVal = false;
-                }
-                
-                break;
-            }
-            
-            const dirPathPrefix = addTrailingSeparator(filePath);
-            let promises = [];
-            for (let idx = 0; idx < entries.length; idx++) {
-                let entryPath = dirPathPrefix + entries[idx];
-                try {
-                    const stats = uxpContext.fs.lstatSync(entryPath);
-                    if (! stats) {
-                        promises = undefined;
+                    const stats = uxpContext.fs.lstatSync(filePath);
+                    if (! stats || ! stats.isDirectory()) {
+                        retVal = false;
                         break;
                     }
-                    let deletePromise;
-                    if (stats.isDirectory()) {
-                        deletePromise = dirDelete(entryPath, true).then(
-                            () => {
-                                // coderstate: resolver
-                                return true;
-                            }
-                        ).catch(
-                            (reason) => {
-                                // coderstate: resolver
-                                return false;
-                            }
-                        );
-                    }
-                    else {
-                        // If no callback given, returns a Promise
-                        deletePromise =  uxpContext.fs.unlink(entryPath).then(
-                            () => {
-                                // coderstate: resolver
-                                return true;
-                            }
-                        ).catch(
-                            (reason) => {
-                                // coderstate: resolver
-                                return false;
-                            }
-                        );
-                    }
-                    promises.push(deletePromise);
                 }
                 catch (err) {
-                    promises = undefined;
+                    if (err != -2) {
+                        crdtuxp.logNote(arguments, "throws " + err);
+                    }
+                    retVal = false;
                     break;
-                }                
-            }
+                }
 
-            if (! promises) {
-                retVal = false;
-            }
-            
-            retVal = Promise.allSettled(promises).then(
-                () => {
-                    // coderstate: resolver
+                let entries = [];
+                try {
+                    entries = uxpContext.fs.readdirSync(filePath);
+                }
+                catch (err) {
+                    crdtuxp.logError(arguments, "throws " + err);
+                    retVal = false;
+                    break;
+                }
+
+                if (! recurse) {
+
+                    if (entries.length > 0) {
+                        retVal = false;
+                        break;
+                    }
+
                     try {
+                        function rmdirResolveFtn() {
+                            // coderstate: resolver
+                            return true;
+                        };
+                        function rmdirRejectFtn(reason) {
+                            // coderstate: rejector
+                            crdtuxp.logError(arguments, "rejected for " + reason);
+                            return false;
+                        };
                         // If no callback given, returns a Promise
                         retVal = uxpContext.fs.rmdir(filePath).then(
-                            () => {
-                                // coderstate: resolver
-                                return true;
-                            }
-                        ).catch(
-                            (reason) => {
-                                // coderstate: resolver
-                                return false;
-                            }
+                            rmdirResolveFtn,
+                            rmdirRejectFtn
                         );
                     }
                     catch (err) {
+                        crdtuxp.logError(arguments, "throws " + err);
                         retVal = false;
                     }
+
+                    break;
                 }
-            ).catch(
-                (reason) => {
+
+                const dirPathPrefix = addTrailingSeparator(filePath);
+                let promises = [];
+                for (let idx = 0; idx < entries.length; idx++) {
+                    let entryPath = dirPathPrefix + entries[idx];
+                    try {
+                        const stats = uxpContext.fs.lstatSync(entryPath);
+                        if (! stats) {
+                            promises = undefined;
+                            break;
+                        }
+                        let deletePromise;
+                        if (stats.isDirectory()) {
+                            function dirDeleteResolveFtn() {
+                                // coderstate: resolver
+                                return true;
+                            };
+                            function dirDeleteRejectFtn(reason) {
+                                // coderstate: rejector
+                                crdtuxp.logError(arguments, "rejected for " + reason);
+                                return false;
+                            };
+                            deletePromise = dirDelete(entryPath, true).then(
+                                dirDeleteResolveFtn,
+                                dirDeleteRejectFtn
+                            );
+                        }
+                        else {
+                            function fileDeletResolveFtn() {
+                                // coderstate: resolver
+                                return true;
+                            };
+                            function fileDeleteRejectFtn(reason) {
+                                // coderstate: rejector
+                                crdtuxp.logError(arguments, "rejected for " + reason);
+                                return false;
+                            };
+                            // If no callback given, returns a Promise
+                            deletePromise =  uxpContext.fs.unlink(entryPath).then(
+                                fileDeletResolveFtn,
+                                fileDeleteRejectFtn
+                            );
+                        }
+                        promises.push(deletePromise);
+                    }
+                    catch (err) {
+                        if (err != -2) {
+                            crdtuxp.logNote(arguments, "throws " + err);
+                        }
+                        promises = undefined;
+                        break;
+                    }
+                }
+
+                if (! promises) {
+                    retVal = false;
+                }
+
+                function allResolveFtn() {
                     // coderstate: resolver
+                    try {
+                        function rmdirResolveFtn() {
+                            // coderstate: resolver
+                            return true;
+                        };
+                        function rmdirRejectFtn(reason) {
+                            // coderstate: rejector
+                            crdtuxp.logError(arguments, "rejected for " + reason);
+                            return false;
+                        };
+                        // If no callback given, returns a Promise
+                        retVal = uxpContext.fs.rmdir(filePath).then(
+                            rmdirResolveFtn,
+                            rmdirRejectFtn
+                        );
+                    }
+                    catch (err) {
+                        crdtuxp.logError(arguments, "throws " + err);
+                        retVal = false;
+                    }
+                };
+                function allRejectFtn(reason) {
+                    // coderstate: rejector
+                    crdtuxp.logError(arguments, "rejected for " + reason);
                     return false;
-                }
-            );
-            
-            break;
-        }
+                };
+                
+                retVal = Promise.allSettled(promises).then(
+                    allResolveFtn,
+                    allRejectFtn
+                );
 
-        const responsePromise = 
-            evalTQL(
-                "dirDelete(" + 
-                dQ(filePath) + 
-                "," + 
-                (recurse ? "true" : "false") + 
-                ") ? \"true\" : \"false\""
-            );
-        if (! responsePromise) {
-            break;
-        }
-
-        const resolveFtn = (response) => {
-            // coderstate: resolver
-            let retVal;
-            if (response && ! response.error) {
-                retVal = response.text == "true";
+                break;
             }
-            return retVal;
-        };
 
-        retVal = responsePromise.then(
-            resolveFtn
-        ).catch(
-            (reason) => {
+            const responsePromise = 
+                evalTQL(
+                    "dirDelete(" + 
+                    dQ(filePath) + 
+                    "," + 
+                    (recurse ? "true" : "false") + 
+                    ") ? \"true\" : \"false\""
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
-                return false;
-            }
-        );
+                let retVal;
+                if (response && ! response.error) {
+                    retVal = response.text == "true";
+                }
+                return retVal;
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
 
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.dirDelete = dirDelete;
@@ -1362,52 +1511,62 @@ function dirExists(dirPath) {
 
     do {
 
-        let uxpContext = getUXPContext();
-        if (uxpContext.hasDirectFileAccess) {
-        
-            try {
-                const stats = uxpContext.fs.lstatSync(dirPath);
-                if (! stats || ! stats.isDirectory()) {
+        try {
+            let uxpContext = getUXPContext();
+            if (uxpContext.hasDirectFileAccess) {
+
+                try {
+                    const stats = uxpContext.fs.lstatSync(dirPath);
+                    if (! stats || ! stats.isDirectory()) {
+                        retVal = false;
+                        break;
+                    }
+                }
+                catch (err) {
+                    if (err != -2) {
+                        crdtuxp.logNote(arguments, "throws " + err);
+                    }
                     retVal = false;
                     break;
                 }
-            }
-            catch (err) {
-                retVal = false;
+
+                retVal = true;
                 break;
             }
-            
-            retVal = true;
-            break;
-        }
 
-        const responsePromise = 
-            evalTQL("dirExists(" + dQ(dirPath) + ") ? \"true\" : \"false\"");
-        if (! responsePromise) {
-            break;
-        }
-
-        const resolveFtn = (response) => {
-            // coderstate: resolver
-            let retVal;
-            if (response && ! response.error) {
-                retVal = response.text == "true";
+            const responsePromise = 
+                evalTQL(
+                    "dirExists(" + dQ(dirPath) + ") ? \"true\" : \"false\""
+                );
+            if (! responsePromise) {
+                break;
             }
-            return retVal;
-        };
 
-        retVal = responsePromise.then(
-            resolveFtn
-        ).catch(
-            (reason) => {
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
+                let retVal;
+                if (response && ! response.error) {
+                    retVal = response.text == "true";
+                }
+                return retVal;
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
                 return undefined;
-            }
-        );
+            };
 
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            ); 
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.dirExists = dirExists;
@@ -1428,33 +1587,39 @@ module.exports.dirExists = dirExists;
  * @returns the parent of the path
  */
 
-function dirName(filePath, options) {    
+function dirName(filePath, options) { 
 // coderstate: function
     let retVal;
 
-    let separator;
-    if (options) {
-        if (options.separator) {
-            separator = options.separator;
+    try {
+
+        let separator;
+        if (options) {
+            if (options.separator) {
+                separator = options.separator;
+            }
         }
-    }
 
-    if (! separator) {
-        separator = crdtuxp.path.SEPARATOR;
-    }
+        if (! separator) {
+            separator = crdtuxp.path.SEPARATOR;
+        }
 
-    // toString() handles cases where filePath is not a real string
-    let splitPath = filePath.toString().split(separator);
-    let endSegment;
-    do {
-        endSegment = splitPath.pop();   
-    }
-    while (splitPath.length > 0 && endSegment == "");
+        // toString() handles cases where filePath is not a real string
+        let splitPath = filePath.toString().split(separator);
+        let endSegment;
+        do {
+            endSegment = splitPath.pop(); 
+        }
+        while (splitPath.length > 0 && endSegment == "");
 
-    retVal = splitPath.join(separator);
-    if (options && options.addTrailingSeparator) {
-        retVal += separator;
-     }
+        retVal = splitPath.join(separator);
+        if (options && options.addTrailingSeparator) {
+            retVal += separator;
+         }
+    }
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
+    }
 
     return retVal;
 }
@@ -1477,72 +1642,81 @@ function dirScan(filePath) {
 
     do {
 
-        // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
-        
-        let uxpContext = getUXPContext();
-        if (uxpContext.hasDirectFileAccess) {
-            
-            let entries = [];
-            try {
-                entries = uxpContext.fs.readdirSync(filePath);
-            }
-            catch (err) {
-                retVal = false;
+        try {
+            // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+
+            let uxpContext = getUXPContext();
+            if (uxpContext.hasDirectFileAccess) {
+
+                let entries = [];
+                try {
+                    entries = uxpContext.fs.readdirSync(filePath);
+                }
+                catch (err) {
+                    crdtuxp.logError(arguments, "throws " + err);
+                    retVal = false;
+                    break;
+                }
+                retVal = entries;
                 break;
             }
-            retVal = entries;
-            break;
-        }
 
-        const responsePromise = 
-            evalTQL("enquote(dirScan(" + dQ(filePath) + ").toString())");
-        if (! responsePromise) {
-            break;
-        }
-
-        const resolveFtn = (response) => {
-            // coderstate: resolver
-            let retVal = undefined;
-
-            do {
-                if (! response || response.error) {
-                    break;
-                }
-        
-                const responseText = response.text;
-                if (! responseText) {
-                    break;
-                }
-        
-                const deQuotedResponseText = deQuote(responseText);
-                if (! deQuotedResponseText) {
-                    break;
-                }
-                
-                const binaryResponse = binaryUTF8ToStr(deQuotedResponseText);
-                if (! binaryResponse) {
-                    break;
-                }
-        
-                retVal = JSON.parse(binaryResponse);
-            } 
-            while (false);
-
-            return retVal;
-        };
-
-        retVal = responsePromise.then(
-            resolveFtn
-        ).catch(
-            (reason) => {
-                // coderstate: resolver
-                return undefined;
+            const responsePromise = 
+                evalTQL(
+                    "enquote(dirScan(" + dQ(filePath) + ").toString())"
+                );
+            if (! responsePromise) {
+                break;
             }
-        );
+
+            function evalTQLResolveFtn(response) {
+                // coderstate: resolver
+                let retVal = undefined;
+
+                do {
+                    if (! response || response.error) {
+                        break;
+                    }
+
+                    const responseText = response.text;
+                    if (! responseText) {
+                        break;
+                    }
+
+                    const deQuotedResponseText = deQuote(responseText);
+                    if (! deQuotedResponseText) {
+                        break;
+                    }
+
+                    const binaryResponse = binaryUTF8ToStr(deQuotedResponseText);
+                    if (! binaryResponse) {
+                        break;
+                    }
+
+                    retVal = JSON.parse(binaryResponse);
+                } 
+                while (false);
+
+                return retVal;
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
 
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.dirScan = dirScan;
@@ -1568,7 +1742,16 @@ module.exports.dirScan = dirScan;
  */
 function dQ(s_or_ByteArr) {
 // coderstate: function
-    return enQuote__(s_or_ByteArr, "\"");
+    let retVal;
+
+    try { 
+        retVal = enQuote__(s_or_ByteArr, "\"");
+    }
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
+    }
+
+    return retVal;
 }
 module.exports.dQ = dQ;
 
@@ -1593,41 +1776,51 @@ function encrypt(s_or_ByteArr, aesKey, aesIV) {
 
     do {
 
-        if (! aesIV) {
-            aesIV = "";
-        }
+        try {
 
-        const responsePromise = 
-          evalTQL(
-            "encrypt(" + 
-                dQ(s_or_ByteArr) + ", " + 
-                dQ(aesKey) + ", " + 
-                dQ(aesIV) + ")");
-        if (! responsePromise) {
-            break;
-        }
-
-        const resolveFtn = (response) => {
-            // coderstate: resolver
-            let retVal;
-            if (response && ! response.error) {
-                retVal = response.text;
+            if (! aesIV) {
+                aesIV = "";
             }
-            return retVal;
-        };
-        
-        retVal = responsePromise.then(
-            resolveFtn
-        ).catch(
-            (reason) => {
+
+            const responsePromise = 
+              evalTQL(
+                "encrypt(" + 
+                    dQ(s_or_ByteArr) + ", " + 
+                    dQ(aesKey) + ", " + 
+                    dQ(aesIV) + 
+                ")"
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
+                let retVal;
+                if (response && ! response.error) {
+                    retVal = response.text;
+                }
+                return retVal;
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
                 return undefined;
-            }
-        );
+            };
+
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
 
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.encrypt = encrypt;
@@ -1639,55 +1832,62 @@ function enQuote__(s_or_ByteArr, quoteChar) {
 // coderstate: function
     let retVal = "";
 
-    const quoteCharCode = quoteChar.charCodeAt(0);
+    try {
 
-    let isString;
-    let byteSequence;
-    if (s_or_ByteArr instanceof ArrayBuffer) {
-        byteSequence = new Uint8Array(in_byteArray);
-    }
-    else {
-        isString = ("string" == typeof s_or_ByteArr);
-        byteSequence = s_or_ByteArr;
-    }
+        const quoteCharCode = quoteChar.charCodeAt(0);
 
-    const sLen = byteSequence.length;
-    let escapedS = "";
-    for (let charIdx = 0; charIdx < sLen; charIdx++) {
-        let cCode;
-        if (isString) {
-            cCode = byteSequence.charCodeAt(charIdx);
+        let isString;
+        let byteSequence;
+        if (s_or_ByteArr instanceof ArrayBuffer) {
+            byteSequence = new Uint8Array(in_byteArray);
         }
         else {
-            cCode = byteSequence[charIdx];
+            isString = ("string" == typeof s_or_ByteArr);
+            byteSequence = s_or_ByteArr;
         }
-        if (cCode == 0x5C) {
-            escapedS += '\\\\';
-        }
-        else if (cCode == quoteCharCode) {
-            escapedS += '\\' + quoteChar;
-        }
-        else if (cCode == 0x0A) {
-            escapedS += '\\n';
-        }
-        else if (cCode == 0x0D) {
-            escapedS += '\\r';
-        }
-        else if (cCode == 0x09) {
-            escapedS += '\\t';
-        }
-        else if (cCode < 32 || cCode == 0x7F || (! isString && cCode >= 0x80)) {
-            escapedS += "\\x" + toHex(cCode, 2);
-        }
-        else if (isString && cCode >= 0x80) {
-            escapedS += "\\u" + toHex(cCode, 4);
-        }
-        else {
-            escapedS += String.fromCharCode(cCode);
-        }
-    }
 
-    retVal = quoteChar + escapedS + quoteChar;
+        const sLen = byteSequence.length;
+        let escapedS = "";
+        for (let charIdx = 0; charIdx < sLen; charIdx++) {
+            let cCode;
+            if (isString) {
+                cCode = byteSequence.charCodeAt(charIdx);
+            }
+            else {
+                cCode = byteSequence[charIdx];
+            }
+            if (cCode == 0x5C) {
+                escapedS += '\\\\';
+            }
+            else if (cCode == quoteCharCode) {
+                escapedS += '\\' + quoteChar;
+            }
+            else if (cCode == 0x0A) {
+                escapedS += '\\n';
+            }
+            else if (cCode == 0x0D) {
+                escapedS += '\\r';
+            }
+            else if (cCode == 0x09) {
+                escapedS += '\\t';
+            }
+            else if (cCode < 32 || cCode == 0x7F || (! isString && cCode >= 0x80)) {
+                escapedS += "\\x" + toHex(cCode, 2);
+            }
+            else if (isString && cCode >= 0x80) {
+                escapedS += "\\u" + toHex(cCode, 4);
+            }
+            else {
+                escapedS += String.fromCharCode(cCode);
+            }
+        }
+
+        retVal = quoteChar + escapedS + quoteChar;
+
+    }
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
+    }
 
     return retVal;
 }
@@ -1701,217 +1901,255 @@ function enQuote__(s_or_ByteArr, quoteChar) {
  * @param {string=} tqlScopeName - a scope name to use. Scopes are persistent for the 
  * duration of the daemon process and can be used to pass data between different 
  * processes
- * @param {boolean=} resultIsRawBinary - whether the resulting data is raw binary,
+ * @param {object=} options - optional. 
+ *   options.wait = false means don't wait to resolve
+ *   options.isBinary
+ *   options.tqlScopeName
  * or can be decoded as a string
  * @returns {Promise<any>} a string or a byte array
  */
-function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
+function evalTQL(tqlScript, options) {
 // coderstate: promisor
     let retVal = { error: true };
 
     do {
 
-        let uxpContext = getUXPContext();
-        
-        if (! uxpContext.hasNetworkAccess && ! uxpContext.hasDirectFileAccess) {
-            // Need either network access or direct file access - cannot do
-            // without
-            break;
-        }
-        
-        if (! uxpContext.hasNetworkAccess) {
+        try {
 
-            // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
-            
-            if (! crdtuxp.context.PATH_EVAL_TQL) 
-            {
-                // Need to know where to put the packet
+            let resultIsRawBinary = options && options.isBinary;
+            let wait = ! options || options.wait;
+            let tqlScopeName = options && options.tqlScopeName;
+
+            let uxpContext = getUXPContext();
+
+            if (! uxpContext.hasNetworkAccess && ! uxpContext.hasDirectFileAccess) {
+                crdtuxp.logError(arguments, "need direct file access or network access");
+                // Need either network access or direct file access - cannot do
+                // without
                 break;
             }
-            
-            if (! uxpContext.tqlRequestID) {
-                uxpContext.tqlRequestID = 0;
-                uxpContext.tqlRequestsByID = {};
-            }
 
-            let validUntil = 
-                (new Date()).getTime() + DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS;
+            if (! uxpContext.hasNetworkAccess) {
 
-            let tqlRequest = {
-                validUntil: validUntil,
-                sessionID: uxpContext.sessionID,
-                requestID: ++uxpContext.tqlRequestID,
-                tqlRequest: tqlScript,
-                tqlScopeName: tqlScopeName
-            };
-            uxpContext.tqlRequestsByID[tqlRequest.requestID] = tqlRequest;
-            
-            let tqlRequestJSON = JSON.stringify(tqlRequest);
-            let tqlRequestByteArray = strToUTF8(tqlRequestJSON);
-        
-            let tqlSharedFilePathPrefix = 
-                crdtuxp.context.PATH_EVAL_TQL + 
-                tqlRequest.sessionID + 
-                crdtuxp.leftPad(tqlRequest.requestID, "0", LENGTH_REQUEST_ID);
+                // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
 
-            let requestFilePath = 
-                tqlSharedFilePathPrefix + 
-                FILE_NAME_SUFFIX_TQL_REQUEST + 
-                "." + 
-                FILE_NAME_EXTENSION_JSON;
-                
-            let responseFilePath = 
-                tqlSharedFilePathPrefix + 
-                FILE_NAME_SUFFIX_TQL_RESPONSE + 
-                "." + 
-                FILE_NAME_EXTENSION_JSON;
-                
-            const handleResponseData = (replyByteArray) => {
-                // coderstate: function
-                let retVal = undefined;
-                
-                let responseText;
-                do {
-                    try {
-                        let jsonResponse = binaryUTF8ToStr(replyByteArray);
-                        
-                        let response;
+                if (! crdtuxp.context.PATH_EVAL_TQL) 
+                {
+                    crdtuxp.logError(arguments, "need crdtuxp.context.PATH_EVAL_TQL to be set");
+                    // Need to know where to put the packet
+                    break;
+                }
+
+                if (! uxpContext.tqlRequestID) {
+                    uxpContext.tqlRequestID = 0;
+                    uxpContext.tqlRequestsByID = {};
+                }
+
+                let validUntil = 
+                    (new Date()).getTime() + DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS;
+
+                let tqlRequest = {
+                    validUntil: validUntil,
+                    sessionID: uxpContext.sessionID,
+                    requestID: ++uxpContext.tqlRequestID,
+                    tqlRequest: tqlScript,
+                    tqlScopeName: tqlScopeName
+                };
+                uxpContext.tqlRequestsByID[tqlRequest.requestID] = tqlRequest;
+
+                let tqlRequestJSON = JSON.stringify(tqlRequest);
+                let tqlRequestByteArray = strToUTF8(tqlRequestJSON);
+
+                let tqlSharedFilePathPrefix = 
+                    crdtuxp.context.PATH_EVAL_TQL + 
+                    tqlRequest.sessionID + 
+                    crdtuxp.leftPad(tqlRequest.requestID, "0", LENGTH_REQUEST_ID);
+
+                let requestFilePath = 
+                    tqlSharedFilePathPrefix + 
+                    FILE_NAME_SUFFIX_TQL_REQUEST + 
+                    "." + 
+                    FILE_NAME_EXTENSION_JSON;
+
+                let responseFilePath = 
+                    tqlSharedFilePathPrefix + 
+                    FILE_NAME_SUFFIX_TQL_RESPONSE + 
+                    "." + 
+                    FILE_NAME_EXTENSION_JSON;
+
+                function handleResponseData(replyByteArray) {
+                    // coderstate: function
+                    let retVal = undefined;
+
+                    let responseText;
+                    do {
                         try {
-                            response = JSON.parse(jsonResponse);
+                            let jsonResponse = binaryUTF8ToStr(replyByteArray);
+
+                            let response;
+                            try {
+                                response = JSON.parse(jsonResponse);
+                            }
+                            catch (err) {
+                                break;
+                            }
+
+                            if (! response || response.result === undefined) {
+                                break;
+                            }
+
+                            responseText = response.result;
                         }
                         catch (err) {
+                            crdtuxp.logError(arguments, "throws " + err);
                             break;
                         }
-                        
-                        if (! response || response.result === undefined) {
-                            break;
-                        }
-                        
-                        responseText = response.result;
+
                     }
-                    catch (err) {
-                        break;
+                    while (false);
+
+                    if (resultIsRawBinary) {
+                        responseTextUnwrapped = responseText;
+                    }
+                    else {
+                        responseTextUnwrapped = binaryUTF8ToStr(deQuote(responseText));
                     }
 
+                    retVal = {
+                        text: responseTextUnwrapped
+                    };
+
+                    return retVal;
                 }
-                while (false);
-                
-                if (resultIsRawBinary) {
-                    responseTextUnwrapped = responseText;
-                }
-                else {
-                    responseTextUnwrapped = binaryUTF8ToStr(deQuote(responseText));
-                }
-        
-                retVal = {
-                    text: responseTextUnwrapped
+
+                function responseWaitResolveFtn(responseFileState) {
+                    // coderstate: resolver
+                    let retVal = undefined;
+
+                    do {
+
+                        if (! responseFileState) {
+                            break;
+                        }
+
+                        let replyByteArray;
+                        function unlinkResolveFtn() { 
+                            // coderstate: resolver
+                            return handleResponseData(replyByteArray);
+                        };
+                        function unlinkRejectFtn(reason) {
+                            // coderstate: rejector
+                            crdtuxp.logError(arguments, "rejected for " + reason);
+                            return handleResponseData(replyByteArray);
+                        };
+
+                        try {
+                            replyByteArray = new Uint8Array(uxpContext.fs.readFileSync(responseFilePath));
+                            retVal = uxpContext.fs.unlink(responseFilePath).then(
+                                unlinkResolveFtn,
+                                unlinkRejectFtn
+                            );
+                        }
+                        catch (err) {
+                            crdtuxp.logError(arguments, "throws " + err);
+                        }
+                    }
+                    while (false);
+
+                    return retVal;
                 };
-                
-                return retVal;
-            }
-            
-            const responseWaitResolveFtn = (responseFileState) => {
-                // coderstate: resolver
-                let retVal = undefined;
+                function responseWaitRejectFtn(reason) {
+                    // coderstate: rejector
+                    crdtuxp.logError(arguments, "rejected for " + reason);
+                    return undefined;
+                };
 
-                do {
-
-                    if (! responseFileState) {
-                        break;
-                    }
-
-                    try {
-                        let replyByteArray = new Uint8Array(uxpContext.fs.readFileSync(responseFilePath));
-                        retVal = uxpContext.fs.unlink(responseFilePath).then(
-                            () => {                                
-                                // coderstate: resolver
-                                return handleResponseData(replyByteArray);
-                            }
-                        ).catch(
-                            (reason) => {
-                                // coderstate: resolver
-                                return handleResponseData(replyByteArray);
-                            }
-                        );
-                    }
-                    catch (err) {
-                    }
+                try {
+                    uxpContext.fs.writeFileSync(requestFilePath, new Uint8Array(tqlRequestByteArray));
                 }
-                while (false);
+                catch (err) {
+                    break;
+                }
 
-                return retVal;
-            };
+                if (! wait) {
+                    retVal = undefined;
+                    break;
+                }
 
-            try {
-                uxpContext.fs.writeFileSync(requestFilePath, new Uint8Array(tqlRequestByteArray));
-            }
-            catch (err) {
+                retVal = crdtuxp.waitForFile(responseFilePath).then(
+                    responseWaitResolveFtn,
+                    responseWaitRejectFtn
+                );
+
                 break;
             }
 
-            retVal = crdtuxp.waitForFile(responseFilePath).then(
-                responseWaitResolveFtn
-            ).catch(
-                (reason) => {
-                    // coderstate: resolver
-                    return undefined;
-                }
-            );
+            if (! tqlScopeName) {
+                tqlScopeName = TQL_SCOPE_NAME_DEFAULT;
+            }
 
-            break;
-        }
+            const init = {
+                method: "POST",
+                body: tqlScript
+            };
 
-        if (! tqlScopeName) {
-            tqlScopeName = TQL_SCOPE_NAME_DEFAULT;
-        }
+            const responsePromise = 
+                fetch(LOCALHOST_URL + "/" + tqlScopeName + "?" + HTTP_CACHE_BUSTER, init);
+            HTTP_CACHE_BUSTER = HTTP_CACHE_BUSTER + 1;
 
-        const init = {
-            method: "POST",
-            body: tqlScript
-        };
+            if (! wait) {
+                retVal = undefined;
+                break;
+            }
 
-        const responsePromise = 
-            fetch(LOCALHOST_URL + "/" + tqlScopeName + "?" + HTTP_CACHE_BUSTER, init);
-        HTTP_CACHE_BUSTER = HTTP_CACHE_BUSTER + 1;
+            if (! responsePromise) {
+                break;
+            }
 
-        if (! responsePromise) {
-            break;
-        }
-
-        retVal = responsePromise.then(
-            (response) => {
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 const responseTextPromise = response.text();
+                function responseTextResolveFtn(responseText) {
+                    // coderstate: resolver
+                    let responseTextUnwrapped;
+                    if (resultIsRawBinary) {
+                        responseTextUnwrapped = responseText;
+                    }
+                    else {
+                        responseTextUnwrapped = binaryUTF8ToStr(deQuote(responseText));
+                    }
+
+                    retVal = {
+                        text: responseTextUnwrapped
+                    };
+                    return retVal;
+                };
+                function responseTextRejectFtn(reason) {
+                    // coderstate: rejector
+                    crdtuxp.logError(arguments, "rejected for " + reason);
+                    return { error: reason };
+                };
+
                 return responseTextPromise.then(
-                    (responseText) => {
-                        // coderstate: resolver
-                        let responseTextUnwrapped;
-                        if (resultIsRawBinary) {
-                            responseTextUnwrapped = responseText;
-                        }
-                        else {
-                            responseTextUnwrapped = binaryUTF8ToStr(deQuote(responseText));
-                        }
-                
-                        retVal = {
-                            text: responseTextUnwrapped
-                        };
-                        return retVal;
-                    }
-                ).catch(
-                    (reason) => {
-                        // coderstate: resolver
-                        return { error: reason };
-                    }
+                    responseTextResolveFtn,
+                    responseTextRejectFtn
                 );
-            }
-        ).catch(
-            (reason) => {
-                // coderstate: resolver
+            };
+            
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
                 return { error: reason };
-            }
-        );
-        
+            };
+            
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        } 
     } 
     while (false);
 
@@ -1928,48 +2166,77 @@ module.exports.evalTQL = evalTQL;
  *
  * @param {string} fileName - path to file
  * @param {string} appendStr - data to append. If a newline is needed it needs to be part of appendStr
+ * @param {object=} options - options.wait = false means don't wait to resolve
  * @returns {Promise<boolean|undefined>} success or failure
  */
 
-function fileAppendString(fileName, in_appendStr) {
+function fileAppendString(fileName, in_appendStr, options) {
 // coderstate: promisor
     let retVal;
 
     do {
 
-        // Don't try direct file access - Photoshop UXPScript lacks an 
-        // append function
-         
-        const responsePromise = evalTQL(
-            "var retVal = true;" + 
-            "var handle = fileOpen(" + dQ(fileName) + ",'a');" +
-            "if (! handle) {" + 
-                "retVal = false;" + 
-            "}" + 
-            "else if (! fileWrite(handle, " + dQ(in_appendStr) + ")) {" +
-                "retVal = false;" + 
-            "}" + 
-            "if (! fileClose(handle)) {" +
-                "retVal = false;" + 
-            "}" + 
-            "retVal");        
-        if (! responsePromise) {
-            break;
-        }
+        try {
 
-        retVal = responsePromise.then(
-            (response) => {
+            // Don't try direct file access - Photoshop UXPScript lacks an 
+            // append function
+
+            let waitForLogConfirmation = true;
+            if (options && ! options.wait) {
+                waitForLogConfirmation = false;
+            }
+            let evalTQLOptions = {
+                wait: waitForLogConfirmation
+            };
+            const responsePromise = evalTQL(
+                "var retVal = true;" + 
+                "var handle = fileOpen(" + dQ(fileName) + ",'a');" +
+                "if (! handle) {" + 
+                    "retVal = false;" + 
+                "}" + 
+                "else if (! fileWrite(handle, " + dQ(in_appendStr) + ")) {" +
+                    "retVal = false;" + 
+                "}" + 
+                "if (! fileClose(handle)) {" +
+                    "retVal = false;" + 
+                "}" + 
+                "retVal",
+                evalTQLOptions
+            );
+
+            if (options && ! options.wait) {
+                retVal = undefined;
+                break;
+            }
+
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
                 }
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn);
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.fileAppendString = fileAppendString;
@@ -1991,36 +2258,53 @@ function fileClose(fileHandle) {
 
     do {
 
-        let uxpContext = getUXPContext();
-        if (uxpContext.hasDirectFileAccess) {
-            let fileInfo = uxpContext.fileInfoByFileHandle[fileHandle];
-            if (! fileInfo) {
+        try {
+
+            let uxpContext = getUXPContext();
+            if (uxpContext.hasDirectFileAccess) {
+                let fileInfo = uxpContext.fileInfoByFileHandle[fileHandle];
+                if (! fileInfo) {
+                    break;
+                }
+                delete uxpContext.fileInfoByFileHandle[fileHandle];
+                retVal = true;
                 break;
             }
-            delete uxpContext.fileInfoByFileHandle[fileHandle];
-            retVal = true;
-            break;
-        }
 
-        const responsePromise = evalTQL("fileClose(" + fileHandle + ") ? \"true\" : \"false\"");
-        if (! responsePromise) {
-            break;
-        }
+            const responsePromise = 
+                evalTQL(
+                    "fileClose(" + fileHandle + ") ? \"true\" : \"false\""
+                );
+            if (! responsePromise) {
+                break;
+            }
 
-        retVal = responsePromise.then(
-            (response) => {
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
                 }
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+            
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
 
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.fileClose = fileClose;
@@ -2042,56 +2326,77 @@ function fileDelete(filePath) {
 
     do {
 
-        let uxpContext = getUXPContext();
-        if (uxpContext.hasDirectFileAccess) {
-        
-            // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
-            try {
-                const stats = uxpContext.fs.lstatSync(filePath);
-                if (! stats || ! stats.isFile()) {
-                    retVal = false;
+        try {
+
+            let uxpContext = getUXPContext();
+            if (uxpContext.hasDirectFileAccess) {
+
+                // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+                try {
+                    const stats = uxpContext.fs.lstatSync(filePath);
+                    if (! stats || ! stats.isFile()) {
+                        retVal = false;
+                        break;
+                    } 
+                }
+                catch (err) {
+                    if (err != -2) {
+                        crdtuxp.logNote(arguments, "throws " + err);
+                    }
                     break;
-                }                
-            }
-            catch (err) {
+                }
+
+                try {
+                    function unlinkResolveFtn() {
+                        // coderstate: resolver
+                        return true;
+                    };
+                    function unlinkRejectFtn(reason) {
+                        // coderstate: rejector
+                        crdtuxp.logError(arguments, "rejected for " + reason);
+                        return false;
+                    };
+                    // If no callback given, returns a Promise
+                    retVal = uxpContext.fs.unlink(filePath).then(
+                        unlinkResolveFtn,
+                        unlinkRejectFtn
+                    );
+                }
+                catch (err) {
+                }
                 break;
             }
 
-            try {
-                // If no callback given, returns a Promise
-                retVal = uxpContext.fs.unlink(filePath).then(
-                    () => {
-                        // coderstate: resolver
-                        return true;
-                    }
-                ).catch(
-                    (reason) => {
-                        // coderstate: resolver
-                        return false;
-                    }
+            const responsePromise = 
+                evalTQL(
+                    "fileDelete(" + dQ(filePath) + ") ? \"true\" : \"false\""
                 );
+            if (! responsePromise) {
+                break;
             }
-            catch (err) {
-            }
-            break;
-        }
 
-        const responsePromise = evalTQL("fileDelete(" + dQ(filePath) + ") ? \"true\" : \"false\"");
-        if (! responsePromise) {
-            break;
-        }
-
-        retVal = responsePromise.then(
-            (response) => {
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
                 }
                 return retVal;
-            }
-        );
-
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+            
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2118,41 +2423,60 @@ function fileExists(filePath) {
 
     do {
 
-        let uxpContext = getUXPContext();
-        if (uxpContext.hasDirectFileAccess) {
+        try {
 
-            // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
-            try {
-                const stats = uxpContext.fs.lstatSync(filePath);
-                if (! stats || ! stats.isFile()) {
-                    retVal = false;
+            let uxpContext = getUXPContext();
+            if (uxpContext.hasDirectFileAccess) {
+
+                // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+                try {
+                    const stats = uxpContext.fs.lstatSync(filePath);
+                    if (! stats || ! stats.isFile()) {
+                        retVal = false;
+                        break;
+                    } 
+                }
+                catch (err) {
+                    if (err != -2) {
+                        crdtuxp.logNote(arguments, "throws " + err);
+                    }
                     break;
-                }                
-            }
-            catch (err) {
+                }
+
+                retVal = true;
                 break;
             }
 
-            retVal = true;
-            break;
-        }
-    
-        const responsePromise = evalTQL("fileExists(" + dQ(filePath) + ") ? \"true\" : \"false\"");
-        if (! responsePromise) {
-            break;
-        }
+            const responsePromise = 
+                evalTQL(
+                    "fileExists(" + dQ(filePath) + ") ? \"true\" : \"false\""
+                );
+            if (! responsePromise) {
+                break;
+            }
 
-        retVal = responsePromise.then(
-            (response) => {
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
                 }
                 return retVal;
-            }
-        );
-
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+            
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2175,13 +2499,18 @@ function fileNameExtension(filePath, separator) {
 
     let retVal;
 
-    let splitName = crdtuxp.path.baseName(filePath).split(".");
-    let extension = "";
-    if (splitName.length > 1) {
-        extension = splitName.pop();
-    }
+    try {
+        let splitName = crdtuxp.path.baseName(filePath).split(".");
+        let extension = "";
+        if (splitName.length > 1) {
+            extension = splitName.pop();
+        }
 
-    retVal = extension.toLowerCase();
+        retVal = extension.toLowerCase();
+    }
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
+    }
 
     return retVal;
 }
@@ -2205,75 +2534,88 @@ function fileOpen(filePath, mode) {
 
     do {
 
-        let uxpContext = getUXPContext();
-        if (uxpContext.hasDirectFileAccess) {
-            let parentPath = crdtuxp.path.dirName(filePath);            
-            let baseName = crdtuxp.path.baseName(filePath); 
-            if (! uxpContext.uniqueFileHandleID) {
-                uxpContext.uniqueFileHandleID = 0;
-                uxpContext.fileInfoByFileHandle = {};
-            }
-                      
-            if (mode == 'w' || mode == 'a') {
+        try {
 
-                // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
-                try {
-                    const stats = uxpContext.fs.lstatSync(parentPath);
-                    if (! stats || ! stats.isDirectory()) {
+            let uxpContext = getUXPContext();
+            if (uxpContext.hasDirectFileAccess) {
+                let parentPath = crdtuxp.path.dirName(filePath); 
+                let baseName = crdtuxp.path.baseName(filePath); 
+                if (! uxpContext.uniqueFileHandleID) {
+                    uxpContext.uniqueFileHandleID = 0;
+                    uxpContext.fileInfoByFileHandle = {};
+                }
+
+                if (mode == 'w' || mode == 'a') {
+
+                    // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+                    try {
+                        const stats = uxpContext.fs.lstatSync(parentPath);
+                        if (! stats || ! stats.isDirectory()) {
+                            break;
+                        } 
+                    }
+                    catch (err) {
+                        if (err != -2) {
+                            crdtuxp.logNote(arguments, "throws " + err);
+                        }
                         break;
-                    }                
-                }
-                catch (err) {
-                    break;
-                }
+                    }
 
-                let uniqueFileHandleID = ++uxpContext.uniqueFileHandleID;  
-                let fileInfo = {
-                    fileHandle: uniqueFileHandleID,
-                    filePath: filePath,
-                    mode: mode
-                }
-                uxpContext.fileInfoByFileHandle[uniqueFileHandleID] = fileInfo;
-                retVal = uniqueFileHandleID;
-            
-            }     
-            else if (mode == 'r') {
+                    let uniqueFileHandleID = ++uxpContext.uniqueFileHandleID; 
+                    let fileInfo = {
+                        fileHandle: uniqueFileHandleID,
+                        filePath: filePath,
+                        mode: mode
+                    }
+                    uxpContext.fileInfoByFileHandle[uniqueFileHandleID] = fileInfo;
+                    retVal = uniqueFileHandleID;
 
-                try {
-                    const stats = uxpContext.fs.lstatSync(filePath);
-                    if (! stats || ! stats.isFile()) {
+                } 
+                else if (mode == 'r') {
+
+                    try {
+                        const stats = uxpContext.fs.lstatSync(filePath);
+                        if (! stats || ! stats.isFile()) {
+                            break;
+                        } 
+                    }
+                    catch (err) {
+                        if (err != -2) {
+                            crdtuxp.logNote(arguments, "throws " + err);
+                        }
                         break;
-                    }                
-                }
-                catch (err) {
-                    break;
-                }
-                
-                let uniqueFileHandleID = ++uxpContext.uniqueFileHandleID;  
-                let fileInfo = {
-                    fileHandle: uniqueFileHandleID,
-                    filePath: filePath,
-                    mode: mode
-                }
-                uxpContext.fileInfoByFileHandle[uniqueFileHandleID] = fileInfo;
-                retVal = uniqueFileHandleID;
-            }
-            break;
-        }
-    
-        let responsePromise;
-        if (mode) {
-            responsePromise = evalTQL("enquote(fileOpen(" + dQ(filePath) + "," + dQ(mode) + "))");
-        }
-        else {
-            responsePromise = evalTQL("enquote(fileOpen(" + dQ(filePath) + "))");
-        }
-        if (! responsePromise) {
-            break;
-        }
+                    }
 
-        retVal = responsePromise.then(
-            (response) => {
+                    let uniqueFileHandleID = ++uxpContext.uniqueFileHandleID; 
+                    let fileInfo = {
+                        fileHandle: uniqueFileHandleID,
+                        filePath: filePath,
+                        mode: mode
+                    }
+                    uxpContext.fileInfoByFileHandle[uniqueFileHandleID] = fileInfo;
+                    retVal = uniqueFileHandleID;
+                }
+                break;
+            }
+
+            let responsePromise;
+            if (mode) {
+                responsePromise = 
+                    evalTQL(
+                        "enquote(fileOpen(" + dQ(filePath) + "," + dQ(mode) + "))"
+                    );
+            }
+            else {
+                responsePromise = 
+                    evalTQL(
+                        "enquote(fileOpen(" + dQ(filePath) + "))"
+                    );
+            }
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
 
@@ -2281,24 +2623,37 @@ function fileOpen(filePath, mode) {
                     if (! response || response.error) {
                         break;
                     }
-                    
+
                     let responseStr = deQuote(response.text);
                     if (! responseStr) {
                         break;
                     }
-            
+
                     let responseData = binaryUTF8ToStr(responseStr);
                     if (! responseData) {
                         break;
                     }
-            
+
                     retVal = parseInt(responseData, 10);
                 }
                 while (false);
 
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+            
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2323,47 +2678,53 @@ function fileRead(fileHandle, isBinary) {
     let retVal;
 
     do {
-    
-        let uxpContext = getUXPContext();
-        if (uxpContext.hasDirectFileAccess) {
-        
-            if (! uxpContext.fileInfoByFileHandle) {
-                break;
-            }       
 
-            let fileInfo = uxpContext.fileInfoByFileHandle[fileHandle];
-            if (! fileInfo) {
-                break;
-            }       
-                      
-            if (fileInfo.mode != 'r') {
-                break;
-            }
+        try {
+            let uxpContext = getUXPContext();
+            if (uxpContext.hasDirectFileAccess) {
 
-            let replyByteArray;
-            try {
-                replyByteArray = new Uint8Array(uxpContext.fs.readFileSync(fileInfo.filePath));
-                if (isBinary) {
-                    retVal = replyByteArray;
+                if (! uxpContext.fileInfoByFileHandle) {
                     break;
                 }
-            }
-            catch (err) {
+
+                let fileInfo = uxpContext.fileInfoByFileHandle[fileHandle];
+                if (! fileInfo) {
+                    break;
+                }
+
+                if (fileInfo.mode != 'r') {
+                    break;
+                }
+
+                let replyByteArray;
+                try {
+                    replyByteArray = new Uint8Array(uxpContext.fs.readFileSync(fileInfo.filePath));
+                    if (isBinary) {
+                        retVal = replyByteArray;
+                        break;
+                    }
+                }
+                catch (err) {
+                    crdtuxp.logError(arguments, "throws " + err);
+                    break;
+                }
+
+                retVal = binaryUTF8ToStr(replyByteArray);
                 break;
             }
-            
-            retVal = binaryUTF8ToStr(replyByteArray);
-            break;
-        }
-            
-        const responsePromise = evalTQL("enquote(fileRead(" + fileHandle + "))", undefined, true);;
-        if (! responsePromise) {
-            break;
-        }
 
-        retVal = responsePromise.then(
-            
-            (response) => {
+            let evalTQLOptions = {
+                isBinary: true
+            };
+            const responsePromise = 
+                evalTQL(
+                    "enquote(fileRead(" + fileHandle + "))", 
+                    evalTQLOptions);
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
 
@@ -2371,29 +2732,42 @@ function fileRead(fileHandle, isBinary) {
                     if (! response || response.error) {
                         break;
                     }
-            
+
                     let byteArrayStr = deQuote(response.text);
                     if (! byteArrayStr) {
                         break;
                     }
-            
+
                     var str = binaryUTF8ToStr(byteArrayStr);
                     if (! str) {
                         break;
                     }
-            
+
                     if (isBinary) {
                         retVal = deQuote(str);
                         break;
                     }
-            
+
                     retVal = binaryUTF8ToStr(deQuote(str));
                 }
                 while (false);
 
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+            
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2419,50 +2793,54 @@ function fileWrite(fileHandle, s_or_ByteArr) {
 
     do {
 
-        let byteArray;
-        if ("string" == typeof s_or_ByteArr) {
-            byteArray = strToUTF8(s_or_ByteArr);
-        }
-        else {
-            byteArray = s_or_ByteArr;
-        }
+        try {
+            let byteArray;
+            if ("string" == typeof s_or_ByteArr) {
+                byteArray = strToUTF8(s_or_ByteArr);
+            }
+            else {
+                byteArray = s_or_ByteArr;
+            }
 
-        let uxpContext = getUXPContext();
-        if (uxpContext.hasDirectFileAccess) {
-        
-            if (! uxpContext.fileInfoByFileHandle) {
-                break;
-            }       
+            let uxpContext = getUXPContext();
+            if (uxpContext.hasDirectFileAccess) {
 
-            let fileInfo = uxpContext.fileInfoByFileHandle[fileHandle];
-            if (! fileInfo) {
-                break;
-            }       
-                      
-            if (fileInfo.mode != 'w' && fileInfo.mode != 'a') {
+                if (! uxpContext.fileInfoByFileHandle) {
+                    break;
+                }
+
+                let fileInfo = uxpContext.fileInfoByFileHandle[fileHandle];
+                if (! fileInfo) {
+                    break;
+                }
+
+                if (fileInfo.mode != 'w' && fileInfo.mode != 'a') {
+                    break;
+                }
+
+                let lengthWritten = 0;
+                try {
+                    lengthWritten = uxpContext.fs.writeFileSync(fileInfo.filePath, new Uint8Array(byteArray));
+                }
+                catch (err) {
+                    crdtuxp.logError(arguments, "throws " + err);
+                    break;
+                }
+
+                retVal = lengthWritten == byteArray.length;
+
                 break;
             }
 
-            let lengthWritten = 0;
-            try {
-                lengthWritten = uxpContext.fs.writeFileSync(fileInfo.filePath, new Uint8Array(byteArray));
-            }
-            catch (err) {
+            const responsePromise = 
+                evalTQL(
+                    "fileWrite(" + fileHandle + "," + dQ(byteArray) + ") ? \"true\" : \"false\""
+                );
+            if (! responsePromise) {
                 break;
             }
 
-            retVal = lengthWritten == byteArray.length;
-
-            break;
-        }
-            
-        const responsePromise = evalTQL("fileWrite(" + fileHandle + "," + dQ(byteArray) + ") ? \"true\" : \"false\"");
-        if (! responsePromise) {
-            break;
-        }
-
-        retVal = responsePromise.then(
-            (response) => {
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
 
@@ -2471,9 +2849,21 @@ function fileWrite(fileHandle, s_or_ByteArr) {
                 }
 
                 return retVal;
-            }
-        );
-
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+            
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2518,11 +2908,16 @@ function getBooleanFromINI(in_value) {
 
     let retVal = false;
 
-    if (in_value) {
-        const value = (in_value + "").replace(REGEXP_TRIM, REGEXP_TRIM_REPLACE);
-        const firstChar = value.charAt(0).toLowerCase();
-        const firstValue = parseInt(firstChar, 10);
-        retVal = firstChar == "y" || firstChar == "t" || (! isNaN(firstValue) && firstValue != 0);
+    try {
+        if (in_value) {
+            const value = (in_value + "").replace(REGEXP_TRIM, REGEXP_TRIM_REPLACE);
+            const firstChar = value.charAt(0).toLowerCase();
+            const firstValue = parseInt(firstChar, 10);
+            retVal = firstChar == "y" || firstChar == "t" || (! isNaN(firstValue) && firstValue != 0);
+        }
+    }
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
     }
 
     return retVal;
@@ -2549,13 +2944,21 @@ function getCapability(issuer, capabilityCode, encryptionKey) {
 
     do {
 
-        const responsePromise = evalTQL("getCapability(" + dQ(issuer) + ", " + dQ(capabilityCode) + ", " + dQ(encryptionKey) + ")");
-        if (! responsePromise) {
-            break;
-        }
+        try {
 
-        retVal = responsePromise.then(
-            (response) => {
+            const responsePromise = 
+                evalTQL(
+                    "getCapability(" + 
+                        dQ(issuer) + ", " + 
+                        dQ(capabilityCode) + ", " + 
+                        dQ(encryptionKey) + 
+                    ")"
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
 
@@ -2564,9 +2967,21 @@ function getCapability(issuer, capabilityCode, encryptionKey) {
                 }
 
                 return retVal;
-            }
-        );
-
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+            
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2590,13 +3005,16 @@ function getCreativeDeveloperToolsLevel() {
 
     do {
 
-        const responsePromise = evalTQL("getCreativeDeveloperToolsLevel()");
-        if (! responsePromise) {
-            break;
-        }
+        try {
+            const responsePromise = 
+                evalTQL(
+                    "getCreativeDeveloperToolsLevel()"
+                );
+            if (! responsePromise) {
+                break;
+            }
 
-        retVal = responsePromise.then(
-            (response) => {
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
 
@@ -2605,9 +3023,21 @@ function getCreativeDeveloperToolsLevel() {
                 }
 
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
 
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2640,51 +3070,51 @@ function getDir(dirTag) {
 
     do {
 
-        if (crdtuxp.context) {
-            
-            if (dirTag == module.exports.DESKTOP_DIR && crdtuxp.context.PATH_DESKTOP) {
-                retVal = crdtuxp.context.PATH_DESKTOP;
+        try {
+            if (crdtuxp.context) {
+
+                if (dirTag == module.exports.DESKTOP_DIR && crdtuxp.context.PATH_DESKTOP) {
+                    retVal = crdtuxp.context.PATH_DESKTOP;
+                    break;
+                }
+
+                if (dirTag == module.exports.DOCUMENTS_DIR && crdtuxp.context.PATH_DOCUMENTS) {
+                    retVal = crdtuxp.context.PATH_DOCUMENTS;
+                    break;
+                }
+
+                if (dirTag == module.exports.HOME_DIR && crdtuxp.context.PATH_HOME) {
+                    retVal = crdtuxp.context.PATH_HOME;
+                    break;
+                }
+
+                if (dirTag == module.exports.LOG_DIR && crdtuxp.context.PATH_LOG) {
+                    retVal = crdtuxp.context.PATH_LOG;
+                    break;
+                }
+
+                if (dirTag == module.exports.SYSTEMDATA_DIR && crdtuxp.context.PATH_SYSTEMDATA) {
+                    retVal = crdtuxp.context.PATH_SYSTEMDATA;
+                    break;
+                }
+
+                if (dirTag == module.exports.TMP_DIR && crdtuxp.context.PATH_TMP) {
+                    retVal = crdtuxp.context.PATH_TMP;
+                    break;
+                }
+
+                if (dirTag == module.exports.USERDATA_DIR && crdtuxp.context.PATH_USERDATA) {
+                    retVal = crdtuxp.context.PATH_USERDATA;
+                    break;
+                }
+            }
+
+            const sysInfoPromise = getSysInfo__();
+            if (! sysInfoPromise) {
                 break;
             }
 
-            if (dirTag == module.exports.DOCUMENTS_DIR && crdtuxp.context.PATH_DOCUMENTS) {
-                retVal = crdtuxp.context.PATH_DOCUMENTS;
-                break;
-            }
-
-            if (dirTag == module.exports.HOME_DIR && crdtuxp.context.PATH_HOME) {
-                retVal = crdtuxp.context.PATH_HOME;
-                break;
-            }
-
-            if (dirTag == module.exports.LOG_DIR && crdtuxp.context.PATH_LOG) {
-                retVal = crdtuxp.context.PATH_LOG;
-                break;
-            }
-
-            if (dirTag == module.exports.SYSTEMDATA_DIR && crdtuxp.context.PATH_SYSTEMDATA) {
-                retVal = crdtuxp.context.PATH_SYSTEMDATA;
-                break;
-            }
-
-            if (dirTag == module.exports.TMP_DIR && crdtuxp.context.PATH_TMP) {
-                retVal = crdtuxp.context.PATH_TMP;
-                break;
-            }
-
-            if (dirTag == module.exports.USERDATA_DIR && crdtuxp.context.PATH_USERDATA) {
-                retVal = crdtuxp.context.PATH_USERDATA;
-                break;
-            }
-        }
-
-        const sysInfoPromise = getSysInfo__();
-        if (! sysInfoPromise) {
-            break;
-        }
-
-        retVal = sysInfoPromise.then(
-            sysInfo => {
+            function evalTQLResolveFtn(sysInfo) {
                 // coderstate: resolver
                 let retVal;
 
@@ -2695,9 +3125,22 @@ function getDir(dirTag) {
                 }
 
                 return retVal;
-            }
-        );
+            };
+            
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
 
+            retVal = sysInfoPromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2721,13 +3164,17 @@ function getEnvironment(envVarName) {
 
     do {
 
-        const responsePromise = evalTQL("getEnv(" + dQ(envVarName) + ")");
-        if (! responsePromise) {
-            break;
-        }
+        try {
 
-        retVal = responsePromise.then(
-            (response) => {
+            const responsePromise = 
+                evalTQL(
+                    "getEnv(" + dQ(envVarName) + ")"
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
 
@@ -2736,9 +3183,21 @@ function getEnvironment(envVarName) {
                 }
 
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
 
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2763,68 +3222,74 @@ function getFloatWithUnitFromINI(in_valueStr, in_convertToUnit) {
 
     do {
 
-        if (! in_valueStr) {
-            break;
-        }
+        try {
 
-        let convertToUnit;
-        if (in_convertToUnit) {
-            convertToUnit = in_convertToUnit;
-        }
-        else {
-            convertToUnit = crdtuxp.UNIT_NAME_NONE;
-        }
+            if (! in_valueStr) {
+                break;
+            }
 
-        let sign = 1.0;
+            let convertToUnit;
+            if (in_convertToUnit) {
+                convertToUnit = in_convertToUnit;
+            }
+            else {
+                convertToUnit = crdtuxp.UNIT_NAME_NONE;
+            }
 
-        let valueStr = in_valueStr.replace(REGEXP_DESPACE, REGEXP_DESPACE_REPLACE).toLowerCase();
+            let sign = 1.0;
 
-        const firstChar = valueStr.charAt(0);
-        if (firstChar == '-') {
-            valueStr = valueStr.substring(1);
-            sign = -1.0;
-        }
-        else if (firstChar == '+') {
-            valueStr = valueStr.substring(1);
-        }
+            let valueStr = in_valueStr.replace(REGEXP_DESPACE, REGEXP_DESPACE_REPLACE).toLowerCase();
 
-        let picas = undefined;
-        let ciceros = undefined;
-        if (valueStr.match(REGEXP_PICAS)) {
-            picas = parseInt(valueStr.replace(REGEXP_PICAS, REGEXP_PICAS_REPLACE), 10);
-            valueStr = valueStr.replace(REGEXP_PICAS, REGEXP_PICAS_POINTS_REPLACE);
-        }
-        else if (valueStr.match(REGEXP_CICEROS)) {
-            ciceros = parseInt(valueStr.replace(REGEXP_CICEROS, REGEXP_CICEROS_REPLACE), 10);
-            valueStr = valueStr.replace(REGEXP_CICEROS, REGEXP_CICEROS_POINTS_REPLACE);
-        }
+            const firstChar = valueStr.charAt(0);
+            if (firstChar == '-') {
+                valueStr = valueStr.substring(1);
+                sign = -1.0;
+            }
+            else if (firstChar == '+') {
+                valueStr = valueStr.substring(1);
+            }
 
-        const numberOnlyStr = valueStr.replace(REGEXP_NUMBER_ONLY, REGEXP_NUMBER_ONLY_REPLACE);
-        let numberOnly = parseFloat(numberOnlyStr);
-        if (isNaN(numberOnly)) {
-            numberOnly = 0.0;
-        }
+            let picas = undefined;
+            let ciceros = undefined;
+            if (valueStr.match(REGEXP_PICAS)) {
+                picas = parseInt(valueStr.replace(REGEXP_PICAS, REGEXP_PICAS_REPLACE), 10);
+                valueStr = valueStr.replace(REGEXP_PICAS, REGEXP_PICAS_POINTS_REPLACE);
+            }
+            else if (valueStr.match(REGEXP_CICEROS)) {
+                ciceros = parseInt(valueStr.replace(REGEXP_CICEROS, REGEXP_CICEROS_REPLACE), 10);
+                valueStr = valueStr.replace(REGEXP_CICEROS, REGEXP_CICEROS_POINTS_REPLACE);
+            }
 
-        let fromUnit;
-        if (picas !== undefined) {
-            fromUnit = crdtuxp.UNIT_NAME_PICA;
-            numberOnly = picas + numberOnly / 6.0;
-        }
-        else if (ciceros !== undefined) {
-            fromUnit = crdtuxp.UNIT_NAME_CICERO;
-            numberOnly = ciceros + numberOnly / 6.0;
-        }
-        else {
-            let unitOnly = valueStr.replace(REGEXP_UNIT_ONLY, REGEXP_UNIT_ONLY_REPLACE);
-            fromUnit = getUnitFromINI(unitOnly, crdtuxp.UNIT_NAME_NONE);
-        }
+            const numberOnlyStr = valueStr.replace(REGEXP_NUMBER_ONLY, REGEXP_NUMBER_ONLY_REPLACE);
+            let numberOnly = parseFloat(numberOnlyStr);
+            if (isNaN(numberOnly)) {
+                numberOnly = 0.0;
+            }
 
-        let conversion = 1.0;
-        if (fromUnit != crdtuxp.UNIT_NAME_NONE && convertToUnit != crdtuxp.UNIT_NAME_NONE) {
-            conversion = unitToInchFactor(fromUnit) / unitToInchFactor(convertToUnit);
-        }
+            let fromUnit;
+            if (picas !== undefined) {
+                fromUnit = crdtuxp.UNIT_NAME_PICA;
+                numberOnly = picas + numberOnly / 6.0;
+            }
+            else if (ciceros !== undefined) {
+                fromUnit = crdtuxp.UNIT_NAME_CICERO;
+                numberOnly = ciceros + numberOnly / 6.0;
+            }
+            else {
+                let unitOnly = valueStr.replace(REGEXP_UNIT_ONLY, REGEXP_UNIT_ONLY_REPLACE);
+                fromUnit = getUnitFromINI(unitOnly, crdtuxp.UNIT_NAME_NONE);
+            }
 
-        retVal = sign * numberOnly * conversion;
+            let conversion = 1.0;
+            if (fromUnit != crdtuxp.UNIT_NAME_NONE && convertToUnit != crdtuxp.UNIT_NAME_NONE) {
+                conversion = unitToInchFactor(fromUnit) / unitToInchFactor(convertToUnit);
+            }
+
+            retVal = sign * numberOnly * conversion;
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2847,30 +3312,36 @@ function getFloatValuesFromINI(in_valueStr) {
 
     do {
 
-        if (! in_valueStr) {
-            break;
-        }
+        try {
 
-        let floatValues = undefined;
-        const values = in_valueStr.split(",");
-        for (let idx = 0; idx < values.length; idx++) {
-            const value = values[idx].replace(REGEXP_TRIM, REGEXP_TRIM_REPLACE);
-            let numValue = 0;
-            if (value) {
-                numValue = parseFloat(value);
-                if (isNaN(numValue)) {
-                    floatValues = undefined;
-                    break;
+            if (! in_valueStr) {
+                break;
+            }
+
+            let floatValues = undefined;
+            const values = in_valueStr.split(",");
+            for (let idx = 0; idx < values.length; idx++) {
+                const value = values[idx].replace(REGEXP_TRIM, REGEXP_TRIM_REPLACE);
+                let numValue = 0;
+                if (value) {
+                    numValue = parseFloat(value);
+                    if (isNaN(numValue)) {
+                        floatValues = undefined;
+                        break;
+                    }
                 }
+
+                if (! floatValues) {
+                    floatValues = [];
+                }
+                floatValues.push(numValue);
             }
 
-            if (! floatValues) {
-                floatValues = [];
-            }
-            floatValues.push(numValue);
+            retVal = floatValues;
         }
-
-        retVal = floatValues;
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2893,32 +3364,38 @@ function getIntValuesFromINI(in_valueStr) {
 
     do {
 
-        if (! in_valueStr) {
-            break;
-        }
+        try {
 
-        let intValues = undefined;
-        const values = in_valueStr.split(",");
-        for (let idx = 0; idx < values.length; idx++) {
-            const valueStr = values[idx].replace(REGEXP_TRIM, REGEXP_TRIM_REPLACE);
-            let value = 0;
-            if (! valueStr) {
-                value = 0;
+            if (! in_valueStr) {
+                break;
             }
-            else {
-                value = parseInt(valueStr, 10);
-                if (isNaN(value)) {
-                    intValues = undefined;
-                    break;
+
+            let intValues = undefined;
+            const values = in_valueStr.split(",");
+            for (let idx = 0; idx < values.length; idx++) {
+                const valueStr = values[idx].replace(REGEXP_TRIM, REGEXP_TRIM_REPLACE);
+                let value = 0;
+                if (! valueStr) {
+                    value = 0;
                 }
+                else {
+                    value = parseInt(valueStr, 10);
+                    if (isNaN(value)) {
+                        intValues = undefined;
+                        break;
+                    }
+                }
+                if (! intValues) {
+                    intValues = [];
+                }
+                intValues.push(value);
             }
-            if (! intValues) {
-                intValues = [];
-            }
-            intValues.push(value);
-        }
 
-        retVal = intValues;
+            retVal = intValues;
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2944,13 +3421,21 @@ function getPersistData(issuer, attribute, password) {
 
     do {
 
-        const responsePromise = evalTQL("getPersistData(" + dQ(issuer) + "," + dQ(attribute) + "," + dQ(password) + ")");
-        if (! responsePromise) {
-            break;
-        }
+        try {
 
-        retVal = responsePromise.then(
-            (response) => {
+            const responsePromise = 
+                evalTQL(
+                    "getPersistData(" + 
+                        dQ(issuer) + "," + 
+                        dQ(attribute) + "," + 
+                        dQ(password) + 
+                    ")"
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
 
@@ -2959,9 +3444,21 @@ function getPersistData(issuer, attribute, password) {
                 }
 
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
 
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -2981,13 +3478,17 @@ function getPluginInstallerPath() {
 
     do {
 
-        const responsePromise = evalTQL("getPluginInstallerPath()");
-        if (! responsePromise) {
-            break;
-        }
+        try {
 
-        retVal = responsePromise.then(
-            (response) => {
+            const responsePromise = 
+                evalTQL(
+                    "getPluginInstallerPath()"
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
 
@@ -2996,9 +3497,21 @@ function getPluginInstallerPath() {
                 }
 
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
 
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -3020,18 +3533,22 @@ function getSysInfo__() {
 
     do {
 
-        if (SYS_INFO) {
-            retVal = SYS_INFO;
-            break;
-        }
+        try {
 
-        const responsePromise = evalTQL("enquote(sysInfo())");
-        if (! responsePromise) {
-            break;
-        }
+            if (SYS_INFO) {
+                retVal = SYS_INFO;
+                break;
+            }
 
-        retVal = responsePromise.then(
-            (response) => {
+            const responsePromise = 
+                evalTQL(
+                    "enquote(sysInfo())"
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
 
@@ -3039,31 +3556,43 @@ function getSysInfo__() {
                     if (! response || response.error) {
                         break;
                     }
-            
+
                     let responseWrapperStr = response.text;
                     if (! responseWrapperStr) {
                         break;
                     }
-            
+
                     let responseData = deQuote(responseWrapperStr);
                     if (! responseData) {
                         break;
                     }
-            
+
                     let responseStr = binaryUTF8ToStr(responseData);
                     if (! responseStr) {
                         break;
                     }
-            
+
                     SYS_INFO = JSON.parse(responseStr);
                     retVal = SYS_INFO;
                 }
                 while (false);
 
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
 
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -3083,31 +3612,36 @@ function getSysInfo__() {
 function getUnitFromINI(in_value, in_defaultUnit) {
 
     const defaultUnit = (in_defaultUnit !== undefined) ? in_defaultUnit : crdtuxp.UNIT_NAME_NONE;
-
     let retVal = defaultUnit;
 
-    const value = (in_value + "").replace(REGEXP_TRIM, REGEXP_TRIM_REPLACE).toLowerCase();
+    try {
 
-    if (value == "\"" || value.substring(0,2) == "in") {
-        retVal = crdtuxp.UNIT_NAME_INCH;
+        const value = (in_value + "").replace(REGEXP_TRIM, REGEXP_TRIM_REPLACE).toLowerCase();
+
+        if (value == "\"" || value.substring(0,2) == "in") {
+            retVal = crdtuxp.UNIT_NAME_INCH;
+        }
+        else if (value == "cm" || value == "cms" || value.substr(0,4) == "cent") {
+            retVal = crdtuxp.UNIT_NAME_CM;
+        }
+        else if (value == "mm" || value == "mms" || value.substr(0,4) == "mill") {
+            retVal = crdtuxp.UNIT_NAME_MM;
+        }
+        else if (value.substring(0,3) == "cic") {
+            retVal = crdtuxp.UNIT_NAME_CICERO;
+        }
+        else if (value.substring(0,3) == "pic") {
+            retVal = crdtuxp.UNIT_NAME_PICA;
+        }
+        else if (value.substring(0,3) == "pix" || value == "px") {
+            retVal = crdtuxp.UNIT_NAME_PIXEL;
+        }
+        else if (value.substring(0,3) == "poi" || value == "pt") {
+            retVal = crdtuxp.UNIT_NAME_POINT;
+        }
     }
-    else if (value == "cm" || value == "cms" || value.substr(0,4) == "cent") {
-        retVal = crdtuxp.UNIT_NAME_CM;
-    }
-    else if (value == "mm" || value == "mms" || value.substr(0,4) == "mill") {
-        retVal = crdtuxp.UNIT_NAME_MM;
-    }
-    else if (value.substring(0,3) == "cic") {
-        retVal = crdtuxp.UNIT_NAME_CICERO;
-    }
-    else if (value.substring(0,3) == "pic") {
-        retVal = crdtuxp.UNIT_NAME_PICA;
-    }
-    else if (value.substring(0,3) == "pix" || value == "px") {
-        retVal = crdtuxp.UNIT_NAME_PIXEL;
-    }
-    else if (value.substring(0,3) == "poi" || value == "pt") {
-        retVal = crdtuxp.UNIT_NAME_POINT;
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
     }
 
     return retVal;
@@ -3129,57 +3663,65 @@ function getUXPContext() {
 
     do {
 
-        if (crdtuxp.uxpContext) {
-            retVal = crdtuxp.uxpContext;
-            break;
-        }
-
-        let uxpContext = {};
-        crdtuxp.uxpContext = uxpContext;
-
-        uxpContext.preferDaemonOverInternal = DEFAULT_PREFER_DAEMON_OVER_INTERNAL;
-
-        uxpContext.fs = require("fs");
-        uxpContext.os = require("os");
-        uxpContext.uxp = require("uxp");   
-        let storage = uxpContext.uxp.storage;
-        uxpContext.lfs = storage.localFileSystem;
-        uxpContext.sessionID = window.crypto.randomUUID().replace(/-/g,"");
-
         try {
-            // @ts-ignore
-            uxpContext.indesign = require("indesign");
-            uxpContext.app = uxpContext.indesign.app;
-            if (uxpContext.app.name.indexOf("Server") >= 0) {
-                uxpContext.uxpVariant = UXP_VARIANT_INDESIGN_SERVER_UXPSCRIPT;
-                uxpContext.hasNetworkAccess = true;
+
+            if (crdtuxp.uxpContext) {
+                retVal = crdtuxp.uxpContext;
+                break;
             }
-            else {
-                uxpContext.uxpVariant = UXP_VARIANT_INDESIGN_UXPSCRIPT;
-                uxpContext.hasNetworkAccess = true;
+
+            let uxpContext = {};
+            crdtuxp.uxpContext = uxpContext;
+
+            uxpContext.preferDaemonOverInternal = DEFAULT_PREFER_DAEMON_OVER_INTERNAL;
+
+            uxpContext.fs = require("fs");
+            uxpContext.os = require("os");
+            uxpContext.uxp = require("uxp"); 
+            let storage = uxpContext.uxp.storage;
+            uxpContext.lfs = storage.localFileSystem;
+            uxpContext.sessionID = window.crypto.randomUUID().replace(/-/g,"");
+
+            try {
+                // @ts-ignore
+                uxpContext.indesign = require("indesign");
+                uxpContext.app = uxpContext.indesign.app;
+                if (uxpContext.app.name.indexOf("Server") >= 0) {
+                    uxpContext.uxpVariant = UXP_VARIANT_INDESIGN_SERVER_UXPSCRIPT;
+                    uxpContext.hasNetworkAccess = true;
+                }
+                else {
+                    uxpContext.uxpVariant = UXP_VARIANT_INDESIGN_UXPSCRIPT;
+                    uxpContext.hasNetworkAccess = true;
+                }
             }
+            catch (err) {
+                crdtuxp.logTrace(arguments, "throws " + err);
+            }
+
+            try {
+                // @ts-ignore
+                uxpContext.photoshop = require("photoshop");
+                uxpContext.app = uxpContext.photoshop.app;
+                let commandId = uxpContext.uxp?.script?.executionContext?.commandInfo?._manifestCommand?.commandId;
+                if (commandId == "scriptMainCommand") {
+                    uxpContext.uxpVariant = UXP_VARIANT_PHOTOSHOP_UXPSCRIPT;
+                    uxpContext.hasDirectFileAccess = true;
+                }
+                else {
+                    uxpContext.uxpVariant = UXP_VARIANT_PHOTOSHOP_UXP;
+                    uxpContext.hasNetworkAccess = true;
+                }
+            }
+            catch (err) { 
+                crdtuxp.logTrace(arguments, "throws " + err);
+            }
+
+            retVal = uxpContext;
         }
         catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
         }
-
-        try {
-            // @ts-ignore
-            uxpContext.photoshop = require("photoshop");
-            uxpContext.app = uxpContext.photoshop.app;
-            let commandId = uxpContext.uxp?.script?.executionContext?.commandInfo?._manifestCommand?.commandId;
-            if (commandId == "scriptMainCommand") {
-                uxpContext.uxpVariant = UXP_VARIANT_PHOTOSHOP_UXPSCRIPT;
-                uxpContext.hasDirectFileAccess = true;
-            }
-            else {
-                uxpContext.uxpVariant = UXP_VARIANT_PHOTOSHOP_UXP;
-                uxpContext.hasNetworkAccess = true;
-            }
-        }
-        catch (err) {    
-        }
-
-        retVal = uxpContext;
     }
     while (false);
 
@@ -3205,74 +3747,81 @@ function intPow(i, intPower) {
     let retVal;
 
     do {
-        if (Math.floor(intPower) != intPower) {
-            // Must be integer
-            retVal = undefined;
-            break;
-        }
 
-        if (intPower == 0) {
-            // Handle power of 0: 0^0 is not a number
-            if (i == 0) {
-                retVal = NaN;
-            }
-            else {
-                retVal = 1;
-            }
-            break;
-        }
+        try {
 
-        if (intPower > 0 && i == 0) {
-            retVal = 0;
-            break;
-        }
-
-        if (intPower < 0 && i == 0) {
-            retVal = NaN;
-            break;
-        }
-
-        if (i == 1) {
-            // Multiplying 1 with itself is 1
-            retVal = 1;
-            break;
-        }
-
-        if (intPower == 1) {
-            // i ^ 1 is i
-            retVal = i;
-            break;
-        }
-        
-        if (intPower < 0) {
-            // i^-x is 1/(i^x)
-            let intermediate = intPow(i, -intPower);
-            if (intermediate) {
-                retVal = 1 / intermediate;
-            }
-            break;
-        }
-
-        // Divide and conquer
-        const halfIntPower = intPower >> 1;
-        const otherHalfIntPower = intPower - halfIntPower;
-        const part1 = intPow(i, halfIntPower);
-        if (! part1) {
-            break;
-        }
-
-        let part2;
-        if (halfIntPower == otherHalfIntPower) {
-            part2 = part1;
-        }
-        else {
-            part2 =  intPow(i, otherHalfIntPower);
-            if (! part2) {
+            if (Math.floor(intPower) != intPower) {
+                // Must be integer
+                retVal = undefined;
                 break;
             }
-        }
 
-        retVal = part1 * part2;    
+            if (intPower == 0) {
+                // Handle power of 0: 0^0 is not a number
+                if (i == 0) {
+                    retVal = NaN;
+                }
+                else {
+                    retVal = 1;
+                }
+                break;
+            }
+
+            if (intPower > 0 && i == 0) {
+                retVal = 0;
+                break;
+            }
+
+            if (intPower < 0 && i == 0) {
+                retVal = NaN;
+                break;
+            }
+
+            if (i == 1) {
+                // Multiplying 1 with itself is 1
+                retVal = 1;
+                break;
+            }
+
+            if (intPower == 1) {
+                // i ^ 1 is i
+                retVal = i;
+                break;
+            }
+
+            if (intPower < 0) {
+                // i^-x is 1/(i^x)
+                let intermediate = intPow(i, -intPower);
+                if (intermediate) {
+                    retVal = 1 / intermediate;
+                }
+                break;
+            }
+
+            // Divide and conquer
+            const halfIntPower = intPower >> 1;
+            const otherHalfIntPower = intPower - halfIntPower;
+            const part1 = intPow(i, halfIntPower);
+            if (! part1) {
+                break;
+            }
+
+            let part2;
+            if (halfIntPower == otherHalfIntPower) {
+                part2 = part1;
+            }
+            else {
+                part2 =  intPow(i, otherHalfIntPower);
+                if (! part2) {
+                    break;
+                }
+            }
+
+            retVal = part1 * part2;
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -3296,6 +3845,7 @@ function leftPad(s, padChar, len) {
     let retVal = "";
 
     do {
+
         try {
 
             retVal = s + "";
@@ -3314,6 +3864,7 @@ function leftPad(s, padChar, len) {
             retVal = padding + retVal;
         }
         catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
         }
     }
     while (false);
@@ -3338,7 +3889,7 @@ function logEntry(reportingFunctionArguments) {
     if (LOG_ENTRY_EXIT) {
         retVal = logTrace(reportingFunctionArguments, "Entry");
     }
-    
+
     return retVal;
 }
 module.exports.logEntry = logEntry;
@@ -3364,7 +3915,7 @@ function logError(reportingFunctionArguments, message) {
         }
         retVal = logMessage(reportingFunctionArguments, LOG_LEVEL_ERROR, message);
     }
-    
+
     return retVal;
 }
 module.exports.logError = logError;
@@ -3385,7 +3936,7 @@ function logExit(reportingFunctionArguments) {
     if (LOG_ENTRY_EXIT) {
         retVal = logTrace(reportingFunctionArguments, "Exit");
     }
-    
+
     return retVal;
 }
 module.exports.logExit = logExit;
@@ -3404,15 +3955,11 @@ module.exports.logExit = logExit;
 function logMessage(reportingFunctionArguments, logLevel, message) {
 // coderstate: promisor
     let retVal;
-    
+
     let savedInLogger = IN_LOGGER;
 
     do {
         try {
-
-            if (IN_LOGGER) {
-                break;
-            }
 
             IN_LOGGER = true;
 
@@ -3435,7 +3982,7 @@ function logMessage(reportingFunctionArguments, logLevel, message) {
                 }
 
                 functionPrefix += functionName + ": ";
-                
+
             }
 
             let now = new Date();
@@ -3476,26 +4023,53 @@ function logMessage(reportingFunctionArguments, logLevel, message) {
 
             let logLine = platformPrefix + timePrefix + "- " + logLevelPrefix + ": " + functionPrefix + message;
 
-            let promises = [];
-            if (LOG_TO_CRDT) {
-                promises.push(evalTQL("logMessage(" + logLevel + "," + dQ(functionName) + "," + dQ(message) + ")"));
-            }
+            // Only wait for it to resolve if we have network access
+            // Otherwise logging slows down to a crawl because of the polling
+            // mechanism used to communicate with the daemon
 
             if (LOG_TO_UXPDEVTOOL_CONSOLE) {
                 console.log(logLine);
             }
 
+            if (savedInLogger) {
+                // Don't try to use async stuff when nested in logger
+                break;
+            }
+
+            let uxpContext = getUXPContext();
+            let waitForLogConfirmation;
+            if (uxpContext && uxpContext.hasNetworkAccess) {
+                waitForLogConfirmation = true;
+            }
+            let evalTQLOptions = { wait: waitForLogConfirmation };
+
+            let promises = [];
+            if (LOG_TO_CRDT) {
+                let logCRDTPromise = 
+                    evalTQL(
+                        "logMessage(" + 
+                            logLevel + "," + 
+                            dQ(functionName) + "," + 
+                            dQ(message) + 
+                        ")",
+                        evalTQLOptions
+                    );
+                if (waitForLogConfirmation) {
+                    promises.push(logCRDTPromise);
+                }
+            }
+
             if (LOG_TO_FILEPATH) {
-                let uxpContext = getUXPContext();
-                let appendPromise = fileAppendString(LOG_TO_FILEPATH, logLine + "\n");
-                // Only wait for it to resolve if we have network access
-                // Otherwise logging slows down to a crawl because of the polling
-                // mechanism used to communicate with the daemon
-                if (uxpContext.hasNetworkAccess) {
+                let appendPromise = 
+                    fileAppendString(
+                        LOG_TO_FILEPATH, 
+                        logLine + "\n",
+                        evalTQLOptions);
+                if (waitForLogConfirmation) {
                     promises.push(appendPromise);
                 }
             }
-            
+
             if (promises.length) {
                 retVal = Promise.all(promises);
             }
@@ -3507,7 +4081,7 @@ function logMessage(reportingFunctionArguments, logLevel, message) {
     while (false);
 
     IN_LOGGER = savedInLogger;
-    
+
     return retVal;
 }
 module.exports.logMessage = logMessage;
@@ -3525,7 +4099,7 @@ module.exports.logMessage = logMessage;
 function logNote(reportingFunctionArguments, message) {
 // coderstate: promisor
     let retVal;
-    
+
     if (LOG_LEVEL >= LOG_LEVEL_NOTE) {
         if (! message) {
             message = reportingFunctionArguments;
@@ -3533,7 +4107,7 @@ function logNote(reportingFunctionArguments, message) {
         }
         retVal = logMessage(reportingFunctionArguments, LOG_LEVEL_NOTE, message);
     }
-    
+
     return retVal;
 }
 module.exports.logNote = logNote;
@@ -3559,7 +4133,7 @@ function logTrace(reportingFunctionArguments, message) {
         }
         retVal = logMessage(reportingFunctionArguments, LOG_LEVEL_TRACE, message);
     }
-    
+
     return retVal;
 }
 module.exports.logTrace = logTrace;
@@ -3584,7 +4158,7 @@ function logWarning(reportingFunctionArguments, message) {
         }
         retVal = logMessage(reportingFunctionArguments, LOG_LEVEL_WARNING, message);
     }
-    
+
     return retVal;
 }
 module.exports.logWarning = logWarning;
@@ -3604,13 +4178,17 @@ function machineGUID() {
 
     do {
 
-        const responsePromise = evalTQL("machineGUID()");
-        if (! responsePromise) {
-            break;
-        }
+        try {
 
-        retVal = responsePromise.then(
-            (response) => {
+            const responsePromise = 
+                evalTQL(
+                    "machineGUID()"
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
 
@@ -3619,12 +4197,24 @@ function machineGUID() {
                 }
 
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
 
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.machineGUID = machineGUID;
@@ -3643,13 +4233,17 @@ function pluginInstaller() {
 
     do {
 
-        const responsePromise = evalTQL("pluginInstaller()");
-        if (! responsePromise) {
-            break;
-        }
+        try {
 
-        retVal = responsePromise.then(
-            (response) => {
+            const responsePromise = 
+                evalTQL(
+                    "pluginInstaller()"
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
 
@@ -3658,12 +4252,24 @@ function pluginInstaller() {
                 }
 
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
 
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.pluginInstaller = pluginInstaller;
@@ -3705,7 +4311,8 @@ function promisify(ftn) {
 
    return (...args) => {
 
-     return new Promise((resolveFtn, rejectFtn) => {
+     return new Promise(
+        function executorFtn(resolveFtn, rejectFtn) {
         // coderstate: executor
 
         args.push(
@@ -3736,7 +4343,8 @@ function promisifyWithContext(ftn, context) {
 
    return (...args) => {
 
-     return new Promise((resolveFtn, rejectFtn) => {
+     return new Promise(
+        function executorFtn(resolveFtn, rejectFtn) {
         // coderstate: executor
 
         args.push(
@@ -3786,13 +4394,21 @@ module.exports.pushLogLevel = pushLogLevel;
 function rawStringToByteArray(in_str) {
 
     let retVal = [];
-    for (let idx = 0; idx < in_str.length; idx++) {
-        let c = in_str.charCodeAt(idx);
-        if (c > 255) {
-            retVal = undefined;
-            break;
+
+    try {
+
+        for (let idx = 0; idx < in_str.length; idx++) {
+            let c = in_str.charCodeAt(idx);
+            if (c > 255) {
+                retVal = undefined;
+                break;
+            }
+            retVal.push(c);
         }
-        retVal.push(c);
+
+    }
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
     }
 
     return retVal;
@@ -3879,6 +4495,7 @@ function readINI(in_text) {
     let retVal = undefined;
 
     do {
+
         try {
 
             if (! in_text) {
@@ -4028,6 +4645,7 @@ function readINI(in_text) {
             }
         }
         catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
         }
     }
     while (false);
@@ -4071,6 +4689,7 @@ function rightPad(s, padChar, len) {
             retVal = retVal + padding;
         }
         catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
         }
     }
     while (false);
@@ -4094,25 +4713,29 @@ function S(stringCode, locale) {
 
     do {
 
-        if (! locale) {
-            locale = DEFAULT_LOCALE;
-        }
+        try {
+            if (! locale) {
+                locale = DEFAULT_LOCALE;
+            }
 
-        if (! (stringCode in LOCALE_STRINGS)) {
-            break;
-        }
+            if (! (stringCode in LOCALE_STRINGS)) {
+                break;
+            }
 
-        const localeStrings = LOCALE_STRINGS[stringCode];
-        if (locale in localeStrings) {
-            retVal = localeStrings[locale];        
-        }
-        else if (LOCALE_EN_US in localeStrings) {
-            retVal = localeStrings[LOCALE_EN_US];
-        }
+            const localeStrings = LOCALE_STRINGS[stringCode];
+            if (locale in localeStrings) {
+                retVal = localeStrings[locale]; 
+            }
+            else if (LOCALE_EN_US in localeStrings) {
+                retVal = localeStrings[LOCALE_EN_US];
+            }
 
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
-
 
     return retVal;
 }
@@ -4135,26 +4758,41 @@ function setIssuer(issuerGUID, issuerEmail) {
 
     do {
 
-        const responsePromise = evalTQL("setIssuer(" + dQ(issuerGUID) + "," + dQ(issuerEmail) + ")");
-        if (! responsePromise) {
-            break;
-        }
+        try {
+            const responsePromise = 
+                evalTQL(
+                    "setIssuer(" + dQ(issuerGUID) + "," + dQ(issuerEmail) + ")"
+                );
+            if (! responsePromise) {
+                break;
+            }
 
-        retVal = responsePromise.then(
-            (response) => {
-                // codestate: resolver                
+            function evalTQLResolveFtn(response) {
+                // codestate: resolver 
                 let retVal;
 
                 if (response && ! response.error) {
                     retVal = response.text == "true";
                 }
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
 
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.setIssuer = setIssuer;
@@ -4178,7 +4816,17 @@ module.exports.setIssuer = setIssuer;
  * `let script = "a=b(" + sQ(somedata) + ");";`
  */
 function sQ(s_or_ByteArr) {
-    return enQuote__(s_or_ByteArr, "'");
+
+    let retVal;
+
+    try {
+        retVal = enQuote__(s_or_ByteArr, "'");
+    }
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
+    }
+
+    return retVal;
 }
 module.exports.sQ = sQ;
 
@@ -4201,14 +4849,23 @@ function setPersistData(issuer, attribute, password, data) {
 
     do {
 
-        const responsePromise = evalTQL("setPersistData(" + dQ(issuer) + "," + dQ(attribute) + "," + dQ(password) + "," + dQ(data) + ") ? \"true\" : \"false\"");
-        if (! responsePromise) {
-            break;
-        }
+        try {
 
-        retVal = responsePromise.then(
-            (response) => {
-                // codestate: resolver                
+            const responsePromise = 
+                evalTQL(
+                    "setPersistData(" + 
+                        dQ(issuer) + "," + 
+                        dQ(attribute) + "," + 
+                        dQ(password) + "," + 
+                        dQ(data) + 
+                    ") ? \"true\" : \"false\""
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
+                // codestate: resolver 
                 let retVal;
 
                 if (response && ! response.error) {
@@ -4216,12 +4873,24 @@ function setPersistData(issuer, attribute, password, data) {
                 }
 
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
 
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.setPersistData = setPersistData;
@@ -4237,28 +4906,34 @@ module.exports.setPersistData = setPersistData;
  * @returns the file path without trailing separator
  */
 
-function stripTrailingSeparator(filePath, separator) {    
+function stripTrailingSeparator(filePath, separator) {
 
     let retVal = filePath;
 
     do {
 
-        if (! filePath) {
-            break;            
-        }
+        try {
 
-        const lastChar = filePath.substr(-1);        
-        if (! separator) {
-            if (lastChar == crdtuxp.path.SEPARATOR || lastChar == crdtuxp.path.OTHER_PLATFORM_SEPARATOR) {
-                retVal = filePath.substr(0, filePath.length - 1); 
+            if (! filePath) {
+                break; 
             }
-        }
-        else {
-            if (lastChar == separator) {
-                retVal = filePath.substr(0, filePath.length - 1);
-            }
-        }
 
+            const lastChar = filePath.substr(-1); 
+            if (! separator) {
+                if (lastChar == crdtuxp.path.SEPARATOR || lastChar == crdtuxp.path.OTHER_PLATFORM_SEPARATOR) {
+                    retVal = filePath.substr(0, filePath.length - 1); 
+                }
+            }
+            else {
+                if (lastChar == separator) {
+                    retVal = filePath.substr(0, filePath.length - 1);
+                }
+            }
+
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
 
@@ -4277,25 +4952,32 @@ function strToUTF8(in_s) {
 
     let retVal = undefined;
 
-    let idx = 0;
-    let len = in_s.length;
-    let cCode;
-    while (idx < len) {
-        cCode = in_s.charCodeAt(idx);
-        idx++;
-        let bytes = charCodeToUTF8__(cCode);
-        if (! bytes) {
-            retVal = undefined;
-            break;
-        }
-        else {
-            for (let byteIdx = 0; byteIdx < bytes.length; byteIdx++) {
-                if (! retVal) {
-                    retVal = [];
+    try {
+
+        let idx = 0;
+        let len = in_s.length;
+        let cCode;
+        while (idx < len) {
+            cCode = in_s.charCodeAt(idx);
+            idx++;
+            let bytes = charCodeToUTF8__(cCode);
+            if (! bytes) {
+                retVal = undefined;
+                break;
+            }
+            else {
+                for (let byteIdx = 0; byteIdx < bytes.length; byteIdx++) {
+                    if (! retVal) {
+                        retVal = [];
+                    }
+                    retVal.push(bytes[byteIdx]);
                 }
-                retVal.push(bytes[byteIdx]);
             }
         }
+
+    }
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
     }
 
     return retVal;
@@ -4319,14 +5001,18 @@ function sublicense(key, activation) {
 
     do {
 
-        const responsePromise = evalTQL("sublicense(" + dQ(key) + "," + dQ(activation) + ")");
-        if (! responsePromise) {
-            break;
-        }
+        try {
 
-        retVal = responsePromise.then(
-            (response) => {
-                // codestate: resolver                
+            const responsePromise = 
+                evalTQL(
+                    "sublicense(" + dQ(key) + "," + dQ(activation) + ")"
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
+                // codestate: resolver 
                 let retVal;
 
                 if (response && ! response.error) {
@@ -4334,12 +5020,25 @@ function sublicense(key, activation) {
                 }
 
                 return retVal;
-            }
-        );
+            };
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
 
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
-    
+
     return retVal;
 }
 module.exports.sublicense = sublicense;
@@ -4361,40 +5060,47 @@ function toHex(i, numDigits) {
     let retVal = "";
 
     do {
-        if (! numDigits) {
-            numDigits = 4;
-        }
 
-    if (i < 0) {
-        let upper = intPow(2, numDigits*4);
-        if (! upper) {
-            break;
-        }
-        
-        // Calculate 2's complement with numDigits if negative
-        i = (upper + i) & (upper - 1);
-    }
+        try {
 
-        // Calculate and cache a long enough string of zeroes
-        let zeroes = TO_HEX_BUNCH_OF_ZEROES;
-        if (! zeroes) {
-            zeroes = "0";
-        }
-        if (zeroes.length < numDigits) {
-            while (zeroes.length < numDigits) {
-                zeroes += zeroes;
+            if (! numDigits) {
+                numDigits = 4;
             }
-            TO_HEX_BUNCH_OF_ZEROES = zeroes;
-        }
 
-        retVal = i.toString(16).toLowerCase(); // Probably always lowercase by default, but just in case...
-        if (retVal.length > numDigits) {
-            retVal = retVal.substring(retVal.length - numDigits);
+            if (i < 0) {
+                let upper = intPow(2, numDigits*4);
+                if (! upper) {
+                    break;
+                }
+
+                // Calculate 2's complement with numDigits if negative
+                i = (upper + i) & (upper - 1);
+            }
+
+            // Calculate and cache a long enough string of zeroes
+            let zeroes = TO_HEX_BUNCH_OF_ZEROES;
+            if (! zeroes) {
+                zeroes = "0";
+            }
+            if (zeroes.length < numDigits) {
+                while (zeroes.length < numDigits) {
+                    zeroes += zeroes;
+                }
+                TO_HEX_BUNCH_OF_ZEROES = zeroes;
+            }
+
+            retVal = i.toString(16).toLowerCase(); // Probably always lowercase by default, but just in case...
+            if (retVal.length > numDigits) {
+                retVal = retVal.substring(retVal.length - numDigits);
+            }
+            else if (retVal.length < numDigits) {
+                retVal = zeroes.substring(0, numDigits - retVal.length) + retVal;
+            }
+
         }
-        else if (retVal.length < numDigits) {
-            retVal = zeroes.substring(0, numDigits - retVal.length) + retVal;
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
         }
-            
     }
     while (false);
 
@@ -4415,25 +5121,30 @@ function unitToInchFactor(in_unit) {
 
     let retVal = 1.0;
 
-    switch (in_unit) {
-        case crdtuxp.UNIT_NAME_CM:
-            retVal = 1.0/2.54;
-            break;
-        case crdtuxp.UNIT_NAME_MM:
-            retVal = 1.0/25.4;
-            break;
-        case crdtuxp.UNIT_NAME_CICERO:
-            retVal = 0.17762;
-            break;
-        case crdtuxp.UNIT_NAME_PICA:
-            retVal = 1.0/12.0;
-            break;
-        case crdtuxp.UNIT_NAME_PIXEL:
-            retVal = 1.0/72.0;
-            break;
-        case crdtuxp.UNIT_NAME_POINT:
-            retVal = 1.0/72.0;
-            break;
+    try {
+        switch (in_unit) {
+            case crdtuxp.UNIT_NAME_CM:
+                retVal = 1.0/2.54;
+                break;
+            case crdtuxp.UNIT_NAME_MM:
+                retVal = 1.0/25.4;
+                break;
+            case crdtuxp.UNIT_NAME_CICERO:
+                retVal = 0.17762;
+                break;
+            case crdtuxp.UNIT_NAME_PICA:
+                retVal = 1.0/12.0;
+                break;
+            case crdtuxp.UNIT_NAME_PIXEL:
+                retVal = 1.0/72.0;
+                break;
+            case crdtuxp.UNIT_NAME_POINT:
+                retVal = 1.0/72.0;
+                break;
+        }
+    }
+    catch (err) {
+        crdtuxp.logError(arguments, "throws " + err);
     }
 
     return retVal;
@@ -4459,57 +5170,65 @@ function waitForFile(
     let retVal;
 
     do {
-    
-        var uxpContext = getUXPContext();
-        if (! uxpContext.hasDirectFileAccess) {
-            break;
-        }
+        try {
 
-        let endTime = (new Date()).getTime() + timeout;
+            var uxpContext = getUXPContext();
 
-         const checkFile = () => {
-             // coderstate: promisor
+            if (! uxpContext.hasDirectFileAccess) {
+                crdtuxp.logError(arguments, "need direct file access");
+                break;
+            }
 
-            const checkFileExecutor = (resolveFtn, rejectFtn) => {
-                // coderstate: executor
-                const now = Date.now();
+            let endTime = (new Date()).getTime() + timeout;
 
-                if (endTime < now) {
-                    resolveFtn(undefined);
-                } else {
-                    try {
-                        // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
-                        const stats = uxpContext.fs.lstatSync(filePath);
-                        if (stats) {
-                            resolveFtn(true);
-                        } else {
+             function checkFile() {
+                 // coderstate: promisor
+
+                function checkFileExecutor(resolveFtn, rejectFtn) {
+                    // coderstate: executor
+                    const now = Date.now();
+
+                    if (endTime < now) {
+                        resolveFtn(undefined);
+                    } else {
+                        try {
+                            // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
+                            const stats = uxpContext.fs.lstatSync(filePath);
+                            if (stats) {
+                                resolveFtn(true);
+                            } else {
+                                delayFunction(interval, checkFile).
+                                    then(
+                                        resolveFtn,
+                                        rejectFtn
+                                    );
+                            }
+                        } 
+                        catch (err) {
+                            if (err != -2) {
+                                crdtuxp.logNote(arguments, "throws " + err);
+                            }
                             delayFunction(interval, checkFile).
                                 then(
-                                    resolveFtn
-                                ).catch(
+                                    resolveFtn,
                                     rejectFtn
                                 );
                         }
-                    } 
-                    catch (err) {
-                        delayFunction(interval, checkFile).
-                            then(
-                                resolveFtn
-                            ).catch(
-                                rejectFtn
-                            );
                     }
-                }
+                };
+
+                return new Promise(checkFileExecutor);
             };
-            
-            return new Promise(checkFileExecutor);
-        };
-        
-        retVal = checkFile();
+
+            retVal = checkFile();
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
     }
     while (false);
-    
-    return retVal;  
-    
+
+    return retVal;
+
 }
 module.exports.waitForFile = waitForFile;
