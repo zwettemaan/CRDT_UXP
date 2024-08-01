@@ -287,11 +287,6 @@ const REGEXP_CICEROS                           = /^([\d]+)c(([\d]*)(\.([\d]+)?)?
 const REGEXP_CICEROS_REPLACE                   = "$1";
 const REGEXP_CICEROS_POINTS_REPLACE            = "$2";
 
-const RESOLVED_UNDEFINED_PROMISE               = Promise.resolve(undefined);
-const RESOLVED_TRUE_PROMISE                    = Promise.resolve(true);
-const RESOLVED_FALSE_PROMISE                   = Promise.resolve(false);
-const RESOLVED_ERROR_PROMISE                   = Promise.resolve({ error: true });
-
 const LOCALE_EN_US                             = "en_US";
 
 const DEFAULT_LOCALE                           = LOCALE_EN_US;
@@ -381,7 +376,7 @@ module.exports.path.addTrailingSeparator = addTrailingSeparator;
 
 function alert(message) {
 // coderstate: promisor
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+    let retVal;
     
     do {
 
@@ -394,7 +389,7 @@ function alert(message) {
             crdtuxp.app.doScript(
                 "alert(" + crdtuxp.dQ(message) + ")", 
                 uxpContext.indesign.ScriptLanguage.JAVASCRIPT);
-            retVal = RESOLVED_TRUE_PROMISE;
+            retVal = true;
             break;
         }
 
@@ -410,7 +405,7 @@ function alert(message) {
             dlg.canCancel = false;
             dlg.show();
             dlg.destroy(); 
-            retVal = RESOLVED_TRUE_PROMISE;
+            retVal = true;
             break;
         }
         
@@ -453,11 +448,9 @@ function alert(message) {
                 );
             }
             
-            const resolver = () => {
+            const resolveFtn = () => {
+                // coderstate: resolver
                 return true;
-            };
-            const rejector = (error) => {
-                return undefined;
             };
             
             retVal = 
@@ -467,8 +460,7 @@ function alert(message) {
                         "commandName": "alert message"
                     }
                 ).then(
-                    resolver,
-                    rejector);
+                    resolveFtn);
                         
             break;
         }
@@ -497,7 +489,7 @@ module.exports.alert = alert;
  */
 function base64decode(base64Str, options) {
 // coderstate: promisor
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+    let retVal;
 
     do {
 
@@ -509,10 +501,10 @@ function base64decode(base64Str, options) {
             let rawString = window.atob(base64Str);
             let byteArray = rawStringToByteArray(rawString);
             if (isBinary) {
-                retVal = Promise.resolve(byteArray);
+                retVal = byteArray;
             }
             else {
-                retVal = Promise.resolve(binaryUTF8ToStr(byteArray));
+                retVal = binaryUTF8ToStr(byteArray);
             }
             break;
         }
@@ -523,11 +515,8 @@ function base64decode(base64Str, options) {
             break;
         }
 
-        const rejector = (error) => {
-            return undefined;
-        };
-        
-        const resolver = (response) => {
+        const resolveFtn = (response) => {
+            // coderstate: resolver
             let retVal;
             if (response && ! response.error) {
                 if (isBinary) {
@@ -541,8 +530,7 @@ function base64decode(base64Str, options) {
         };
         
         retVal = responsePromise.then(
-            resolver,
-            rejector);
+            resolveFtn);
 
     }
     while (false);
@@ -568,7 +556,7 @@ module.exports.base64decode = base64decode;
  */
 function base64encode(s_or_ByteArr) {
 // coderstate: promisor
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+    let retVal;
 
     do {
 
@@ -585,7 +573,7 @@ function base64encode(s_or_ByteArr) {
             
             let rawString = byteArrayToRawString(byteArray);            
             
-            retVal = Promise.resolve(window.btoa(rawString));
+            retVal = window.btoa(rawString);
             
             break;
         }
@@ -595,11 +583,8 @@ function base64encode(s_or_ByteArr) {
             break;
         }
 
-        const rejector = (error) => {
-            return undefined;
-        };
-        
-        const resolver = (response) => {
+        const resolveFtn = (response) => {
+            // coderstate: resolver
             let retVal;
             if (response && ! response.error) {
                 retVal = response.text;
@@ -608,8 +593,7 @@ function base64encode(s_or_ByteArr) {
         };
 
         retVal = responsePromise.then(
-            resolver,
-            rejector);
+            resolveFtn);
 
     }
     while (false);
@@ -845,7 +829,7 @@ module.exports.configLogger = configLogger;
 
 function decrypt(s_or_ByteArr, aesKey, aesIV) {
 // coderstate: promisor
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+    let retVal;
 
     do {
 
@@ -864,11 +848,8 @@ function decrypt(s_or_ByteArr, aesKey, aesIV) {
             break;
         }
 
-        const rejector = (error) => {
-            return undefined;
-        };
-        
-        const resolver = (response) => {
+        const resolveFtn = (response) => {
+            // coderstate: resolver
             let retVal;
             if (response && ! response.error) {
                 retVal = response.text;
@@ -877,8 +858,7 @@ function decrypt(s_or_ByteArr, aesKey, aesIV) {
         };
 
         retVal = responsePromise.then(
-            resolver,
-            rejector);
+            resolveFtn);
 
     }
     while (false);
@@ -900,7 +880,7 @@ module.exports.decrypt = decrypt;
 function delayFunction(delayTimeMilliseconds, ftn, ...args) {
 // coderstate: promisor
 
-    const executor = (resolve, reject) => {
+    const executor = (resolveFtn, rejectFtn) => {
         // coderstate: executor
         setTimeout(
             () => {
@@ -908,13 +888,18 @@ function delayFunction(delayTimeMilliseconds, ftn, ...args) {
                 try {
                     let result = ftn(...args);
                     if (result instanceof Promise) {
-                        result.then(resolve).catch(reject);
+                        result.then(
+                            resolveFtn
+                        ).catch(
+                            rejectFtn
+                        );
                     }
                     else {
-                        resolve(result);
+                        resolveFtn(result);
                     }
-                } catch (error) {
-                    reject(error);
+                } 
+                catch (err) {
+                    rejectFtn(err);
                 }                    
             }, 
             delayTimeMilliseconds
@@ -1086,7 +1071,7 @@ module.exports.deQuote = deQuote;
 
 function dirCreate(filePath) {
 // coderstate: promisor
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+    let retVal;
 
     do {
 
@@ -1100,7 +1085,7 @@ function dirCreate(filePath) {
             try {
                 const stats = uxpContext.fs.lstatSync(parentPath);
                 if (! stats || ! stats.isDirectory()) {
-                    retVal = RESOLVED_FALSE_PROMISE;
+                    retVal = false;
                     break;
                 }                
             }
@@ -1111,7 +1096,7 @@ function dirCreate(filePath) {
             try {
                 const stats = uxpContext.fs.lstatSync(filePath);
                 if (stats) {
-                    retVal = RESOLVED_FALSE_PROMISE;
+                    retVal = false;
                     break;
                 }
             }
@@ -1122,12 +1107,15 @@ function dirCreate(filePath) {
                 // If no callback given, returns a Promise
                 retVal = uxpContext.fs.mkdir(filePath).then(
                     () => {
+                        // coderstate: resolver
                         return true;
-                    },
+                    }
+                ).catch(
                     (reason) => {
+                        // coderstate: resolver
                         return false;
                     }
-                )
+                );
             }
             catch (err) {
             }
@@ -1141,11 +1129,8 @@ function dirCreate(filePath) {
             break;
         }
 
-        const rejector = (error) => {
-            return undefined;
-        };
-        
-        const resolver = (response) => {
+        const resolveFtn = (response) => {
+            // coderstate: resolver
             let retVal;
             if (response && ! response.error) {
                 retVal = response.text == "true";
@@ -1154,8 +1139,7 @@ function dirCreate(filePath) {
         };
 
         retVal = responsePromise.then(
-            resolver,
-            rejector);
+            resolveFtn);
 
     }
     while (false);
@@ -1181,7 +1165,7 @@ module.exports.dirCreate = dirCreate;
 
 function dirDelete(filePath, recurse) {
 // coderstate: promisor
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+    let retVal;
 
     do {
 
@@ -1194,12 +1178,12 @@ function dirDelete(filePath, recurse) {
             try {
                 const stats = uxpContext.fs.lstatSync(filePath);
                 if (! stats || ! stats.isDirectory()) {
-                    retVal = RESOLVED_FALSE_PROMISE;
+                    retVal = false;
                     break;
                 }
             }
             catch (err) {
-                retVal = RESOLVED_FALSE_PROMISE;
+                retVal = false;
                 break;
             }
 
@@ -1208,14 +1192,14 @@ function dirDelete(filePath, recurse) {
                 entries = uxpContext.fs.readdirSync(filePath);
             }
             catch (err) {
-                retVal = RESOLVED_FALSE_PROMISE;
+                retVal = false;
                 break;
             }
 
             if (! recurse) {
             
                 if (entries.length > 0) {
-                    retVal = RESOLVED_FALSE_PROMISE;
+                    retVal = false;
                     break;
                 }
                 
@@ -1223,15 +1207,18 @@ function dirDelete(filePath, recurse) {
                     // If no callback given, returns a Promise
                     retVal = uxpContext.fs.rmdir(filePath).then(
                         () => {
+                            // coderstate: resolver
                             return true;
-                        },
+                        }
+                    ).catch(
                         (reason) => {
+                            // coderstate: resolver
                             return false;
-                        }                    
+                        }
                     );
                 }
                 catch (err) {
-                    retVal = RESOLVED_FALSE_PROMISE;
+                    retVal = false;
                 }
                 
                 break;
@@ -1251,22 +1238,28 @@ function dirDelete(filePath, recurse) {
                     if (stats.isDirectory()) {
                         deletePromise = dirDelete(entryPath, true).then(
                             () => {
+                                // coderstate: resolver
                                 return true;
-                            },
+                            }
+                        ).catch(
                             (reason) => {
+                                // coderstate: resolver
                                 return false;
-                            }                    
+                            }
                         );
                     }
                     else {
                         // If no callback given, returns a Promise
                         deletePromise =  uxpContext.fs.unlink(entryPath).then(
                             () => {
+                                // coderstate: resolver
                                 return true;
-                            },
+                            }
+                        ).catch(
                             (reason) => {
+                                // coderstate: resolver
                                 return false;
-                            }                    
+                            }
                         );
                     }
                     promises.push(deletePromise);
@@ -1278,27 +1271,33 @@ function dirDelete(filePath, recurse) {
             }
 
             if (! promises) {
-                retVal = RESOLVED_FALSE_PROMISE;
+                retVal = false;
             }
             
             retVal = Promise.allSettled(promises).then(
                 () => {
+                    // coderstate: resolver
                     try {
                         // If no callback given, returns a Promise
                         retVal = uxpContext.fs.rmdir(filePath).then(
                             () => {
+                                // coderstate: resolver
                                 return true;
-                            },
+                            }
+                        ).catch(
                             (reason) => {
+                                // coderstate: resolver
                                 return false;
-                            }                    
+                            }
                         );
                     }
                     catch (err) {
-                        retVal = RESOLVED_FALSE_PROMISE;
+                        retVal = false;
                     }
-                },
+                }
+            ).catch(
                 (reason) => {
+                    // coderstate: resolver
                     return false;
                 }
             );
@@ -1318,11 +1317,8 @@ function dirDelete(filePath, recurse) {
             break;
         }
 
-        const rejector = (error) => {
-            return undefined;
-        };
-        
-        const resolver = (response) => {
+        const resolveFtn = (response) => {
+            // coderstate: resolver
             let retVal;
             if (response && ! response.error) {
                 retVal = response.text == "true";
@@ -1331,8 +1327,13 @@ function dirDelete(filePath, recurse) {
         };
 
         retVal = responsePromise.then(
-            resolver,
-            rejector);
+            resolveFtn
+        ).catch(
+            (reason) => {
+                // coderstate: resolver
+                return false;
+            }
+        );
 
     }
     while (false);
@@ -1357,7 +1358,7 @@ module.exports.dirDelete = dirDelete;
 
 function dirExists(dirPath) {
 // coderstate: promisor
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+    let retVal;
 
     do {
 
@@ -1367,16 +1368,16 @@ function dirExists(dirPath) {
             try {
                 const stats = uxpContext.fs.lstatSync(dirPath);
                 if (! stats || ! stats.isDirectory()) {
-                    retVal = RESOLVED_FALSE_PROMISE;
+                    retVal = false;
                     break;
                 }
             }
             catch (err) {
-                retVal = RESOLVED_FALSE_PROMISE;
+                retVal = false;
                 break;
             }
             
-            retVal = RESOLVED_TRUE_PROMISE;
+            retVal = true;
             break;
         }
 
@@ -1386,11 +1387,8 @@ function dirExists(dirPath) {
             break;
         }
 
-        const rejector = (error) => {
-            return undefined;
-        };
-        
-        const resolver = (response) => {
+        const resolveFtn = (response) => {
+            // coderstate: resolver
             let retVal;
             if (response && ! response.error) {
                 retVal = response.text == "true";
@@ -1399,8 +1397,13 @@ function dirExists(dirPath) {
         };
 
         retVal = responsePromise.then(
-            resolver,
-            rejector);
+            resolveFtn
+        ).catch(
+            (reason) => {
+                // coderstate: resolver
+                return undefined;
+            }
+        );
 
     }
     while (false);
@@ -1470,7 +1473,7 @@ module.exports.path.dirName = dirName;
 
 function dirScan(filePath) {
 // coderstate: promisor
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+    let retVal;
 
     do {
 
@@ -1484,10 +1487,10 @@ function dirScan(filePath) {
                 entries = uxpContext.fs.readdirSync(filePath);
             }
             catch (err) {
-                retVal = RESOLVED_FALSE_PROMISE;
+                retVal = false;
                 break;
             }
-            retVal = Promise.resolve(entries);
+            retVal = entries;
             break;
         }
 
@@ -1497,12 +1500,8 @@ function dirScan(filePath) {
             break;
         }
 
-        const rejector = (error) => {
-            return undefined;
-        };
-        
-        const resolver = (response) => {
-
+        const resolveFtn = (response) => {
+            // coderstate: resolver
             let retVal = undefined;
 
             do {
@@ -1533,8 +1532,13 @@ function dirScan(filePath) {
         };
 
         retVal = responsePromise.then(
-            resolver,
-            rejector);
+            resolveFtn
+        ).catch(
+            (reason) => {
+                // coderstate: resolver
+                return undefined;
+            }
+        );
 
     }
     while (false);
@@ -1585,7 +1589,7 @@ module.exports.dQ = dQ;
 
 function encrypt(s_or_ByteArr, aesKey, aesIV) {
 // coderstate: promisor
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+    let retVal;
 
     do {
 
@@ -1603,11 +1607,8 @@ function encrypt(s_or_ByteArr, aesKey, aesIV) {
             break;
         }
 
-        const rejector = (error) => {
-            return undefined;
-        };
-        
-        const resolver = (response) => {
+        const resolveFtn = (response) => {
+            // coderstate: resolver
             let retVal;
             if (response && ! response.error) {
                 retVal = response.text;
@@ -1616,8 +1617,13 @@ function encrypt(s_or_ByteArr, aesKey, aesIV) {
         };
         
         retVal = responsePromise.then(
-            resolver,
-            rejector);
+            resolveFtn
+        ).catch(
+            (reason) => {
+                // coderstate: resolver
+                return undefined;
+            }
+        );
 
     }
     while (false);
@@ -1701,7 +1707,7 @@ function enQuote__(s_or_ByteArr, quoteChar) {
  */
 function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
 // coderstate: promisor
-    let retVal = RESOLVED_ERROR_PROMISE;
+    let retVal = { error: true };
 
     do {
 
@@ -1760,12 +1766,8 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
                 "." + 
                 FILE_NAME_EXTENSION_JSON;
                 
-            const cannotReadResponseRejector = (error) => {
-                return undefined;
-            };
-
             const handleResponseData = (replyByteArray) => {
-
+                // coderstate: function
                 let retVal = undefined;
                 
                 let responseText;
@@ -1802,15 +1804,14 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
                 }
         
                 retVal = {
-                    error: false,
                     text: responseTextUnwrapped
                 };
                 
                 return retVal;
             }
             
-            const responseWaitResolver = (responseFileState) => {
-
+            const responseWaitResolveFtn = (responseFileState) => {
+                // coderstate: resolver
                 let retVal = undefined;
 
                 do {
@@ -1823,12 +1824,15 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
                         let replyByteArray = new Uint8Array(uxpContext.fs.readFileSync(responseFilePath));
                         retVal = uxpContext.fs.unlink(responseFilePath).then(
                             () => {                                
-                                return handleResponseData(replyByteArray);
-                            },
-                            (error) => {
+                                // coderstate: resolver
                                 return handleResponseData(replyByteArray);
                             }
-                        ); 
+                        ).catch(
+                            (reason) => {
+                                // coderstate: resolver
+                                return handleResponseData(replyByteArray);
+                            }
+                        );
                     }
                     catch (err) {
                     }
@@ -1846,8 +1850,13 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
             }
 
             retVal = crdtuxp.waitForFile(responseFilePath).then(
-                responseWaitResolver,
-                cannotReadResponseRejector);
+                responseWaitResolveFtn
+            ).catch(
+                (reason) => {
+                    // coderstate: resolver
+                    return undefined;
+                }
+            );
 
             break;
         }
@@ -1871,9 +1880,11 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 const responseTextPromise = response.text();
                 return responseTextPromise.then(
-                    responseText => {
+                    (responseText) => {
+                        // coderstate: resolver
                         let responseTextUnwrapped;
                         if (resultIsRawBinary) {
                             responseTextUnwrapped = responseText;
@@ -1883,18 +1894,21 @@ function evalTQL(tqlScript, tqlScopeName, resultIsRawBinary) {
                         }
                 
                         retVal = {
-                            error: false,
                             text: responseTextUnwrapped
                         };
                         return retVal;
-                    },
-                    (error) => {
-                        return "CRDT daemon is probably not running. Use PluginInstaller to verify CRDT is activated, then use the Preferences screen to start it";
+                    }
+                ).catch(
+                    (reason) => {
+                        // coderstate: resolver
+                        return { error: reason };
                     }
                 );
-            },
-            (error) => {
-                return "CRDT daemon is probably not running. Use PluginInstaller to verify CRDT is activated, then use the Preferences screen to start it";
+            }
+        ).catch(
+            (reason) => {
+                // coderstate: resolver
+                return { error: reason };
             }
         );
         
@@ -1919,7 +1933,7 @@ module.exports.evalTQL = evalTQL;
 
 function fileAppendString(fileName, in_appendStr) {
 // coderstate: promisor
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+    let retVal;
 
     do {
 
@@ -1945,6 +1959,7 @@ function fileAppendString(fileName, in_appendStr) {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -1971,8 +1986,8 @@ module.exports.fileAppendString = fileAppendString;
  */
 
 function fileClose(fileHandle) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -1983,7 +1998,7 @@ function fileClose(fileHandle) {
                 break;
             }
             delete uxpContext.fileInfoByFileHandle[fileHandle];
-            retVal = RESOLVED_TRUE_PROMISE;
+            retVal = true;
             break;
         }
 
@@ -1994,6 +2009,7 @@ function fileClose(fileHandle) {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -2021,8 +2037,8 @@ module.exports.fileClose = fileClose;
  */
 
 function fileDelete(filePath) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -2033,7 +2049,7 @@ function fileDelete(filePath) {
             try {
                 const stats = uxpContext.fs.lstatSync(filePath);
                 if (! stats || ! stats.isFile()) {
-                    retVal = RESOLVED_FALSE_PROMISE;
+                    retVal = false;
                     break;
                 }                
             }
@@ -2044,12 +2060,16 @@ function fileDelete(filePath) {
             try {
                 // If no callback given, returns a Promise
                 retVal = uxpContext.fs.unlink(filePath).then(
-                    (resolve) => {
+                    () => {
+                        // coderstate: resolver
                         return true;
-                    },
-                    (error) => {
+                    }
+                ).catch(
+                    (reason) => {
+                        // coderstate: resolver
                         return false;
-                    });
+                    }
+                );
             }
             catch (err) {
             }
@@ -2063,6 +2083,7 @@ function fileDelete(filePath) {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -2092,8 +2113,8 @@ module.exports.fileDelete = fileDelete;
  */
 
 function fileExists(filePath) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -2104,7 +2125,7 @@ function fileExists(filePath) {
             try {
                 const stats = uxpContext.fs.lstatSync(filePath);
                 if (! stats || ! stats.isFile()) {
-                    retVal = RESOLVED_FALSE_PROMISE;
+                    retVal = false;
                     break;
                 }                
             }
@@ -2112,7 +2133,7 @@ function fileExists(filePath) {
                 break;
             }
 
-            retVal =  RESOLVED_TRUE_PROMISE;
+            retVal = true;
             break;
         }
     
@@ -2123,6 +2144,7 @@ function fileExists(filePath) {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
                 if (response && ! response.error) {
                     retVal = response.text == "true";
@@ -2178,8 +2200,8 @@ module.exports.path.fileNameExtension = fileNameExtension;
  */
 
 function fileOpen(filePath, mode) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -2212,7 +2234,7 @@ function fileOpen(filePath, mode) {
                     mode: mode
                 }
                 uxpContext.fileInfoByFileHandle[uniqueFileHandleID] = fileInfo;
-                retVal = Promise.resolve(uniqueFileHandleID);
+                retVal = uniqueFileHandleID;
             
             }     
             else if (mode == 'r') {
@@ -2234,7 +2256,7 @@ function fileOpen(filePath, mode) {
                     mode: mode
                 }
                 uxpContext.fileInfoByFileHandle[uniqueFileHandleID] = fileInfo;
-                retVal = Promise.resolve(uniqueFileHandleID);
+                retVal = uniqueFileHandleID;
             }
             break;
         }
@@ -2252,7 +2274,7 @@ function fileOpen(filePath, mode) {
 
         retVal = responsePromise.then(
             (response) => {
-
+                // coderstate: resolver
                 let retVal;
 
                 do {
@@ -2297,8 +2319,8 @@ module.exports.fileOpen = fileOpen;
  */
 
 function fileRead(fileHandle, isBinary) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
     
@@ -2322,7 +2344,7 @@ function fileRead(fileHandle, isBinary) {
             try {
                 replyByteArray = new Uint8Array(uxpContext.fs.readFileSync(fileInfo.filePath));
                 if (isBinary) {
-                    retVal = Promise.resolve(replyByteArray);
+                    retVal = replyByteArray;
                     break;
                 }
             }
@@ -2330,7 +2352,7 @@ function fileRead(fileHandle, isBinary) {
                 break;
             }
             
-            retVal = Promise.resolve(binaryUTF8ToStr(replyByteArray));
+            retVal = binaryUTF8ToStr(replyByteArray);
             break;
         }
             
@@ -2342,7 +2364,7 @@ function fileRead(fileHandle, isBinary) {
         retVal = responsePromise.then(
             
             (response) => {
-
+                // coderstate: resolver
                 let retVal;
 
                 do {
@@ -2392,8 +2414,8 @@ module.exports.fileRead = fileRead;
  */
 
 function fileWrite(fileHandle, s_or_ByteArr) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -2429,7 +2451,7 @@ function fileWrite(fileHandle, s_or_ByteArr) {
                 break;
             }
 
-            retVal = Promise.resolve(lengthWritten == byteArray.length);
+            retVal = lengthWritten == byteArray.length;
 
             break;
         }
@@ -2441,10 +2463,13 @@ function fileWrite(fileHandle, s_or_ByteArr) {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
+
                 if (response && ! response.error) {
                     retVal = response.text == "true";
                 }
+
                 return retVal;
             }
         );
@@ -2519,8 +2544,8 @@ module.exports.getBooleanFromINI = getBooleanFromINI;
  * The decrypted developer data is embedded as a string, so might be two levels of JSON-encoding to be dealt with to get to any JSON-encoded decrypted data
  */
 function getCapability(issuer, capabilityCode, encryptionKey) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -2531,10 +2556,13 @@ function getCapability(issuer, capabilityCode, encryptionKey) {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
+
                 if (response && ! response.error) {
                     retVal = response.text;
                 }
+
                 return retVal;
             }
         );
@@ -2557,8 +2585,8 @@ module.exports.getCapability = getCapability;
  * @returns {Promise<Number|undefined>} - 0, 1 or 2. -1 means: error
  */
 function getCreativeDeveloperToolsLevel() {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -2569,10 +2597,13 @@ function getCreativeDeveloperToolsLevel() {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
+
                 if (response && ! response.error) {
                     retVal = parseInt(response.text, 10);
                 }
+
                 return retVal;
             }
         );
@@ -2604,45 +2635,45 @@ module.exports.getCreativeDeveloperToolsLevel = getCreativeDeveloperToolsLevel;
  * @returns {Promise<string|undefined>} file path of dir or undefined. Directory paths include a trailing slash or backslash.
  */
 function getDir(dirTag) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
         if (crdtuxp.context) {
             
             if (dirTag == module.exports.DESKTOP_DIR && crdtuxp.context.PATH_DESKTOP) {
-                retVal = Promise.resolve(crdtuxp.context.PATH_DESKTOP);
+                retVal = crdtuxp.context.PATH_DESKTOP;
                 break;
             }
 
             if (dirTag == module.exports.DOCUMENTS_DIR && crdtuxp.context.PATH_DOCUMENTS) {
-                retVal = Promise.resolve(crdtuxp.context.PATH_DOCUMENTS);
+                retVal = crdtuxp.context.PATH_DOCUMENTS;
                 break;
             }
 
             if (dirTag == module.exports.HOME_DIR && crdtuxp.context.PATH_HOME) {
-                retVal = Promise.resolve(crdtuxp.context.PATH_HOME);
+                retVal = crdtuxp.context.PATH_HOME;
                 break;
             }
 
             if (dirTag == module.exports.LOG_DIR && crdtuxp.context.PATH_LOG) {
-                retVal = Promise.resolve(crdtuxp.context.PATH_LOG);
+                retVal = crdtuxp.context.PATH_LOG;
                 break;
             }
 
             if (dirTag == module.exports.SYSTEMDATA_DIR && crdtuxp.context.PATH_SYSTEMDATA) {
-                retVal = Promise.resolve(crdtuxp.context.PATH_SYSTEMDATA);
+                retVal = crdtuxp.context.PATH_SYSTEMDATA;
                 break;
             }
 
             if (dirTag == module.exports.TMP_DIR && crdtuxp.context.PATH_TMP) {
-                retVal = Promise.resolve(crdtuxp.context.PATH_TMP);
+                retVal = crdtuxp.context.PATH_TMP;
                 break;
             }
 
             if (dirTag == module.exports.USERDATA_DIR && crdtuxp.context.PATH_USERDATA) {
-                retVal = Promise.resolve(crdtuxp.context.PATH_USERDATA);
+                retVal = crdtuxp.context.PATH_USERDATA;
                 break;
             }
         }
@@ -2654,12 +2685,15 @@ function getDir(dirTag) {
 
         retVal = sysInfoPromise.then(
             sysInfo => {
+                // coderstate: resolver
                 let retVal;
+
                 if (sysInfo && ! sysInfo.error) {
                     if (dirTag in sysInfo) {
                         retVal = sysInfo[dirTag];
                     }
                 }
+
                 return retVal;
             }
         );
@@ -2682,8 +2716,8 @@ module.exports.getDir = getDir;
  * @returns {Promise<string>} environment variable value
  */
 function getEnvironment(envVarName) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -2694,10 +2728,13 @@ function getEnvironment(envVarName) {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
+
                 if (response && ! response.error) {
                     retVal = response.text;
                 }
+
                 return retVal;
             }
         );
@@ -2902,8 +2939,8 @@ module.exports.getIntValuesFromINI = getIntValuesFromINI;
  * @returns {Promise<any>} whatever persistent data is stored for the given attribute
  */
 function getPersistData(issuer, attribute, password) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -2914,10 +2951,13 @@ function getPersistData(issuer, attribute, password) {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
+
                 if (response && ! response.error) {
                     retVal = response.text;
                 }
+
                 return retVal;
             }
         );
@@ -2936,8 +2976,8 @@ module.exports.getPersistData = getPersistData;
  * @returns {Promise<string>} file path
 */
 function getPluginInstallerPath() {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -2948,10 +2988,13 @@ function getPluginInstallerPath() {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
+
                 if (response && ! response.error) {
                     retVal = response.text;
                 }
+
                 return retVal;
             }
         );
@@ -2972,13 +3015,13 @@ module.exports.getPluginInstallerPath = getPluginInstallerPath;
  */
 
 function getSysInfo__() {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
         if (SYS_INFO) {
-            retVal = Promise.resolve(SYS_INFO);
+            retVal = SYS_INFO;
             break;
         }
 
@@ -2989,7 +3032,9 @@ function getSysInfo__() {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
+
                 do {
                     if (! response || response.error) {
                         break;
@@ -3287,8 +3332,8 @@ module.exports.leftPad = leftPad;
  */
 
 function logEntry(reportingFunctionArguments) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     if (LOG_ENTRY_EXIT) {
         retVal = logTrace(reportingFunctionArguments, "Entry");
@@ -3309,8 +3354,8 @@ module.exports.logEntry = logEntry;
  * @returns {Promise} - a promise that can be used to await the log call completion
  */
 function logError(reportingFunctionArguments, message) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     if (LOG_LEVEL >= LOG_LEVEL_ERROR) {
         if (! message) {
@@ -3334,8 +3379,8 @@ module.exports.logError = logError;
  */
 
 function logExit(reportingFunctionArguments) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     if (LOG_ENTRY_EXIT) {
         retVal = logTrace(reportingFunctionArguments, "Exit");
@@ -3357,8 +3402,8 @@ module.exports.logExit = logExit;
  */
 
 function logMessage(reportingFunctionArguments, logLevel, message) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
     
     let savedInLogger = IN_LOGGER;
 
@@ -3478,8 +3523,8 @@ module.exports.logMessage = logMessage;
  * @returns {Promise} - a promise that can be used to await the log call completion
  */
 function logNote(reportingFunctionArguments, message) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
     
     if (LOG_LEVEL >= LOG_LEVEL_NOTE) {
         if (! message) {
@@ -3504,8 +3549,8 @@ module.exports.logNote = logNote;
  * @returns {Promise} - a promise that can be used to await the log call completion
  */
 function logTrace(reportingFunctionArguments, message) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     if (LOG_LEVEL >= LOG_LEVEL_TRACE) {
         if (! message) {
@@ -3529,8 +3574,8 @@ module.exports.logTrace = logTrace;
  * @param {any} message - the warning message to output
  */
 function logWarning(reportingFunctionArguments, message) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     if (LOG_LEVEL >= LOG_LEVEL_WARNING) {
         if (! message) {
@@ -3554,8 +3599,8 @@ module.exports.logWarning = logWarning;
  * @returns {Promise<string | undefined>} a `GUID` string
  */
 function machineGUID() {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -3566,10 +3611,13 @@ function machineGUID() {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
+
                 if (response && ! response.error) {
                     retVal = response.text;
                 }
+
                 return retVal;
             }
         );
@@ -3590,8 +3638,8 @@ module.exports.machineGUID = machineGUID;
 */
 
 function pluginInstaller() {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -3602,10 +3650,13 @@ function pluginInstaller() {
 
         retVal = responsePromise.then(
             (response) => {
+                // coderstate: resolver
                 let retVal;
+
                 if (response && ! response.error) {
                     retVal = response.text == "true";
                 }
+
                 return retVal;
             }
         );
@@ -3654,14 +3705,15 @@ function promisify(ftn) {
 
    return (...args) => {
 
-     return new Promise((resolve, reject) => {
+     return new Promise((resolveFtn, rejectFtn) => {
+        // coderstate: executor
 
         args.push(
             (err, ...results) => {
                 if (err) {
-                    return reject(err)
+                    return rejectFtn(err)
                 }
-                return resolve(results.length === 1 ? results[0] : results);
+                return resolveFtn(results.length === 1 ? results[0] : results);
             }
         );
         ftn.call(this, ...args)
@@ -3684,14 +3736,15 @@ function promisifyWithContext(ftn, context) {
 
    return (...args) => {
 
-     return new Promise((resolve, reject) => {
+     return new Promise((resolveFtn, rejectFtn) => {
+        // coderstate: executor
 
         args.push(
             (err, ...results) => {
                 if (err) {
-                    return reject(err)
+                    return rejectFtn(err)
                 }
-                return resolve(results.length === 1 ? results[0] : results);
+                return resolveFtn(results.length === 1 ? results[0] : results);
             }
         );
         ftn.call(context, ...args)
@@ -4077,8 +4130,8 @@ module.exports.S = S;
  * @returns {Promise<boolean|undefined>} - success or failure
  */
 function setIssuer(issuerGUID, issuerEmail) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -4089,7 +4142,9 @@ function setIssuer(issuerGUID, issuerEmail) {
 
         retVal = responsePromise.then(
             (response) => {
+                // codestate: resolver                
                 let retVal;
+
                 if (response && ! response.error) {
                     retVal = response.text == "true";
                 }
@@ -4141,8 +4196,8 @@ module.exports.sQ = sQ;
  * @returns {Promise<boolean|undefined>} success or failure
  */
 function setPersistData(issuer, attribute, password, data) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -4153,10 +4208,13 @@ function setPersistData(issuer, attribute, password, data) {
 
         retVal = responsePromise.then(
             (response) => {
+                // codestate: resolver                
                 let retVal;
+
                 if (response && ! response.error) {
                     retVal = response.text == "true";
                 }
+
                 return retVal;
             }
         );
@@ -4256,8 +4314,8 @@ module.exports.strToUTF8 = strToUTF8;
  * @returns { Promise<boolean|undefined> } success or failure
  */
 function sublicense(key, activation) {
-
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+// coderstate: promisor
+    let retVal;
 
     do {
 
@@ -4268,10 +4326,13 @@ function sublicense(key, activation) {
 
         retVal = responsePromise.then(
             (response) => {
+                // codestate: resolver                
                 let retVal;
+
                 if (response && ! response.error) {
                     retVal = response.text == "true";
                 }
+
                 return retVal;
             }
         );
@@ -4395,7 +4456,7 @@ function waitForFile(
     interval = DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS, 
     timeout = DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS) {
 // coderstate: promisor
-    let retVal = RESOLVED_UNDEFINED_PROMISE;
+    let retVal;
 
     do {
     
@@ -4409,26 +4470,34 @@ function waitForFile(
          const checkFile = () => {
              // coderstate: promisor
 
-            const checkFileExecutor = (resolve, reject) => {
+            const checkFileExecutor = (resolveFtn, rejectFtn) => {
+                // coderstate: executor
                 const now = Date.now();
+
                 if (endTime < now) {
-                    resolve(undefined);
+                    resolveFtn(undefined);
                 } else {
                     try {
                         // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
                         const stats = uxpContext.fs.lstatSync(filePath);
                         if (stats) {
-                            resolve(true);
+                            resolveFtn(true);
                         } else {
                             delayFunction(interval, checkFile).
-                                then(resolve).
-                                catch(reject);
+                                then(
+                                    resolveFtn
+                                ).catch(
+                                    rejectFtn
+                                );
                         }
                     } 
                     catch (err) {
                         delayFunction(interval, checkFile).
-                            then(resolve).
-                            catch(reject);
+                            then(
+                                resolveFtn
+                            ).catch(
+                                rejectFtn
+                            );
                     }
                 }
             };
