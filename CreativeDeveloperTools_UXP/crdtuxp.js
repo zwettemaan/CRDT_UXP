@@ -1018,7 +1018,7 @@ function deQuote(quotedString) {
 // coderstate: function
     let retVal = [];
 
-    let state = 0;
+    let state = -1;
     let buffer = [];
 
     do {
@@ -1027,19 +1027,23 @@ function deQuote(quotedString) {
 
             let qLen = quotedString.length;
             if (qLen < 2) {
+                retVal = quotedString;
                 break;
             }
 
             const quoteChar = quotedString.charAt(0);
             qLen -= 1;
             if (quoteChar != quotedString.charAt(qLen)) {
+                retVal = quotedString;
                 break;
             }
 
             if (quoteChar != '"' && quoteChar != "'") {
+                retVal = quotedString;
                 break;
             }
 
+            state = 0;
             let cCode = 0;
             for (let charIdx = 1; charIdx < qLen; charIdx++) {
 
@@ -2200,7 +2204,7 @@ function fileAppendString(fileName, in_appendStr, options) {
                 "if (! fileClose(handle)) {" +
                     "retVal = false;" + 
                 "}" + 
-                "retVal",
+                "retVal ? \"true\" : \"false\"",
                 evalTQLOptions
             );
 
