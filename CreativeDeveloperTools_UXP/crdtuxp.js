@@ -61,8 +61,6 @@ function getPlatformGlobals() {
     return global;
 }
 
-global.app = app;
-
 let platformGlobals = getPlatformGlobals();
 platformGlobals.getPlatformGlobals = getPlatformGlobals;
 platformGlobals.defineGlobalObject = function defineGlobalObject(globalName) {
@@ -1988,7 +1986,7 @@ function enQuote__(s_or_ByteArr, quoteChar) {
  */
 function evalTQL(tqlScript, options) {
 // coderstate: promisor
-    let retVal = { error: true };
+    let retVal = Promise.resolve({ error: true });
 
     do {
 
@@ -2225,7 +2223,9 @@ function evalTQL(tqlScript, options) {
                 function responseTextRejectFtn(reason) {
                     // coderstate: rejector
                     crdtuxp.logError(arguments, "rejected for " + reason);
-                    return { error: reason };
+                    return { 
+                        error: reason 
+                    };
                 };
 
                 return responseTextPromise.then(
@@ -2237,7 +2237,9 @@ function evalTQL(tqlScript, options) {
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
-                return { error: reason };
+                return { 
+                    error: reason 
+                };
             };
             
             retVal = responsePromise.then(
