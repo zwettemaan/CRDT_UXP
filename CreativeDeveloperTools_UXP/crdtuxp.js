@@ -544,7 +544,13 @@ function base64decode(base64Str, options) {
             function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
-                if (response && ! response.error) {
+
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     if (isBinary) {
                         retVal = deQuote(response.text);
                     }
@@ -552,8 +558,11 @@ function base64decode(base64Str, options) {
                         retVal = response.text;
                     }
                 }
+                while (false);
+
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -562,7 +571,8 @@ function base64decode(base64Str, options) {
             
             retVal = responsePromise.then(
                 evalTQLResolveFtn,
-                evalTQLRejectFtn);
+                evalTQLRejectFtn
+            );
         }
         catch (err) {
             crdtuxp.logError(arguments, "throws " + err);
@@ -626,11 +636,20 @@ function base64encode(s_or_ByteArr) {
             function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
-                if (response && ! response.error) {
+
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text;
                 }
+                while (false);
+
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -639,7 +658,8 @@ function base64encode(s_or_ByteArr) {
 
             retVal = responsePromise.then(
                 evalTQLResolveFtn,
-                evalTQLRejectFtn);
+                evalTQLRejectFtn
+            );
         }
         catch (err) {
             crdtuxp.logError(arguments, "throws " + err);
@@ -925,11 +945,20 @@ function decrypt(s_or_ByteArr, aesKey, aesIV) {
             function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
-                if (response && ! response.error) {
+
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text;
                 }
+                while (false);
+
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -938,12 +967,12 @@ function decrypt(s_or_ByteArr, aesKey, aesIV) {
 
             retVal = responsePromise.then(
                 evalTQLResolveFtn,
-                evalTQLRejectFtn);
+                evalTQLRejectFtn
+            );
         }
         catch (err) {
             crdtuxp.logError(arguments, "throws " + err);
         }
-
     }
     while (false);
 
@@ -1249,11 +1278,20 @@ function dirCreate(filePath) {
             function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
-                if (response && ! response.error) {
+
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text == "true";
                 }
+                while (false);
+
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -1262,12 +1300,12 @@ function dirCreate(filePath) {
 
             retVal = responsePromise.then(
                 evalTQLResolveFtn,
-                evalTQLRejectFtn);
+                evalTQLRejectFtn
+            );
         }
         catch (err) {
             crdtuxp.logError(arguments, "throws " + err);
         }
-
     }
     while (false);
 
@@ -1469,11 +1507,20 @@ function dirDelete(filePath, recurse) {
             function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
-                if (response && ! response.error) {
+
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text == "true";
                 }
+                while (false);
+
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -1549,11 +1596,20 @@ function dirExists(dirPath) {
             function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
-                if (response && ! response.error) {
+
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text == "true";
                 }
+                while (false);
+
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -1679,30 +1735,42 @@ function dirScan(filePath) {
 
                 do {
                     if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
                         break;
                     }
 
                     const responseText = response.text;
                     if (! responseText) {
+                        crdtuxp.logError(arguments, "no responseText");
                         break;
                     }
 
                     const deQuotedResponseText = deQuote(responseText);
                     if (! deQuotedResponseText) {
+                        crdtuxp.logError(arguments, "no deQuotedResponseText");
                         break;
                     }
 
                     const binaryResponse = binaryUTF8ToStr(deQuotedResponseText);
                     if (! binaryResponse) {
+                        crdtuxp.logError(arguments, "no binaryResponse");
                         break;
                     }
 
-                    retVal = JSON.parse(binaryResponse);
+                    try {
+                        retVal = JSON.parse(binaryResponse);
+                    }
+                    catch (err) {
+                        crdtuxp.logError(arguments, "failed to parse JSON " + binaryResponse);
+                        break;
+                    }
+
                 } 
                 while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -1717,7 +1785,6 @@ function dirScan(filePath) {
         catch (err) {
             crdtuxp.logError(arguments, "throws " + err);
         }
-
     }
     while (false);
 
@@ -1801,11 +1868,20 @@ function encrypt(s_or_ByteArr, aesKey, aesIV) {
             function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
-                if (response && ! response.error) {
+
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text;
                 }
+                while (false);
+
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -1816,12 +1892,10 @@ function encrypt(s_or_ByteArr, aesKey, aesIV) {
                 evalTQLResolveFtn,
                 evalTQLRejectFtn
             );
-
         }
         catch (err) {
             crdtuxp.logError(arguments, "throws " + err);
         }
-
     }
     while (false);
 
@@ -1906,9 +1980,9 @@ function enQuote__(s_or_ByteArr, quoteChar) {
  * duration of the daemon process and can be used to pass data between different 
  * processes
  * @param {object=} options - optional. 
- *   options.wait = false means don't wait to resolve
- *   options.isBinary
- *   options.tqlScopeName
+ *   options.wait when false don't wait to resolve, default true
+ *   options.isBinary default false
+ *   options.tqlScopeName default TQL_SCOPE_NAME_DEFAULT
  * or can be decoded as a string
  * @returns {Promise<any>} a string or a byte array
  */
@@ -1920,9 +1994,14 @@ function evalTQL(tqlScript, options) {
 
         try {
 
-            let resultIsRawBinary = options && options.isBinary;
-            let wait = ! options || options.wait;
-            let tqlScopeName = options && options.tqlScopeName;
+            let resultIsRawBinary = false;
+            let wait = true;
+            let tqlScopeName = TQL_SCOPE_NAME_DEFAULT;
+            if (options) {
+                resultIsRawBinary = !!options.isBinary;
+                wait = options.wait === undefined ? true : options.wait;
+                tqlScopeName = options.tqlScopeName || TQL_SCOPE_NAME_DEFAULT;
+            }
 
             let uxpContext = getUXPContext();
 
@@ -2089,10 +2168,6 @@ function evalTQL(tqlScript, options) {
                 break;
             }
 
-            if (! tqlScopeName) {
-                tqlScopeName = TQL_SCOPE_NAME_DEFAULT;
-            }
-
             const init = {
                 method: "POST",
                 body: tqlScript
@@ -2113,22 +2188,40 @@ function evalTQL(tqlScript, options) {
 
             function evalTQLResolveFtn(response) {
                 // coderstate: resolver
+
                 const responseTextPromise = response.text();
+
                 function responseTextResolveFtn(responseText) {
                     // coderstate: resolver
-                    let responseTextUnwrapped;
-                    if (resultIsRawBinary) {
-                        responseTextUnwrapped = responseText;
-                    }
-                    else {
-                        responseTextUnwrapped = binaryUTF8ToStr(deQuote(responseText));
-                    }
+                    let retVal;
 
-                    retVal = {
-                        text: responseTextUnwrapped
-                    };
+                    do {
+                        let responseTextUnwrapped;
+                        try {
+                            if (resultIsRawBinary) {
+                                responseTextUnwrapped = responseText;
+                            }
+                            else {
+                                responseTextUnwrapped = binaryUTF8ToStr(deQuote(responseText));
+                            }
+                        }
+                        catch (err) {
+                            crdtuxp.logError(arguments, "throws " + err);
+                            retVal = {
+                                error: err
+                            };
+                            break;
+                        }
+
+                        retVal = {
+                            text: responseTextUnwrapped
+                        };
+                    }
+                    while (false);
+
                     return retVal;
                 };
+                
                 function responseTextRejectFtn(reason) {
                     // coderstate: rejector
                     crdtuxp.logError(arguments, "rejected for " + reason);
@@ -2221,11 +2314,20 @@ function fileAppendString(fileName, in_appendStr, options) {
             function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
-                if (response && ! response.error) {
+
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text == "true";
                 }
+                while (false);
+
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -2234,7 +2336,8 @@ function fileAppendString(fileName, in_appendStr, options) {
 
             retVal = responsePromise.then(
                 evalTQLResolveFtn,
-                evalTQLRejectFtn);
+                evalTQLRejectFtn
+            );
         }
         catch (err) {
             crdtuxp.logError(arguments, "throws " + err);
@@ -2287,11 +2390,20 @@ function fileClose(fileHandle) {
             function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
-                if (response && ! response.error) {
+
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text == "true";
                 }
+                while (false);
+
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -2306,7 +2418,6 @@ function fileClose(fileHandle) {
         catch (err) {
             crdtuxp.logError(arguments, "throws " + err);
         }
-
     }
     while (false);
 
@@ -2383,11 +2494,20 @@ function fileDelete(filePath) {
             function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
-                if (response && ! response.error) {
+
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text == "true";
                 }
+                while (false);
+
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -2463,11 +2583,20 @@ function fileExists(filePath) {
             function evalTQLResolveFtn(response) {
                 // coderstate: resolver
                 let retVal;
-                if (response && ! response.error) {
+
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text == "true";
                 }
+                while (false);
+
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -2625,26 +2754,41 @@ function fileOpen(filePath, mode) {
                 let retVal;
 
                 do {
-                    if (! response || response.error) {
+                    try {
+                        if (! response || response.error) {
+                            crdtuxp.logError(arguments, "bad response " + response?.error);
+                            break;
+                        }
+
+                        let responseStr = deQuote(response.text);
+                        if (! responseStr) {
+                            crdtuxp.logError(arguments, "no responseStr");
+                            break;
+                        }
+
+                        let responseData = binaryUTF8ToStr(responseStr);
+                        if (! responseData) {
+                            crdtuxp.logError(arguments, "no responseData");
+                            break;
+                        }
+
+                        retVal = parseInt(responseData, 10);
+                        if (isNaN(retVal)) {
+                            crdtuxp.logError(arguments, "not a number " + responseData);
+                            retVal = undefined;
+                            break;
+                        }
+                    }
+                    catch (err) {
+                        crdtuxp.logError(arguments, "throws " + err);
                         break;
                     }
-
-                    let responseStr = deQuote(response.text);
-                    if (! responseStr) {
-                        break;
-                    }
-
-                    let responseData = binaryUTF8ToStr(responseStr);
-                    if (! responseData) {
-                        break;
-                    }
-
-                    retVal = parseInt(responseData, 10);
                 }
                 while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -2674,17 +2818,24 @@ module.exports.fileOpen = fileOpen;
  * @function fileRead
  *
  * @param {number} fileHandle - a file handle as returned by `fileOpen()`.
- * @param {boolean} isBinary - whether the file is considered a binary file (as opposed to a UTF-8 text file)
+ * @param {boolean|object=} options - options: { isBinary: true/false, default false }
  * @returns {Promise<any>} either a byte array or a string
  */
 
-function fileRead(fileHandle, isBinary) {
+function fileRead(fileHandle, options) {
 // coderstate: promisor
     let retVal;
 
     do {
 
         try {
+
+            if ("boolean" == typeof options) {
+                options = {
+                    isBinary: options
+                };
+            }
+
             let uxpContext = getUXPContext();
             if (uxpContext.hasDirectFileAccess) {
 
@@ -2704,7 +2855,7 @@ function fileRead(fileHandle, isBinary) {
                 let replyByteArray;
                 try {
                     replyByteArray = new Uint8Array(uxpContext.fs.readFileSync(fileInfo.filePath));
-                    if (isBinary) {
+                    if (options?.isBinary) {
                         retVal = replyByteArray;
                         break;
                     }
@@ -2719,8 +2870,9 @@ function fileRead(fileHandle, isBinary) {
             }
 
             let evalTQLOptions = {
-                isBinary: true
+                isBinary: options?.isBinary
             };
+
             const responsePromise = 
                 evalTQL(
                     "enquote(fileRead(" + fileHandle + "))", 
@@ -2735,30 +2887,34 @@ function fileRead(fileHandle, isBinary) {
 
                 do {
                     if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
                         break;
                     }
 
                     let byteArrayStr = deQuote(response.text);
                     if (! byteArrayStr) {
+                        crdtuxp.logError(arguments, "no byteArrayStr");
                         break;
                     }
 
                     var str = binaryUTF8ToStr(byteArrayStr);
                     if (! str) {
+                        crdtuxp.logError(arguments, "no str");
                         break;
                     }
 
-                    if (isBinary) {
-                        retVal = deQuote(str);
+                    if (! options?.isBinary) {
+                        retVal = str;
                         break;
                     }
 
-                    retVal = binaryUTF8ToStr(deQuote(str));
+                    retVal = deQuote(str);
                 }
                 while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -2849,12 +3005,19 @@ function fileWrite(fileHandle, s_or_ByteArr) {
                 // coderstate: resolver
                 let retVal;
 
-                if (response && ! response.error) {
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text == "true";
                 }
+                while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -2967,12 +3130,19 @@ function getCapability(issuer, capabilityCode, encryptionKey) {
                 // coderstate: resolver
                 let retVal;
 
-                if (response && ! response.error) {
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text;
                 }
+                while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -3023,12 +3193,24 @@ function getCreativeDeveloperToolsLevel() {
                 // coderstate: resolver
                 let retVal;
 
-                if (response && ! response.error) {
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = parseInt(response.text, 10);
-                }
+                    if (isNaN(retVal)) {
+                        crdtuxp.logError(arguments, "not a number " + response.text);
+                        retVal = undefined;
+                        break;
+                    }
+            }
+                while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -3116,6 +3298,7 @@ function getDir(dirTag) {
 
             const sysInfoPromise = getSysInfo__();
             if (! sysInfoPromise) {
+                crdtuxp.logError(arguments, "no sysInfoPromise");
                 break;
             }
 
@@ -3123,11 +3306,20 @@ function getDir(dirTag) {
                 // coderstate: resolver
                 let retVal;
 
-                if (sysInfo && ! sysInfo.error) {
-                    if (dirTag in sysInfo) {
-                        retVal = sysInfo[dirTag];
+                do {
+                    if (! sysInfo || sysInfo.error) {
+                        crdtuxp.logError(arguments, "bad response " + sysInfo?.error);
+                        break;
                     }
+
+                    if (! (dirTag in sysInfo)) {
+                        crdtuxp.logError(arguments, "unknown tag " + dirTag);
+                        break;
+                    }
+
+                    retVal = sysInfo[dirTag];
                 }
+                while (false);
 
                 return retVal;
             };
@@ -3183,12 +3375,19 @@ function getEnvironment(envVarName) {
                 // coderstate: resolver
                 let retVal;
 
-                if (response && ! response.error) {
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text;
                 }
+                while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -3444,12 +3643,19 @@ function getPersistData(issuer, attribute, password) {
                 // coderstate: resolver
                 let retVal;
 
-                if (response && ! response.error) {
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text;
                 }
+                while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -3497,12 +3703,19 @@ function getPluginInstallerPath() {
                 // coderstate: resolver
                 let retVal;
 
-                if (response && ! response.error) {
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text;
                 }
+                while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -3559,21 +3772,25 @@ function getSysInfo__() {
 
                 do {
                     if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
                         break;
                     }
 
                     let responseWrapperStr = response.text;
                     if (! responseWrapperStr) {
+                        crdtuxp.logError(arguments, "no response text");
                         break;
                     }
 
                     let responseData = deQuote(responseWrapperStr);
                     if (! responseData) {
+                        crdtuxp.logError(arguments, "no responseData");
                         break;
                     }
 
                     let responseStr = binaryUTF8ToStr(responseData);
                     if (! responseStr) {
+                        crdtuxp.logError(arguments, "no responseStr");
                         break;
                     }
 
@@ -3584,6 +3801,7 @@ function getSysInfo__() {
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -4197,12 +4415,19 @@ function machineGUID() {
                 // coderstate: resolver
                 let retVal;
 
-                if (response && ! response.error) {
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text;
                 }
+                while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -4252,12 +4477,19 @@ function pluginInstaller() {
                 // coderstate: resolver
                 let retVal;
 
-                if (response && ! response.error) {
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text == "true";
                 }
+                while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -4776,11 +5008,19 @@ function setIssuer(issuerGUID, issuerEmail) {
                 // codestate: resolver 
                 let retVal;
 
-                if (response && ! response.error) {
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text == "true";
                 }
+                while (false);
+
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -4873,12 +5113,19 @@ function setPersistData(issuer, attribute, password, data) {
                 // codestate: resolver 
                 let retVal;
 
-                if (response && ! response.error) {
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text == "true";
                 }
+                while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -5020,12 +5267,19 @@ function sublicense(key, activation) {
                 // codestate: resolver 
                 let retVal;
 
-                if (response && ! response.error) {
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response " + response?.error);
+                        break;
+                    }
+
                     retVal = response.text == "true";
                 }
+                while (false);
 
                 return retVal;
             };
+
             function evalTQLRejectFtn(reason) {
                 // coderstate: rejector
                 crdtuxp.logError(arguments, "rejected for " + reason);
@@ -5036,7 +5290,6 @@ function sublicense(key, activation) {
                 evalTQLResolveFtn,
                 evalTQLRejectFtn
             );
-
         }
         catch (err) {
             crdtuxp.logError(arguments, "throws " + err);
