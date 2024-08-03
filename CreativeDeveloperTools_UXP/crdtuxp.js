@@ -2012,11 +2012,13 @@ function evalTQL(tqlScript, options) {
 
             if (! uxpContext.hasNetworkAccess) {
 
+                let context = crdtuxp.getContext();
+
                 // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
 
-                if (! crdtuxp.context.PATH_EVAL_TQL) 
+                if (! context?.PATH_EVAL_TQL) 
                 {
-                    crdtuxp.logError(arguments, "need crdtuxp.context.PATH_EVAL_TQL to be set");
+                    crdtuxp.logError(arguments, "need context.PATH_EVAL_TQL to be set");
                     // Need to know where to put the packet
                     break;
                 }
@@ -2043,7 +2045,7 @@ function evalTQL(tqlScript, options) {
                 let tqlRequestByteArray = strToUTF8(tqlRequestJSON);
 
                 let tqlSharedFilePathPrefix = 
-                    crdtuxp.context.PATH_EVAL_TQL + 
+                    context.PATH_EVAL_TQL + 
                     tqlRequest.sessionID + 
                     crdtuxp.leftPad(tqlRequest.requestID, "0", LENGTH_REQUEST_ID);
 
@@ -2110,15 +2112,20 @@ function evalTQL(tqlScript, options) {
 
                     do {
 
+                        delete uxpContext.tqlRequestsByID[tqlRequest.requestID];
+
                         if (! responseFileState) {
+                            crdtuxp.logError(arguments, "timed out waiting for file");
                             break;
                         }
 
                         let replyByteArray;
+
                         function unlinkResolveFtn() { 
                             // coderstate: resolver
                             return handleResponseData(replyByteArray);
                         };
+
                         function unlinkRejectFtn(reason) {
                             // coderstate: rejector
                             crdtuxp.logError(arguments, "rejected for " + reason);
@@ -2140,9 +2147,11 @@ function evalTQL(tqlScript, options) {
 
                     return retVal;
                 };
+
                 function responseWaitRejectFtn(reason) {
                     // coderstate: rejector
                     crdtuxp.logError(arguments, "rejected for " + reason);
+                    delete uxpContext.tqlRequestsByID[tqlRequest.requestID];
                     return undefined;
                 };
 
@@ -3874,6 +3883,88 @@ function getUnitFromINI(in_value, in_defaultUnit) {
 module.exports.getUnitFromINI = getUnitFromINI;
 
 /**
+ * Get our bearings and figure out what operating system context we're operating in. 
+ *
+ * @function getContext
+ *
+ * @returns {object} context
+ */
+
+function getContext() {
+
+    let retVal;
+
+    do {
+
+        try {
+
+            // context can be pre-populated by a calling script, in which case we look if there is any missing 
+            // data that we can add
+            
+            let context = crdtuxp.context;
+            if (context) {
+                context = {};
+                crdtuxp.context = context;
+            }
+
+            if (context.isFinalized) {
+                retVal = context;
+                break;
+            }
+
+            context.isFinalized = true;
+
+            let uxpContext = getUXPContext();
+
+            if (! context.PATH_HOME) {
+                context.PATH_HOME = uxpContext.os.homedir() + crdtuxp.path.SEPARATOR;
+            }
+
+            if (! context.PATH_DOCUMENTS) {
+                // This is an educated guess which will be correct most of the time
+                context.PATH_DOCUMENTS = context.PATH_HOME + "Documents" + crdtuxp.path.SEPARATOR;
+            }
+
+            if (! context.PATH_DESKTOP) {
+                // This is an educated guess which will be correct most of the time
+                context.PATH_DESKTOP = context.PATH_HOME + "Desktop" + crdtuxp.path.SEPARATOR;
+            }
+
+            if (! context.PATH_USERDATA) {
+                // This is an educated guess which will be correct most of the time
+                if (crdtuxp.IS_MAC) {
+                    context.PATH_USERDATA = context.PATH_HOME + "Library/Application Support/";
+                }
+                else {
+                    context.PATH_USERDATA = context.PATH_HOME + "AppData\\Roaming\\";
+                }
+            }
+
+            if (! context.PATH_TIGHTENER_STORAGE) {
+                context.PATH_TIGHTENER_STORAGE = context.PATH_USERDATA + "net.tightener" + crdtuxp.path.SEPARATOR;
+            }
+
+            if (! context.PATH_APP_STORAGE) {
+                context.PATH_APP_STORAGE = context.PATH_TIGHTENER_STORAGE + "Licensing" + crdtuxp.path.SEPARATOR;
+            }
+
+            if (! context.PATH_EVAL_TQL) {
+                context.PATH_EVAL_TQL = context.PATH_APP_STORAGE + "EvalTQL" + crdtuxp.path.SEPARATOR;
+            }
+
+            retVal = context;
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
+    }
+    while (false);
+
+    return retVal;
+}
+module.exports.getContext = getContext;
+
+/**
  * Get our bearings and figure out what context we're operating in. Depending on the context
  * we will or won't have access to certain features
  *
@@ -3903,6 +3994,8 @@ function getUXPContext() {
             uxpContext.fs = require("fs");
             uxpContext.os = require("os");
             uxpContext.uxp = require("uxp"); 
+            uxpContext.path = require("path");
+            
             let storage = uxpContext.uxp.storage;
             uxpContext.lfs = storage.localFileSystem;
             uxpContext.sessionID = window.crypto.randomUUID().replace(/-/g,"");
@@ -3953,6 +4046,205 @@ function getUXPContext() {
     return retVal;
 }
 module.exports.getUXPContext = getUXPContext;
+
+/**
+ * Initialize crdtuxp
+ *
+ * @function init
+ */
+
+function init(context) {
+    let retVal;
+
+    try {
+
+        if (! crdtuxp.isProxyPromiseInjected) {
+            injectProxyPromiseClass();
+        }
+
+        if (! context) {
+            context = {};
+        }
+
+        if (! crdtuxp.context) {
+            crdtuxp.context = context;
+        }
+        else {
+            for (attr in context) {
+                crdtuxp.context[attr] = context[attr];
+            }
+        }
+
+        retVal = true;
+    }
+    catch (err) {
+        console.log("init throws " + err);
+    }
+
+    return retVal;
+}
+module.exports.init = init;
+
+/**
+ * Wrap the system Promise with a new Promise class that allows us to track pending promises
+ *
+ * @function injectProxyPromiseClass
+ */
+
+function injectProxyPromiseClass() {
+
+    try {
+        // Save the original Promise class
+        const SystemPromise = global.Promise;
+
+        let PROMISES_PENDING = {};
+        let LAST_PROMISE_UNIQUE_ID = 0;
+
+        crdtuxp.isProxyPromiseInjected = true;
+
+        // Define the new Promise class
+        class Promise {
+            constructor(executor) {
+        
+            let curThis = this;
+                curThis._state = 'pending';
+                curThis._value = undefined;
+                curThis._id = ++LAST_PROMISE_UNIQUE_ID;
+                PROMISES_PENDING[curThis._id] = curThis;
+
+                // Create a new instance of the original Promise
+                this._promise = new SystemPromise((resolve, reject) => {
+                    executor(
+                        (value) => {
+                            curThis._state = 'resolved';
+                            curThis._value = value;
+                            curThis.untracked();
+                            resolve(value);
+                        },
+                        (reason) => {
+                            curThis._state = 'rejected';
+                            curThis._value = reason;
+                            curThis.untracked();
+                            reject(reason);
+                        });
+                });
+            }
+
+            // Proxy static methods
+            static pendingPromises() {
+            // coderstate: function
+
+                let retVal = [];
+                for (let id in PROMISES_PENDING) {
+                let promise = PROMISES_PENDING[id];
+                if (promise._state == 'pending') {
+                    retVal.push(promise);
+                }
+                }
+                return retVal;
+            }
+
+            static finalizePromises() {
+                // coderstate: promisor
+                
+                function finalizeExecutorFtn(resolveFtn, rejectFtn)  {
+                
+                    setImmediate(
+                        () => {
+                            let retVal;
+                        
+                            let pendingPromises = Promise.pendingPromises();
+                            if (pendingPromises.length == 0) {
+                                resolveFtn();
+                            }
+                            else {
+                                retVal = Promise.allSettled(pendingPromises).then(
+                                    () => {
+                                        // coderstate: resolver
+                                        return Promise.finalizePromises().
+                                            then(resolveFtn, rejectFtn);
+                                    },
+                                    (reason) => {
+                                        // coderstate: rejector
+                                        return Promise.finalizePromises().
+                                            then(resolveFtn, rejectFtn);
+                                    }
+                                );
+                            }
+                            return retVal;
+                        }
+                    );
+                }       
+                
+                let finalizingPromise = new Promise(finalizeExecutorFtn);
+                finalizingPromise.untracked();
+                
+                return finalizingPromise;
+            }
+            
+            static resolve(value) {
+                return new Promise((resolve) => resolve(value));
+            }
+
+            static reject(reason) {
+                return new Promise((_, reject) => reject(reason));
+            }
+
+            static all(promises) {
+                return SystemPromise.all(promises);
+            }
+
+            static allSettled(promises) {
+                return SystemPromise.allSettled(promises)
+            }
+
+            static race(promises) {
+                return SystemPromise.race(promises);
+            }
+
+            // Proxy instance methods
+            then(onFulfilled, onRejected) {
+                return this._promise.then(onFulfilled, onRejected);
+            }
+
+            untracked() {
+                if (this._id in PROMISES_PENDING) {
+                    delete PROMISES_PENDING[this._id];            
+                }
+            }
+
+            catch(onRejected) {
+                return this._promise.catch(onRejected);
+            }
+
+            finally(onFinally) {
+                return this._promise.finally(onFinally);
+            }
+            
+            isPending() {
+                return this._state === 'pending';
+            }
+
+            isResolved() {
+                return this._state === 'resolved';
+            }
+
+            isRejected() {
+                return this._state === 'rejected';
+            }
+
+            getValue() {
+                return this._value;
+            }    
+        }
+
+        global.Promise = Promise;
+    }
+    catch (err) {
+        console.log("injectProxyPromiseClass throws " + err);
+    }
+}
+module.exports.injectProxyPromiseClass = injectProxyPromiseClass;
 
 /**
  * Calculate an integer power of an int value. Avoids using floating point, so
@@ -5449,14 +5741,17 @@ function waitForFile(
                     const now = Date.now();
 
                     if (endTime < now) {
+                        crdtuxp.logNote(arguments, "already timed out");
                         resolveFtn(undefined);
                     } else {
                         try {
                             // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
                             const stats = uxpContext.fs.lstatSync(filePath);
                             if (stats) {
+                                crdtuxp.logTrace(arguments, "file appeared");
                                 resolveFtn(true);
                             } else {
+                                crdtuxp.logNote(arguments, "no stats returned");
                                 delayFunction(interval, checkFile).
                                     then(
                                         resolveFtn,
@@ -5467,6 +5762,9 @@ function waitForFile(
                         catch (err) {
                             if (err != -2) {
                                 crdtuxp.logNote(arguments, "throws " + err);
+                            }
+                            else {
+                                crdtuxp.logTrace(arguments, "file not present yet");
                             }
                             delayFunction(interval, checkFile).
                                 then(
