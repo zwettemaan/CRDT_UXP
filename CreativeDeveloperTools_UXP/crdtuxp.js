@@ -393,7 +393,7 @@ function alert(message) {
                 // We've lost access to the alert() function in InDesign Server, which writes
                 // to stdout.
                 // The only workaround I currently have is to pass through ExtendScript
-                crdtuxp.app.doScript(
+                uxpContext.app.doScript(
                     "alert(" + crdtuxp.dQ(message) + ")", 
                     uxpContext.indesign.ScriptLanguage.JAVASCRIPT);
                 retVal = true;
@@ -405,7 +405,7 @@ function alert(message) {
                 // InDesign dialogs are not async - they stall the thread until they 
                 // are closed
 
-                const dlg = crdtuxp.app.dialogs.add();
+                const dlg = uxpContext.app.dialogs.add();
                 const col = dlg.dialogColumns.add();
                 const stText = col.staticTexts.add();
                 stText.staticLabel = "" + message;
