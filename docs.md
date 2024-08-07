@@ -108,7 +108,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
         * [~getUnitFromINI(in_value, in_defaultUnit)](#module_crdtuxp..getUnitFromINI) ⇒ <code>string</code>
         * [~getContext()](#module_crdtuxp..getContext) ⇒ <code>object</code>
         * [~getUXPContext()](#module_crdtuxp..getUXPContext) ⇒ <code>object</code>
-        * [~init()](#module_crdtuxp..init)
+        * [~init()](#module_crdtuxp..init) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
         * [~injectProxyPromiseClass()](#module_crdtuxp..injectProxyPromiseClass)
         * [~intPow(i, intPower)](#module_crdtuxp..intPow) ⇒ <code>number</code> \| <code>undefined</code>
         * [~leftPad(s, padChar, len)](#module_crdtuxp..leftPad) ⇒ <code>string</code>
@@ -884,10 +884,11 @@ we will or won't have access to certain features
 **Returns**: <code>object</code> - context  
 <a name="module_crdtuxp..init"></a>
 
-### crdtuxp~init()
+### crdtuxp~init() ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
 Initialize crdtuxp
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+**Returns**: <code>Promise.&lt;(boolean\|undefined)&gt;</code> - when true: valid issuer has made CRDT_UXP extra features available  
 <a name="module_crdtuxp..injectProxyPromiseClass"></a>
 
 ### crdtuxp~injectProxyPromiseClass()
