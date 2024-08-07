@@ -67,7 +67,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
         * [~addTrailingSeparator(filePath, [separator])](#module_crdtuxp..addTrailingSeparator) ⇒
         * [~alert(message)](#module_crdtuxp..alert) ⇒ <code>Promise.&lt;any&gt;</code>
         * [~base64decode(base64Str, [options])](#module_crdtuxp..base64decode) ⇒ <code>Promise.&lt;(string\|array\|undefined)&gt;</code>
-        * [~base64encode(s_or_ByteArr)](#module_crdtuxp..base64encode) ⇒ <code>Promise.&lt;(string\|undefined)&gt;</code>
+        * [~base64encode(s_or_ByteArr, [options])](#module_crdtuxp..base64encode) ⇒ <code>Promise.&lt;(string\|undefined)&gt;</code>
         * [~baseName(filePath, [separator])](#module_crdtuxp..baseName) ⇒ <code>string</code>
         * [~binaryUTF8ToStr(in_byteArray)](#module_crdtuxp..binaryUTF8ToStr) ⇒ <code>string</code> \| <code>undefined</code>
         * [~byteArrayToRawString(in_byteArray)](#module_crdtuxp..byteArrayToRawString) ⇒ <code>string</code> \| <code>undefined</code>
@@ -83,15 +83,16 @@ be up to the developer and/or the IT department to decide what is appropriate an
         * [~dirScan(filePath)](#module_crdtuxp..dirScan) ⇒ <code>Promise.&lt;(Array\|undefined)&gt;</code>
         * [~dQ(s_or_ByteArr)](#module_crdtuxp..dQ) ⇒ <code>string</code>
         * [~encrypt(s_or_ByteArr, aesKey, [aesIV])](#module_crdtuxp..encrypt) ⇒ <code>Promise.&lt;(string\|undefined)&gt;</code>
-        * [~evalTQL(tqlScript, [tqlScopeName], [resultIsRawBinary])](#module_crdtuxp..evalTQL) ⇒ <code>Promise.&lt;any&gt;</code>
-        * [~fileAppendString(fileName, appendStr)](#module_crdtuxp..fileAppendString) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
+        * [~evalTQL(tqlScript, [tqlScopeName], [options])](#module_crdtuxp..evalTQL) ⇒ <code>Promise.&lt;any&gt;</code>
+        * [~fileAppendString(fileName, appendStr, [options])](#module_crdtuxp..fileAppendString) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
         * [~fileClose(fileHandle)](#module_crdtuxp..fileClose) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
         * [~fileDelete(filePath)](#module_crdtuxp..fileDelete) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
         * [~fileExists(filePath)](#module_crdtuxp..fileExists) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
         * [~fileNameExtension(filePath, [separator])](#module_crdtuxp..fileNameExtension) ⇒
         * [~fileOpen(filePath, mode)](#module_crdtuxp..fileOpen) ⇒ <code>Promise.&lt;(Number\|undefined)&gt;</code>
-        * [~fileRead(fileHandle, isBinary)](#module_crdtuxp..fileRead) ⇒ <code>Promise.&lt;any&gt;</code>
+        * [~fileRead(fileHandle, options)](#module_crdtuxp..fileRead) ⇒ <code>Promise.&lt;any&gt;</code>
         * [~fileWrite(fileHandle, s_or_ByteArr)](#module_crdtuxp..fileWrite) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
+        * [~finalize()](#module_crdtuxp..finalize)
         * [~functionNameFromArguments(functionArguments)](#module_crdtuxp..functionNameFromArguments) ⇒ <code>string</code>
         * [~getBooleanFromINI(in_value)](#module_crdtuxp..getBooleanFromINI) ⇒ <code>boolean</code>
         * [~getCapability(issuer, capabilityCode, encryptionKey)](#module_crdtuxp..getCapability) ⇒ <code>Promise.&lt;(string\|undefined)&gt;</code>
@@ -105,7 +106,10 @@ be up to the developer and/or the IT department to decide what is appropriate an
         * [~getPluginInstallerPath()](#module_crdtuxp..getPluginInstallerPath) ⇒ <code>Promise.&lt;string&gt;</code>
         * [~getSysInfo__()](#module_crdtuxp..getSysInfo__) ⇒ <code>object</code>
         * [~getUnitFromINI(in_value, in_defaultUnit)](#module_crdtuxp..getUnitFromINI) ⇒ <code>string</code>
+        * [~getContext()](#module_crdtuxp..getContext) ⇒ <code>object</code>
         * [~getUXPContext()](#module_crdtuxp..getUXPContext) ⇒ <code>object</code>
+        * [~init()](#module_crdtuxp..init)
+        * [~injectProxyPromiseClass()](#module_crdtuxp..injectProxyPromiseClass)
         * [~intPow(i, intPower)](#module_crdtuxp..intPow) ⇒ <code>number</code> \| <code>undefined</code>
         * [~leftPad(s, padChar, len)](#module_crdtuxp..leftPad) ⇒ <code>string</code>
         * [~logEntry(reportingFunctionArguments)](#module_crdtuxp..logEntry) ⇒ <code>Promise</code>
@@ -131,6 +135,8 @@ be up to the developer and/or the IT department to decide what is appropriate an
         * [~stripTrailingSeparator(filePath, [separator])](#module_crdtuxp..stripTrailingSeparator) ⇒
         * [~strToUTF8(in_s)](#module_crdtuxp..strToUTF8) ⇒ <code>array</code> \| <code>undefined</code>
         * [~sublicense(key, activation)](#module_crdtuxp..sublicense) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
+        * [~testDirectFileAccess()](#module_crdtuxp..testDirectFileAccess) ⇒ <code>boolean</code>
+        * [~testNetworkAccess()](#module_crdtuxp..testNetworkAccess) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
         * [~toHex(i, numDigits)](#module_crdtuxp..toHex) ⇒ <code>string</code>
         * [~unitToInchFactor(in_unit)](#module_crdtuxp..unitToInchFactor) ⇒ <code>number</code>
         * [~waitForFile(filePath, [interval], [timeout])](#module_crdtuxp..waitForFile) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
@@ -324,11 +330,11 @@ The overheads might be larger than the speed benefit.
 | Param | Type | Description |
 | --- | --- | --- |
 | base64Str | <code>string</code> | base64 encoded string |
-| [options] | <code>object</code> | options: { isBinary: true/false, default false } |
+| [options] | <code>object</code> | options: {   isBinary: true/false, default false,   forceNetworkAPI: true/false, default false } |
 
 <a name="module_crdtuxp..base64encode"></a>
 
-### crdtuxp~base64encode(s_or_ByteArr) ⇒ <code>Promise.&lt;(string\|undefined)&gt;</code>
+### crdtuxp~base64encode(s_or_ByteArr, [options]) ⇒ <code>Promise.&lt;(string\|undefined)&gt;</code>
 Encode a string or an array of bytes using Base 64 encoding.
 
 The evalTQL variant of the function has not been speed-tested; it's mainly for 
@@ -343,6 +349,7 @@ The overheads might be larger than the speed benefit.
 | Param | Type | Description |
 | --- | --- | --- |
 | s_or_ByteArr | <code>string</code> | either a string or an array containing bytes (0-255). |
+| [options] | <code>object</code> | options: {   forceNetworkAPI: true/false, default false } |
 
 <a name="module_crdtuxp..baseName"></a>
 
@@ -566,7 +573,7 @@ Only available to paid developer accounts
 
 <a name="module_crdtuxp..evalTQL"></a>
 
-### crdtuxp~evalTQL(tqlScript, [tqlScopeName], [resultIsRawBinary]) ⇒ <code>Promise.&lt;any&gt;</code>
+### crdtuxp~evalTQL(tqlScript, [tqlScopeName], [options]) ⇒ <code>Promise.&lt;any&gt;</code>
 Send a TQL script to the daemon and wait for the result
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
@@ -576,11 +583,11 @@ Send a TQL script to the daemon and wait for the result
 | --- | --- | --- |
 | tqlScript | <code>string</code> | a script to run |
 | [tqlScopeName] | <code>string</code> | a scope name to use. Scopes are persistent for the  duration of the daemon process and can be used to pass data between different  processes |
-| [resultIsRawBinary] | <code>boolean</code> | whether the resulting data is raw binary, or can be decoded as a string |
+| [options] | <code>object</code> | optional.    options.wait when false don't wait to resolve, default true   options.isBinary default false   options.forceNetworkAPI default false; override uxpContext.hasNetworkAccess   options.tqlScopeName default TQL_SCOPE_NAME_DEFAULT or can be decoded as a string |
 
 <a name="module_crdtuxp..fileAppendString"></a>
 
-### crdtuxp~fileAppendString(fileName, appendStr) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
+### crdtuxp~fileAppendString(fileName, appendStr, [options]) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
 Append a string to a file (useful for logging)
 
 Not restricted by the UXP security sandbox.
@@ -592,6 +599,7 @@ Not restricted by the UXP security sandbox.
 | --- | --- | --- |
 | fileName | <code>string</code> | path to file |
 | appendStr | <code>string</code> | data to append. If a newline is needed it needs to be part of appendStr |
+| [options] | <code>object</code> | {      options.wait = false means don't wait to resolve } |
 
 <a name="module_crdtuxp..fileClose"></a>
 
@@ -667,7 +675,7 @@ Not restricted by the UXP security sandbox.
 
 <a name="module_crdtuxp..fileRead"></a>
 
-### crdtuxp~fileRead(fileHandle, isBinary) ⇒ <code>Promise.&lt;any&gt;</code>
+### crdtuxp~fileRead(fileHandle, options) ⇒ <code>Promise.&lt;any&gt;</code>
 Read a file into memory
 
 Not restricted by the UXP security sandbox.
@@ -678,7 +686,7 @@ Not restricted by the UXP security sandbox.
 | Param | Type | Description |
 | --- | --- | --- |
 | fileHandle | <code>number</code> | a file handle as returned by `fileOpen()`. |
-| isBinary | <code>boolean</code> | whether the file is considered a binary file (as opposed to a UTF-8 text file) |
+| options | <code>boolean</code> \| <code>object</code> | options: { isBinary: true/false, default false } |
 
 <a name="module_crdtuxp..fileWrite"></a>
 
@@ -695,6 +703,12 @@ Not restricted by the UXP security sandbox.
 | fileHandle | <code>number</code> | a file handle as returned by `fileOpen()`. |
 | s_or_ByteArr | <code>string</code> \| <code>Array</code> | data to write to the file |
 
+<a name="module_crdtuxp..finalize"></a>
+
+### crdtuxp~finalize()
+Terminate crdtuxp
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 <a name="module_crdtuxp..functionNameFromArguments"></a>
 
 ### crdtuxp~functionNameFromArguments(functionArguments) ⇒ <code>string</code>
@@ -853,6 +867,13 @@ Interpret a string extracted from some INI data as a unit name
 | in_value | <code>string</code> | ini value |
 | in_defaultUnit | <code>string</code> | default to use if no match is found |
 
+<a name="module_crdtuxp..getContext"></a>
+
+### crdtuxp~getContext() ⇒ <code>object</code>
+Get our bearings and figure out what operating system context we're operating in.
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+**Returns**: <code>object</code> - context  
 <a name="module_crdtuxp..getUXPContext"></a>
 
 ### crdtuxp~getUXPContext() ⇒ <code>object</code>
@@ -861,6 +882,18 @@ we will or won't have access to certain features
 
 **Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 **Returns**: <code>object</code> - context  
+<a name="module_crdtuxp..init"></a>
+
+### crdtuxp~init()
+Initialize crdtuxp
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+<a name="module_crdtuxp..injectProxyPromiseClass"></a>
+
+### crdtuxp~injectProxyPromiseClass()
+Wrap the system Promise with a new Promise class that allows us to track pending promises
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
 <a name="module_crdtuxp..intPow"></a>
 
 ### crdtuxp~intPow(i, intPower) ⇒ <code>number</code> \| <code>undefined</code>
@@ -1254,6 +1287,20 @@ Needs to be preceded by a `setIssuer()` call.
 | key | <code>string</code> | key needed to decode activation data |
 | activation | <code>string</code> | encrypted activation data |
 
+<a name="module_crdtuxp..testDirectFileAccess"></a>
+
+### crdtuxp~testDirectFileAccess() ⇒ <code>boolean</code>
+Test if we can access the path-based file I/O APIs
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+**Returns**: <code>boolean</code> - whether APIs are accessible  
+<a name="module_crdtuxp..testNetworkAccess"></a>
+
+### crdtuxp~testNetworkAccess() ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
+Test if we can access the network APIs
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+**Returns**: <code>Promise.&lt;(boolean\|undefined)&gt;</code> - whether APIs are accessible  
 <a name="module_crdtuxp..toHex"></a>
 
 ### crdtuxp~toHex(i, numDigits) ⇒ <code>string</code>
