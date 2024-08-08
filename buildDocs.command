@@ -7,8 +7,23 @@ export SCRIPT_DIR=`dirname "$0"`
 cd "$SCRIPT_DIR"
 export SCRIPT_DIR=`pwd`/
 
-rm docs.md
+rm -rf docs
 
-npm i jsdoc-to-markdown
-./node_modules/.bin/jsdoc2md "!(node_modules|coverage)/**/*.js" > docs.md
+cat > /tmp/crdt_uxp_jsdoc.json << EOF
+{
+  "source": {
+    "include": ["./"],
+    "includePattern": ".+\\\\.js?\$",
+    "excludePattern": "(^|\\\\/|\\\\\\\\)(node_modules|docs)(\\\\/|\\\\\\\\).*\$"
+  },
+  "opts": {
+    "destination": "./docs/",
+    "recurse": true,
+    "template": "node_modules/minami"
+  }
+}
+EOF
+
+npm i --save-dev jsdoc minami taffydb
+jsdoc -c /tmp/crdt_uxp_jsdoc.json 
 
