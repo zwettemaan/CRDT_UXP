@@ -55,7 +55,7 @@ cp macDequarantineHelpers.command  "${CRDT_UXP_RELEASE_DIR_TEMP}"
 
 cp -R ${CRDT_UXP_PRODUCT_NAME}     "${CRDT_UXP_RELEASE_DIR_TEMP}"
 cp README.md                       "${CRDT_UXP_RELEASE_DIR_TEMP}"
-cp docs.md                         "${CRDT_UXP_RELEASE_DIR_TEMP}"
+cp -R docs                         "${CRDT_UXP_RELEASE_DIR_TEMP}"
 
 find . -name ".DS_Store" | while read a; do rm "$a"; done
 

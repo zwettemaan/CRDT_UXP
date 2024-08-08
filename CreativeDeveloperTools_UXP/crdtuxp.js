@@ -923,7 +923,7 @@ function configLogger(logInfo) {
 module.exports.configLogger = configLogger;
 
 /**
- * Bottleneck for consoleLog
+ * Bottleneck for `console.log`
  *
  * @function consoleLog
  *
@@ -1073,7 +1073,7 @@ module.exports.delayFunction = delayFunction;
  * @function deQuote
  *
  * @param {string} quotedString - a quoted string
- * @returns {array} a byte array. If the quoted string contains any `\uHHHH`` codes,
+ * @returns {array} a byte array. If the quoted string contains any `\uHHHH` codes,
  * these are first re-encoded using UTF-8 before storing them into the byte array.
  */
 function deQuote(quotedString) {
