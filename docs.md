@@ -73,6 +73,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
         * [~byteArrayToRawString(in_byteArray)](#module_crdtuxp..byteArrayToRawString) ⇒ <code>string</code> \| <code>undefined</code>
         * [~charCodeToUTF8__(in_charCode)](#module_crdtuxp..charCodeToUTF8__) ⇒ <code>array</code>
         * [~configLogger(logInfo)](#module_crdtuxp..configLogger) ⇒ <code>boolean</code>
+        * [~consoleLog(...args)](#module_crdtuxp..consoleLog)
         * [~decrypt(s_or_ByteArr, aesKey)](#module_crdtuxp..decrypt) ⇒ <code>Promise.&lt;(Array\|undefined)&gt;</code>
         * [~delayFunction(delayTimeMilliseconds, ftn, ...args)](#module_crdtuxp..delayFunction) ⇒ <code>Promise.&lt;any&gt;</code>
         * [~deQuote(quotedString)](#module_crdtuxp..deQuote) ⇒ <code>array</code>
@@ -84,6 +85,7 @@ be up to the developer and/or the IT department to decide what is appropriate an
         * [~dQ(s_or_ByteArr)](#module_crdtuxp..dQ) ⇒ <code>string</code>
         * [~encrypt(s_or_ByteArr, aesKey, [aesIV])](#module_crdtuxp..encrypt) ⇒ <code>Promise.&lt;(string\|undefined)&gt;</code>
         * [~evalTQL(tqlScript, [tqlScopeName], [options])](#module_crdtuxp..evalTQL) ⇒ <code>Promise.&lt;any&gt;</code>
+        * [~fileAppend_(filePath, data)](#module_crdtuxp..fileAppend_)
         * [~fileAppendString(fileName, appendStr, [options])](#module_crdtuxp..fileAppendString) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
         * [~fileClose(fileHandle)](#module_crdtuxp..fileClose) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
         * [~fileDelete(filePath)](#module_crdtuxp..fileDelete) ⇒ <code>Promise.&lt;(boolean\|undefined)&gt;</code>
@@ -412,6 +414,17 @@ Configure the logger
 | --- | --- | --- |
 | logInfo | <code>object</code> | object with logger setup info     logLevel: 0-4     logEntryExit: boolean     logToUXPConsole: boolean     logToCRDT: boolean     logToFilePath: undefined or a file path for logging |
 
+<a name="module_crdtuxp..consoleLog"></a>
+
+### crdtuxp~consoleLog(...args)
+Bottleneck for consoleLog
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>\*</code> | args for function |
+
 <a name="module_crdtuxp..decrypt"></a>
 
 ### crdtuxp~decrypt(s_or_ByteArr, aesKey) ⇒ <code>Promise.&lt;(Array\|undefined)&gt;</code>
@@ -584,6 +597,18 @@ Send a TQL script to the daemon and wait for the result
 | tqlScript | <code>string</code> | a script to run |
 | [tqlScopeName] | <code>string</code> | a scope name to use. Scopes are persistent for the  duration of the daemon process and can be used to pass data between different  processes |
 | [options] | <code>object</code> | optional.    options.wait when false don't wait to resolve, default true   options.isBinary default false   options.forceNetworkAPI default false; override uxpContext.hasNetworkAccess   options.tqlScopeName default TQL_SCOPE_NAME_DEFAULT or can be decoded as a string |
+
+<a name="module_crdtuxp..fileAppend_"></a>
+
+### crdtuxp~fileAppend\_(filePath, data)
+(Internal) Inefficient file append, for debugging use
+
+**Kind**: inner method of [<code>crdtuxp</code>](#module_crdtuxp)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| filePath | <code>string</code> | file to append to |
+| data | <code>string</code> | string to append |
 
 <a name="module_crdtuxp..fileAppendString"></a>
 
