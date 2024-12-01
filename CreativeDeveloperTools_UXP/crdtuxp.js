@@ -2535,6 +2535,72 @@ function fileClose(fileHandle) {
 module.exports.fileClose = fileClose;
 
 /**
+ * Copy a file
+ *
+ * Not restricted by the UXP security sandbox.
+ *
+ * @function fileCopy
+ *
+ * @param {string} fileFromPath - file to copy
+ * @param {string} fileToPath - where to copy to
+ * @returns {Promise<boolean|undefined>} success or failure
+ */
+
+function fileCopy(fileFromPath, fileToPath) {
+// coderstate: promisor
+    let retVal = RESOLVED_PROMISE_UNDEFINED;
+
+    do {
+
+        try {
+
+            const responsePromise = 
+                evalTQL(
+                    "fileCopy(" + dQ(fileFromPath) + "," + dQ(fileToPath) + ") ? \"true\" : \"false\""
+                );
+            if (! responsePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
+                // coderstate: resolver
+                let retVal;
+
+                do {
+                    if (! response || response.error) {
+                        crdtuxp.logError(arguments, "bad response, error = " + response?.error);
+                        break;
+                    }
+
+                    retVal = response.text == "true";
+                }
+                while (false);
+
+                return retVal;
+            };
+
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                crdtuxp.logError(arguments, "rejected for " + reason);
+                return undefined;
+            };
+            
+            retVal = responsePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
+    }
+    while (false);
+
+    return retVal;
+}
+module.exports.fileCopy = fileCopy;
+
+/**
  * Delete a file
  *
  * Not restricted by the UXP security sandbox.

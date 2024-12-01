@@ -15,14 +15,51 @@ const crdtuxp = require("./crdtuxp");
 
 const crdtuxp_test = require("./crdtuxp_test");
 
-async function init() {
-    //
-    // To embed a license to CRDT you need to provide your developer GUID and email.
-    //
-    // await crdtuxp.setIssuer("1186cb432432878745ee377c49d7eade","my@email.com");
-    document.getElementById("machineGUID_out").textContent = await crdtuxp.machineGUID();
+let devAcct;
+try {
+
+/* pluginInstallerDevAccount.js is something like:
+
+// Do not commit this file to git repo
+const ISSUER_GUID   = "123456789abcdef98799987645a7eade";
+module.exports.ISSUER_GUID = ISSUER_GUID;
+
+const ISSUER_EMAIL  = "someEmail@mail.com";
+module.exports.ISSUER_EMAIL = ISSUER_EMAIL;
+
+*/
+    devAcct = require("./pluginInstallerDevAccount.js");
+}
+catch (err) {    
 }
 
+async function init() {
+
+    //
+    // To embed a license and enable the optional features of CRDT you need to 
+    // provide your developer GUID and email.
+    //
+    // These can be obtained by registering for a Developer account in PluginInstaller. 
+    // Once you have a developer account, you can add your GUID and email here, 
+    // and enable the optional features in CRDT_UXP.
+    //
+    // Developer/Publisher accounts are free for small software companies. More info: dev@rorohiko.com
+    //
+
+    var initContext = {};
+    if (devAcct) {
+        initContext.ISSUER_GUID = devAcct.ISSUER_GUID;
+        initContext.ISSUER_EMAIL = devAcct.ISSUER_EMAIL;
+    }
+
+    crdtuxp.init(initContext);
+}
+
+async function initUI() {
+
+    document.getElementById("machineGUID_out").textContent = await crdtuxp.machineGUID();
+
+}
 
 // Set to false in production code
 const RUN_CRDT_UXP_TESTS = true;
@@ -106,12 +143,18 @@ async function encryptDemo() {
 }
 
 setTimeout(
+
     async function() {
         try {
+
+            await init();
+
             if (RUN_CRDT_UXP_TESTS) {
                 await crdtuxp_test.run();
             }
-            await init();
+
+            await initUI();
+
             crdtuxp.logNote('CRDT sample initialized');
         }
         catch (err) {

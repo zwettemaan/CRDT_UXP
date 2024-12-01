@@ -1,4 +1,5 @@
 /CreativeDeveloperTools_UXP.*.zip
+/CreativeDeveloperTools_UXP/pluginInstallerDevAccount.js
 /node_modules
 /out
 /package-lock.json
