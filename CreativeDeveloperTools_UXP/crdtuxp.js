@@ -3257,23 +3257,33 @@ module.exports.functionNameFromArguments = functionNameFromArguments;
 
 /**
  * Interpret a value extracted from some INI data as a boolean. Things like y, n, yes, no, true, false, t, f, 0, 1
+ * Default if missing is 'false'
  *
  * @function getBooleanFromINI
  *
  * @param {string} in_value - ini value
+ * @param {string} in_default - value to use if `undefined` or `""`
  * @returns {boolean} value
  */
 
-function getBooleanFromINI(in_value) {
+function getBooleanFromINI(in_value, in_default) {
 // coderstate: function
     let retVal = false;
 
     try {
-        if (in_value) {
+        if (! in_value) {
+            retVal = in_default ? true : false;
+        }
+        else {
             const value = (in_value + "").replace(REGEXP_TRIM, REGEXP_TRIM_REPLACE);
-            const firstChar = value.charAt(0).toLowerCase();
-            const firstValue = parseInt(firstChar, 10);
-            retVal = firstChar == "y" || firstChar == "t" || (! isNaN(firstValue) && firstValue != 0);
+            if (! value) {
+                retVal = in_default ? true : false;
+            }
+            else {
+                const firstChar = value.charAt(0).toLowerCase();
+                const firstValue = parseInt(firstChar, 10);
+                retVal = firstChar == "y" || firstChar == "t" || (! isNaN(firstValue) && firstValue != 0);
+            }
         }
     }
     catch (err) {
@@ -3423,6 +3433,45 @@ function getCreativeDeveloperToolsLevel() {
     return retVal;
 }
 module.exports.getCreativeDeveloperToolsLevel = getCreativeDeveloperToolsLevel;
+
+/**
+ * Get the path of the current script of the caller (_not_ the path of this file)
+ *
+ * Not restricted by the UXP security sandbox.
+ *
+ * @function getCurrentScriptPath
+ *
+ * @returns {string|undefined} file path of the script file containing the caller of getCurrentScriptPath
+ */
+
+function getCurrentScriptPath() {
+
+    let retVal = undefined;
+
+    do {
+
+        try {
+            // Intentionally throw an error to capture the stack trace
+            throw new Error();
+        } catch (err) {
+            // Parse the stack trace to extract the script path
+            const stackLines = err.stack.split("\n");
+
+            // We are interested in the script path for the caller of this function, not the path for crdtuxp.js::getCurrentScriptPath
+            const NUM_STEPS_FROM_STACK_TOP = 2;
+            const scriptPathLine = stackLines[NUM_STEPS_FROM_STACK_TOP];
+            const scriptPathMatch = scriptPathLine.match(/(\/.*?|[A-Za-z]:\\.*?|\\\\.*?\\.*?):\d+:\d+/); 
+            if (scriptPathMatch) {
+                retVal = scriptPathMatch[1];
+            }
+        }
+        
+    }    
+    while (false);
+
+    return retVal;
+}
+module.exports.path.getCurrentScriptPath = getCurrentScriptPath;
 
 /**
  * Get the path of a system directory
@@ -4272,7 +4321,20 @@ function init(context) {
         }
 
         if (! context.RUNPATH_ROOT) {
-            context.RUNPATH_ROOT = "./";
+            context.RUNPATH_ROOT = "." + module.exports.path.SEPARATOR;
+        }
+
+        if (! context.RUNPATH_ROOT_RESOLVED) {
+            // crdtuxp_js_path is the path to crdtuxp.js
+            let crdtuxp_js_path = crdtuxp.path.getCurrentScriptPath();
+            // crdtuxp_folder is the folder containing crdtuxp.js
+            let crdtuxp_folder = crdtuxp.path.dirName(crdtuxp_js_path);            
+            // Assume one level above crdtuxp_folder
+            context.RUNPATH_ROOT_RESOLVED = 
+                crdtuxp.path.dirName(
+                    crdtuxp_folder, 
+                    { addTrailingSeparator: true }
+                );
         }
 
         if (context.ISSUER_GUID && context.ISSUER_EMAIL) {
