@@ -310,6 +310,7 @@ let LOCALE_STRINGS                             = {
 
 module.exports.LOCALE                          = DEFAULT_LOCALE;
 module.exports.LOCALE_STRINGS                  = LOCALE_STRINGS;
+module.exports.LOCALE_EN_US                    = LOCALE_EN_US;
 
 //
 // UXP internally caches responses from the server - we need to avoid this as each script
@@ -404,7 +405,7 @@ function alert(message) {
                 uxpContext.app.doScript(
                     "alert(" + crdtuxp.dQ(message) + ")", 
                     uxpContext.indesign.ScriptLanguage.JAVASCRIPT);
-                retVal = true;
+                retVal = RESOLVED_PROMISE_TRUE;
                 break;
             }
 
@@ -420,7 +421,7 @@ function alert(message) {
                 dlg.canCancel = false;
                 dlg.show();
                 dlg.destroy(); 
-                retVal = true;
+                retVal = RESOLVED_PROMISE_TRUE;
                 break;
             }
 
@@ -528,11 +529,13 @@ function base64decode(base64Str, options) {
 
                 let rawString = window.atob(base64Str);
                 let byteArray = rawStringToByteArray(rawString);
-                if (isBinary) {
-                    retVal = byteArray;
-                }
-                else {
-                    retVal = binaryUTF8ToStr(byteArray);
+                if (byteArray) {
+                    if (isBinary) {
+                        retVal = Promise.resolve(byteArray);
+                    }
+                    else {
+                        retVal = Promise.resolve(binaryUTF8ToStr(byteArray));
+                    }
                 }
                 break;
             }
@@ -800,7 +803,7 @@ module.exports.binaryUTF8ToStr = binaryUTF8ToStr;
  *
  * @function byteArrayToRawString
  *
- * @param {string} in_byteArray - a byte array
+ * @param {array} in_array - a byte array
  * @returns {string|undefined} a string with the exact same bytes
  */
 function byteArrayToRawString(in_array) {
@@ -1089,19 +1092,19 @@ function deQuote(quotedString) {
 
             let qLen = quotedString.length;
             if (qLen < 2) {
-                retVal = quotedString;
+                retVal = strToUTF8(quotedString);
                 break;
             }
 
             const quoteChar = quotedString.charAt(0);
             qLen -= 1;
             if (quoteChar != quotedString.charAt(qLen)) {
-                retVal = quotedString;
+                retVal = strToUTF8(quotedString);
                 break;
             }
 
             if (quoteChar != '"' && quoteChar != "'") {
-                retVal = quotedString;
+                retVal = strToUTF8(quotedString);
                 break;
             }
 
@@ -1255,7 +1258,7 @@ function dirCreate(filePath) {
                 try {
                     const stats = uxpContext.fs.lstatSync(parentPath);
                     if (! stats || ! stats.isDirectory()) {
-                        retVal = false;
+                        retVal = RESOLVED_PROMISE_FALSE;
                         break;
                     } 
                 }
@@ -1269,7 +1272,7 @@ function dirCreate(filePath) {
                 try {
                     const stats = uxpContext.fs.lstatSync(filePath);
                     if (stats) {
-                        retVal = false;
+                        retVal = RESOLVED_PROMISE_FALSE;
                         break;
                     }
                 }
@@ -1751,7 +1754,7 @@ function dirScan(filePath) {
                 }
                 catch (err) {
                     crdtuxp.logError(arguments, "throws " + err);
-                    retVal = false;
+                    retVal = RESOLVED_PROMISE_FALSE;
                     break;
                 }
                 retVal = Promise.resolve(entries);
@@ -1843,7 +1846,7 @@ module.exports.dirScan = dirScan;
  * @function dQ
  *
  * @param {string|Array} s_or_ByteArr - a Unicode string or an array of bytes
- * @returns {string} a string enclosed in double quotes. This string is pure 7-bit
+ * @returns {string|undefined} a string enclosed in double quotes. This string is pure 7-bit
  * ASCII and can be used into generated script code
  * Example:
  * `let script = "a=b(" + dQ(somedata) + ");";`
@@ -2105,9 +2108,19 @@ function evalTQL(tqlScript, options) {
                     let retVal = undefined;
 
                     let responseText;
+                    let responseTextUnwrapped;
+
                     do {
                         try {
+
+                            if (! replyByteArray) {
+                                break;
+                            }
+
                             let jsonResponse = binaryUTF8ToStr(replyByteArray);
+                            if (jsonResponse == "undefined") {
+                                break;
+                            }
 
                             let response;
                             try {
@@ -2134,7 +2147,7 @@ function evalTQL(tqlScript, options) {
                     if (resultIsRawBinary) {
                         responseTextUnwrapped = responseText;
                     }
-                    else {
+                    else if (responseText) {
                         responseTextUnwrapped = binaryUTF8ToStr(deQuote(responseText));
                     }
 
@@ -2244,6 +2257,14 @@ function evalTQL(tqlScript, options) {
 
                     do {
                         let responseTextUnwrapped;
+                        if (! responseText) {
+                            break;
+                        }
+
+                        if (responseText == "undefined") {
+                            break;
+                        }
+
                         try {
                             if (resultIsRawBinary) {
                                 responseTextUnwrapped = responseText;
@@ -3333,8 +3354,12 @@ function getCapability(issuer, capabilityCode, encryptionKey) {
                 let retVal;
 
                 do {
-                    if (! response || response.error) {
+                    if (response && response.error) {
                         crdtuxp.logError(arguments, "bad response, error = " + response?.error);
+                        break;
+                    }
+
+                    if (! response) {
                         break;
                     }
 
@@ -4287,6 +4312,35 @@ function getUXPContext() {
     return retVal;
 }
 module.exports.getUXPContext = getUXPContext;
+
+/**
+ * Hash some text
+ * 
+ * Not cryptographic
+ *
+ * @function hashStringFNV1a
+ * 
+ * @param {string} s - text to hash
+ * @returns a hash for the input
+ * 
+ */
+
+function hashStringFNV1a(s) {
+
+    const fnv1a = (str) => {
+        let hash = 0x811c9dc5; // 32-bit FNV-1a offset basis
+        for (let i = 0; i < str.length; i++) {
+            hash ^= str.charCodeAt(i);
+            hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+        }
+        return hash >>> 0; // Ensure 32-bit unsigned
+    };
+
+    var hash = fnv1a(s.toString()).toString(16); // Hexadecimal hash
+
+    return hash;
+}
+module.exports.hashStringFNV1a = hashStringFNV1a;
 
 /**
  * Initialize crdtuxp
