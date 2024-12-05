@@ -968,9 +968,9 @@ function configLogger(logInfo) {
 module.exports.configLogger = configLogger;
 
 /**
- * Bottleneck for &lt;code>console.log&lt;/code>. Only call this function for when crdtuxp.log... is not&lt;br>
+ * Bottleneck for &lt;code>console.log&lt;/code>. Only call this function for when &lt;code>crdtuxp.log...&lt;/code> is not&lt;br>
  * available, e.g. before crdtux has loaded or from within functions used by the logging&lt;br>
- * functionaly like evalTQL()&lt;br>
+ * functionaly like &lt;code>evalTQL()&lt;/code>&lt;br>
  *
  * @function consoleLog
  *
@@ -1626,7 +1626,7 @@ function dirDelete(filePath, recurse) {
 module.exports.dirDelete = dirDelete;
 
 /**
- * Verify whether a directory exists. Will return &lt;code>false&lt;/code> if the path points to a file &lt;br>
+ * Verify whether a directory exists. Will return &lt;code>false&lt;/code> if the path points to a file&lt;br>
  * (instead of a directory).&lt;br>
  * &lt;br>
  * Also see &lt;code>fileExists()&lt;/code>.&lt;br>
@@ -1723,11 +1723,11 @@ module.exports.dirExists = dirExists;
  *
  * @param {string} filePath - a file path 
  * @param {object=} options - options:&lt;br> 
- * {&lt;br>
+ * &lt;code>{&lt;br>
  *   addTrailingSeparator: true/false, default false,&lt;br>
  *   separator: separatorchar. the separator to use. If omitted, will try to guess the &lt;br>
  *   separator.&lt;br>
- * }
+ * }&lt;/code>
  * @param {string=} separator - 
  * @returns the parent of the path
  */
@@ -1879,15 +1879,13 @@ function dirScan(filePath) {
 module.exports.dirScan = dirScan;
 
 /**
- * Wrap a string or a byte array into double quotes, encoding any&lt;br>
- * binary data as a string. Knows how to handle Unicode characters&lt;br>
- * or binary zeroes.&lt;br>
+ * Wrap a string or a byte array into double quotes, encoding any binary data as a string.&lt;br>
+ * Knows how to handle Unicode characters or binary zeroes.&lt;br>
  * &lt;br>
- * When the input is a string, high Unicode characters are&lt;br>
- * encoded as &lt;code>\uHHHH&lt;/code>.&lt;br>
+ * When the input is a string, high Unicode characters are encoded as &lt;code>\uHHHH&lt;/code>.&lt;br>
  * &lt;br>
- * When the input is a byte array, all bytes are encoded&lt;br>
- * as characters or as &lt;code>\xHH&lt;/code> escape sequences.
+ * When the input is a byte array, all bytes are encoded as characters or as &lt;code>\xHH&lt;/code>&lt;br>
+ * escape sequences.
  *
  * @function dQ
  *
@@ -1913,10 +1911,9 @@ function dQ(s_or_ByteArr) {
 module.exports.dQ = dQ;
 
 /**
- * Encrypt a string or array of bytes using a key. A random salt
- * is added into the mix, so even when passing in the same parameter values, the result will
- * be different every time.
- *
+ * Encrypt a string or array of bytes using a key. A random salt is added into the mix,&lt;br>
+ * so even when passing in the same parameter values, the result will be different every time.&lt;br>
+ * &lt;br>
  * Only available to paid developer accounts
  *
  * @function encrypt
@@ -2062,12 +2059,12 @@ function enQuote__(s_or_ByteArr, quoteChar) {
  * @function evalTQL
  *
  * @param {string} tqlScript - a script to run
- * @param {object=} options - optional. 
- *   options.wait when false don't wait to resolve, default true
- *   options.isBinary default false
- *   options.tqlScopeName default TQL_SCOPE_NAME_DEFAULT
- *   options.waitFileTimeout default DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS
- *   options.waitFileCheckInterval default DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS
+ * @param {object=} options - optional. &lt;br>
+ *   &lt;code>options.wait&lt;/code> when &lt;code>false&lt;/code> don't wait to resolve, default &lt;code>true&lt;/code>&lt;br>
+ *   &lt;code>options.isBinary&lt;/code> default &lt;code>false&lt;/code>&lt;br>
+ *   &lt;code>options.tqlScopeName&lt;/code> default &lt;code>TQL_SCOPE_NAME_DEFAULT&lt;/code>&lt;br>
+ *   &lt;code>options.waitFileTimeout&lt;/code> default &lt;code>DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS&lt;/code>&lt;br>
+ *   &lt;code>options.waitFileCheckInterval&lt;/code> default &lt;code>DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS&lt;/code>&lt;br>
  * or can be decoded as a string
  * @returns {Promise&lt;any>} a string or a byte array
  */
@@ -2435,17 +2432,17 @@ function fileAppend_(filePath, data) {
 module.exports.fileAppend_ = fileAppend_;
 
 /**
- * Append a string to a file (useful for logging). 
- *
+ * Append a string to a file (useful for logging).&lt;br>
+ * &lt;br>
  * Not restricted by the UXP security sandbox.
  *
  * @function fileAppendString
  *
  * @param {string} fileName - path to file
  * @param {string} appendStr - data to append. If a newline is needed it needs to be part of appendStr
- * @param {object=} options - {
- *      options.wait = false means don't wait to resolve
- * }
+ * @param {object=} options - &lt;code>{&lt;br>
+ *     options.wait = false means don't wait to resolve&lt;br>
+ * }&lt;/code>
  * @returns {Promise&lt;boolean|undefined>} success or failure
  */
 
@@ -2533,8 +2530,8 @@ function fileAppendString(fileName, in_appendStr, options) {
 module.exports.fileAppendString = fileAppendString;
 
 /**
- * Close a currently open file.
- *
+ * Close a currently open file.&lt;br>
+ * &lt;br>
  * Not restricted by the UXP security sandbox.
  *
  * @function fileClose
@@ -2610,8 +2607,8 @@ function fileClose(fileHandle) {
 module.exports.fileClose = fileClose;
 
 /**
- * Copy a file.
- *
+ * Copy a file.&lt;br>
+ * &lt;br>
  * Not restricted by the UXP security sandbox.
  *
  * @function fileCopy
@@ -2676,8 +2673,8 @@ function fileCopy(fileFromPath, fileToPath) {
 module.exports.fileCopy = fileCopy;
 
 /**
- * Delete a file.
- *
+ * Delete a file.&lt;br>
+ * &lt;br>
  * Not restricted by the UXP security sandbox.
  *
  * @function fileDelete
@@ -2781,11 +2778,11 @@ function fileDelete(filePath) {
 module.exports.fileDelete = fileDelete;
 
 /**
- * Check if a file exists. Will return &lt;code>false&lt;/code> if the file path points to a directory.
- *
- * Also see &lt;code>dirExists()&lt;/code>.
- *
- * Not restricted by the UXP security sandbox.
+ * Check if a file exists. Will return &lt;code>false&lt;/code> if the file path points to a directory.&lt;br>
+ * &lt;br>
+ * Also see &lt;code>dirExists()&lt;/code>.&lt;br>
+ * &lt;br>
+ * Not restricted by the UXP security sandbox. 
  *
  * @function fileExists
  *
@@ -2876,8 +2873,7 @@ module.exports.fileExists = fileExists;
  * @function fileNameExtension
  *
  * @param {string} filePath - a file path 
- * @param {string=} separator - the separator to use. If omitted, will try 
- * guess the separator.
+ * @param {string=} separator - the separator to use. If omitted, will try to guess the separator.
  * @returns the lowercased file name extension, without leading period
  */
 
@@ -2903,8 +2899,8 @@ function fileNameExtension(filePath, separator) {
 module.exports.path.fileNameExtension = fileNameExtension;
 
 /**
- * Open a binary file and return a handle.
- *
+ * Open a binary file and return a handle.&lt;br>
+ * &lt;br>
  * Not restricted by the UXP security sandbox.
  *
  * @function fileOpen
@@ -3064,14 +3060,14 @@ function fileOpen(filePath, mode) {
 module.exports.fileOpen = fileOpen;
 
 /**
- * Read a file into memory.
- *
+ * Read a file into memory.&lt;br>
+ * &lt;br>
  * Not restricted by the UXP security sandbox.
  *
  * @function fileRead
  *
  * @param {number} fileHandle - a file handle as returned by &lt;code>fileOpen()&lt;/code>.
- * @param {boolean|object=} options - options: { isBinary: true/false, default false }
+ * @param {boolean|object=} options - &lt;code>{ isBinary: true/false, default false }&lt;/code>
  * @returns {Promise&lt;any>} either a byte array or a string
  */
 
@@ -3191,8 +3187,8 @@ function fileRead(fileHandle, options) {
 module.exports.fileRead = fileRead;
 
 /**
- * Binary write to a file. Strings are written as UTF-8.
- *
+ * Binary write to a file. Strings are written as UTF-8.&lt;br>
+ * &lt;br>
  * Not restricted by the UXP security sandbox.
  *
  * @function fileWrite
@@ -3331,8 +3327,8 @@ function functionNameFromArguments(functionArguments) {
 module.exports.functionNameFromArguments = functionNameFromArguments;
 
 /**
- * Interpret a value extracted from some INI data as a boolean. Things like y, n, yes, no, true, false, t, f, 0, 1
- * Default if missing is 'false'
+ * Interpret a value extracted from some INI data as a boolean. Things like &lt;code>y, n, yes, no, true, false, t, f, 0, 1&lt;/code>&lt;br>
+ * Default if missing is &lt;code>false&lt;/code>
  *
  * @function getBooleanFromINI
  *
@@ -3375,13 +3371,17 @@ module.exports.getBooleanFromINI = getBooleanFromINI;
  * @function getCapability
  *
  * @param {string} issuer - a GUID identifier for the developer account as seen in the PluginInstaller
- * @param {string} capabilityCode - a code for the software features to be activated (as determined by the developer who owns the account).
- * &lt;code>capabilityCode&lt;/code> is not the same as &lt;code>orderProductCode&lt;/code> - there can be multiple &lt;code>orderProductCode&lt;/code> associated with 
- * a single &lt;code>capabilityCode&lt;/code> (e.g. &lt;code>capabilityCode&lt;/code> 'XYZ', &lt;code>orderProductCode&lt;/code> 'XYZ_1YEAR', 'XYZ_2YEAR'...).
- * @param {string} encryptionKey - the secret encryption key (created by the developer) needed to decode the capability data. You want to make
- * sure this password is obfuscated and contained within encrypted script code.
- * @returns {Promise&lt;string|undefined>} a JSON-encoded object with meta object (containing customer GUID, seatIndex, decrypted developer-provided data from the activation file).
- * The decrypted developer data is embedded as a string, so might be two levels of JSON-encoding to be dealt with to get to any JSON-encoded decrypted data
+ * @param {string} capabilityCode - a code for the software features to be activated (as determined by&lt;br>
+ * the developer who owns the account).&lt;br>
+ * &lt;code>capabilityCode&lt;/code> is not the same as &lt;code>orderProductCode&lt;/code> - there can be multiple&lt;br>
+ * &lt;code>orderProductCode&lt;/code> associated with a single &lt;code>capabilityCode&lt;/code>&lt;br>
+ * (e.g. &lt;code>capabilityCode&lt;/code> 'XYZ', &lt;code>orderProductCode&lt;/code> 'XYZ_1YEAR', 'XYZ_2YEAR'...).
+ * @param {string} encryptionKey - the secret encryption key (created by the developer) needed to decode&lt;br>
+ * the capability data. You want to make sure this password is obfuscated and contained within encrypted script code.
+ * @returns {Promise&lt;string|undefined>} a JSON-encoded object with meta object (containing customer GUID, seatIndex,&lt;br>
+ * decrypted developer-provided data from the activation file).&lt;br>
+ * The decrypted developer data is embedded as a string, so might be two levels of JSON-encoding to be dealt with &lt;br>
+ * to get to any JSON-encoded decrypted data
  */
 function getCapability(issuer, capabilityCode, encryptionKey) {
 // coderstate: promisor
@@ -3446,10 +3446,10 @@ function getCapability(issuer, capabilityCode, encryptionKey) {
 module.exports.getCapability = getCapability;
 
 /**
- * Determine the license level for CRDT: 0 = not, 1 = basic, 2 = full
- *
- * Some functions, marked with "Only available to paid developer accounts" 
- * will only work with level 2. Licensing function only work with level 1
+ * Determine the license level for CRDT: 0 = not, 1 = basic, 2 = full&lt;br>
+ * &lt;br>
+ * Some functions, marked with "Only available to paid developer accounts" &lt;br>
+ * will only work with level 2. Licensing function only work with level 1&lt;br>
  *
  * @function getCreativeDeveloperToolsLevel
  *
@@ -3514,13 +3514,13 @@ function getCreativeDeveloperToolsLevel() {
 module.exports.getCreativeDeveloperToolsLevel = getCreativeDeveloperToolsLevel;
 
 /**
- * Get the path of the current script of the caller (_not_ the path of this file).
- *
+ * Get the path of the current script of the caller (_not_ the path of this file).&lt;br>
+ * &lt;br>
  * Not restricted by the UXP security sandbox.
  *
  * @function getCurrentScriptPath
  *
- * @returns {string|undefined} file path of the script file containing the caller of getCurrentScriptPath
+ * @returns {string|undefined} file path of the script file containing the caller of &lt;code>getCurrentScriptPath()&lt;/code>
  */
 
 function getCurrentScriptPath() {
@@ -3553,21 +3553,21 @@ function getCurrentScriptPath() {
 module.exports.path.getCurrentScriptPath = getCurrentScriptPath;
 
 /**
- * Get the path of a system directory.
- *
+ * Get the path of a system directory.&lt;br>
+ * &lt;br>
  * Not restricted by the UXP security sandbox.
  *
  * @function getDir
  *
  * @param {string} dirTag - a tag representing the dir:
- * &lt;code>
- *    DESKTOP_DIR
- *    DOCUMENTS_DIR
- *    HOME_DIR
- *    LOG_DIR
- *    SYSTEMDATA_DIR
- *    TMP_DIR
- *    USERDATA_DIR
+ * &lt;code>&lt;br>
+ *    DESKTOP_DIR&lt;br>
+ *    DOCUMENTS_DIR&lt;br>
+ *    HOME_DIR&lt;br>
+ *    LOG_DIR&lt;br>
+ *    SYSTEMDATA_DIR&lt;br>
+ *    TMP_DIR&lt;br>
+ *    USERDATA_DIR&lt;br>
  * &lt;/code>
  * @returns {Promise&lt;string|undefined>} file path of dir or undefined. Directory paths include a trailing slash or backslash.
  */
@@ -3666,8 +3666,8 @@ function getDir(dirTag) {
 module.exports.getDir = getDir;
 
 /**
- * Access the environment as available to the daemon program.
- *
+ * Access the environment as available to the daemon program.&lt;br>
+ * &lt;br>
  * Not restricted by the UXP security sandbox.
  *
  * @function getEnvironment
@@ -3730,7 +3730,7 @@ function getEnvironment(envVarName) {
 module.exports.getEnvironment = getEnvironment;
 
 /**
- * Interpret a string extracted from some INI data as a floating point value, followed by an optional unit
+ * Interpret a string extracted from some INI data as a floating point value, followed by an optional unit&lt;br>
  * If there is no unit, then no conversion is performed.
  *
  * @function getFloatWithUnitFromINI
@@ -3822,7 +3822,7 @@ function getFloatWithUnitFromINI(in_valueStr, in_convertToUnit) {
 module.exports.getFloatWithUnitFromINI = getFloatWithUnitFromINI;
 
 /**
- * Interpret a string extracted from some INI data as an array with float values (e.g. "[ 255, 128.2, 1.7]" )
+ * Interpret a string extracted from some INI data as an array with float values (e.g. &lt;code>"[ 255, 128.2, 1.7]"&lt;/code> )
  *
  * @function getFloatValuesFromINI
  *
@@ -3874,7 +3874,7 @@ function getFloatValuesFromINI(in_valueStr) {
 module.exports.getFloatValuesFromINI = getFloatValuesFromINI;
 
 /**
- * Interpret a string extracted from some INI data as an array with int values (e.g. "[ 255, 128, 1]" )
+ * Interpret a string extracted from some INI data as an array with int values (e.g. &lt;code>"[ 255, 128, 1]"&lt;/code> )
  *
  * @function getIntValuesFromINI
  *
@@ -3928,9 +3928,9 @@ function getIntValuesFromINI(in_valueStr) {
 module.exports.getIntValuesFromINI = getIntValuesFromINI;
 
 /**
- * Query the daemon for persisted data
- *
- * Only available to paid developer accounts
+ * Query the daemon for persisted data&lt;br>
+ * &lt;br>
+ * Only available to paid developer accounts&lt;br>
  *
  * @function getPersistData
  *
@@ -4274,7 +4274,7 @@ function getContext() {
 module.exports.getContext = getContext;
 
 /**
- * Get our bearings and figure out what context we're operating in. Depending on the context
+ * Get our bearings and figure out what context we're operating in. Depending on the context&lt;br>
  * we will or won't have access to certain features
  *
  * @function getUXPContext
@@ -4530,7 +4530,7 @@ function init(context) {
 module.exports.init = init;
 
 /**
- * Wrap the system Promise with a new Promise class that allows us to track pending promises
+ * Wrap the system &lt;code>Promise&lt;/code> with a new &lt;code>Promise&lt;/code> class that allows us to track pending promises
  *
  * @function injectProxyPromiseClass
  */
@@ -4691,10 +4691,9 @@ function injectProxyPromiseClass() {
 module.exports.injectProxyPromiseClass = injectProxyPromiseClass;
 
 /**
- * Calculate an integer power of an int value. Avoids using floating point, so
- * should not have any floating-point round-off errors. &lt;code>Math.pow()&lt;/code> will probably
- * give the exact same result, but I am doubtful that some implementations might internally use &lt;code>log&lt;/code> and &lt;code>exp&lt;/code>
- * to handle &lt;code>Math.pow()&lt;/code>
+ * Calculate an integer power of an int value. Avoids using floating point, so should not have any floating-point&lt;br>
+ * round-off errors. &lt;code>Math.pow()&lt;/code> will probably give the exact same result, but I am doubtful that some&lt;br>
+ * implementations might internally use &lt;code>log&lt;/code> and &lt;code>exp&lt;/code> to handle &lt;code>Math.pow()&lt;/code>
  *
  * @function intPow
  *
@@ -4924,12 +4923,13 @@ function logEntry(reportingFunctionArguments) {
 module.exports.logEntry = logEntry;
 
 /**
- * Make a log entry of an error message. Pass in the &lt;code>arguments&lt;/code> keyword as the first parameter
+ * Make a log entry of an error message. Pass in the &lt;code>arguments&lt;/code> keyword as the first parameter&lt;br>
  * If the error level is below &lt;code>LOG_LEVEL_ERROR&lt;/code> nothing happens
  *
  * @function logError
  *
- * @param {any} reportingFunctionArguments - pass in the current &lt;code>arguments&lt;/code> to the function. This is used to determine the function's name for the log
+ * @param {any} reportingFunctionArguments - pass in the current &lt;code>arguments&lt;/code> to the function.&lt;br>
+ * This is used to determine the function's name for the log
  * @param {any} message - error message
  * @returns {Promise} - a promise that can be used to await the log call completion
  */
@@ -4954,7 +4954,8 @@ module.exports.logError = logError;
  *
  * @function logExit
  *
- * @param {any} reportingFunctionArguments - pass in the current &lt;code>arguments&lt;/code> to the function. This is used to determine the function's name for the log
+ * @param {any} reportingFunctionArguments - pass in the current &lt;code>arguments&lt;/code> to the function. &lt;br>
+ * This is used to determine the function's name for the log
  * @returns {Promise} - a promise that can be used to await the log call completion
  */
 
@@ -4975,7 +4976,8 @@ module.exports.logExit = logExit;
  * 
  * @function logMessage
  *
- * @param {any} reportingFunctionArguments - pass in the current &lt;code>arguments&lt;/code> to the function. This is used to determine the function's name for the log
+ * @param {any} reportingFunctionArguments - pass in the current &lt;code>arguments&lt;/code> to the function.&lt;br>
+ * This is used to determine the function's name for the log
  * @param {number} logLevel - log level 0 - 4
  * @param {string} message - the note to output
  * @returns {Promise} - a promise that can be used to await the log call completion
@@ -5125,12 +5127,13 @@ function logMessage(reportingFunctionArguments, logLevel, message) {
 module.exports.logMessage = logMessage;
 
 /**
- * Make a log entry of a note. Pass in the &lt;code>arguments&lt;/code> keyword as the first parameter.
+ * Make a log entry of a note. Pass in the &lt;code>arguments&lt;/code> keyword as the first parameter.&lt;br>
  * If the error level is below &lt;code>LOG_LEVEL_NOTE&lt;/code> nothing happens
  *
  * @function logNote
  *
- * @param {any} reportingFunctionArguments - pass in the current &lt;code>arguments&lt;/code> to the function. This is used to determine the function's name for the log
+ * @param {any} reportingFunctionArguments - pass in the current &lt;code>arguments&lt;/code> to the function.&lt;br>
+ * This is used to determine the function's name for the log
  * @param {any} message - the note to output
  * @returns {Promise} - a promise that can be used to await the log call completion
  */
@@ -5151,12 +5154,13 @@ function logNote(reportingFunctionArguments, message) {
 module.exports.logNote = logNote;
 
 /**
- * Emit a trace messsage into the log. Pass in the &lt;code>arguments&lt;/code> keyword as the first parameter.
+ * Emit a trace messsage into the log. Pass in the &lt;code>arguments&lt;/code> keyword as the first parameter.&lt;br>
  * If the error level is below &lt;code>LOG_LEVEL_TRACE&lt;/code> nothing happens
  *
  * @function logTrace
  *
- * @param {any} reportingFunctionArguments - pass in the current &lt;code>arguments&lt;/code> to the function. This is used to determine the function's name for the log
+ * @param {any} reportingFunctionArguments - pass in the current &lt;code>arguments&lt;/code> to the function.&lt;br>
+ * This is used to determine the function's name for the log
  * @param {any} message - the trace message to output
  * @returns {Promise} - a promise that can be used to await the log call completion
  */
@@ -5177,12 +5181,13 @@ function logTrace(reportingFunctionArguments, message) {
 module.exports.logTrace = logTrace;
 
 /**
- * Emit a warning messsage into the log. Pass in the &lt;code>arguments&lt;/code> keyword as the first parameter.
+ * Emit a warning messsage into the log. Pass in the &lt;code>arguments&lt;/code> keyword as the first parameter.&lt;br>
  * If the error level is below &lt;code>LOG_LEVEL_WARNING&lt;/code> nothing happens
  *
  * @function logWarning
  *
- * @param {any} reportingFunctionArguments - pass in the current &lt;code>arguments&lt;/code> to the function. This is used to determine the function's name for the log
+ * @param {any} reportingFunctionArguments - pass in the current &lt;code>arguments&lt;/code> to the function.&lt;br>
+ * This is used to determine the function's name for the log
  * @param {any} message - the warning message to output
 */
 function logWarning(reportingFunctionArguments, message) {
@@ -5202,8 +5207,8 @@ function logWarning(reportingFunctionArguments, message) {
 module.exports.logWarning = logWarning;
 
 /**
- * The unique &lt;code>GUID&lt;/code> of this computer
- *
+ * The unique &lt;code>GUID&lt;/code> of this computer&lt;br>
+ * &lt;br>
  * Only available to paid developer accounts
  * 
  * @function machineGUID
@@ -5468,73 +5473,75 @@ function rawStringToByteArray(in_str) {
 module.exports.rawStringToByteArray = rawStringToByteArray;
 
 /**
- * Read a bunch of text and try to extract structured information in .INI format
- *
- * This function is lenient and is able to extract slightly mangled INI data from the text frame
- * content of an InDesign text frame.
- *
- * This function knows how to handle curly quotes should they be present.
- *
- * The following flexibilities have been built-in:
- *
- * - Attribute names are case-insensitive and anything not &lt;code>a-z 0-9&lt;/code> is ignored.
- * Entries like &lt;code>this or that = ...&lt;/code> or &lt;code>thisOrThat = ...&lt;/code> or &lt;code>this'orThat = ...&lt;/code> are
- * all equivalent. Only letters and digits are retained, and converted to lowercase.
- *
- * - Attribute values can be quoted with either single, double, curly quotes.
- * This often occurs because InDesign can be configured to convert normal quotes into
- * curly quotes automatically.
- * Attribute values without quotes are trimmed (e.g. &lt;code>bla =    x  &lt;/code> is the same as &lt;code>bla=x&lt;/code>)
- * Spaces are retained in quoted attribute values.
- *
- * - Any text will be ignore if not properly formatted as either a section name or an attribute-value
- * pair with an equal sign
- *
- * - Hard and soft returns are equivalent
- *
- * The return value is an object with the section names at the top level, and attribute names
- * below that. The following .INI
- * &lt;code>
- * [My data]
- * this is = " abc "
- * that =      abc
- * &lt;/code>
- * returns
- * &lt;code>
- * {
- *   "mydata": {
- *      "__rawSectionName": "My data",
- *      "thisis": " abc ",
- *      "that": "abc"
- *   }
- * }
- * &lt;/code>
- *
- * Duplicated sections and entries are automatically suffixed with a counter suffix - e.g.
- * 
- * [main]
- * a=1
- * a=2
- * a=3
- * 
- * is equivalent with 
- * 
- * [main]
- * a=1
- * a_2=2
- * a_3=3
- * 
- * [a]
- * a=1
- * [a]
- * a=2
- * 
+ * Read a bunch of text and try to extract structured information in .INI format&lt;br>
+ * &lt;br>
+ * This function is lenient and is able to extract slightly mangled INI data from the text frame&lt;br>
+ * content of an InDesign text frame.&lt;br>
+ * &lt;br>
+ * This function knows how to handle curly quotes should they be present.&lt;br>
+ * &lt;br>
+ * The following flexibilities have been built-in:&lt;br>
+ * &lt;br>
+ * - Attribute names are case-insensitive and anything not &lt;code>a-z 0-9&lt;/code> is ignored.&lt;br>
+ * Entries like &lt;code>this or that = ...&lt;/code> or &lt;code>thisOrThat = ...&lt;/code> or &lt;code>this'orThat = ...&lt;/code> are&lt;br>
+ * all equivalent. Only letters and digits are retained, and converted to lowercase.&lt;br>
+ * &lt;br>
+ * - Attribute values can be quoted with either single, double, curly quotes.&lt;br>
+ * This often occurs because InDesign can be configured to convert normal quotes into&lt;br>
+ * curly quotes automatically.&lt;br>
+ * Attribute values without quotes are trimmed (e.g. &lt;code>bla =    x  &lt;/code> is the same as &lt;code>bla=x&lt;/code>)&lt;br>
+ * Spaces are retained in quoted attribute values.&lt;br>
+ * &lt;br>
+ * - Any text will be ignore if not properly formatted as either a section name or an attribute-value&lt;br>
+ * pair with an equal sign&lt;br>
+ * &lt;br>
+ * - Hard and soft returns are equivalent&lt;br>
+ * &lt;br>
+ * The return value is an object with the section names at the top level, and attribute names&lt;br>
+ * below that. The following .INI&lt;br>
+ * &lt;code>&lt;br>
+ * [My data]&lt;br>
+ * this is = " abc "&lt;br>
+ * that =      abc&lt;br>
+ * &lt;/code>&lt;br>
+ * returns&lt;br>
+ * &lt;code>&lt;br>
+ * {&lt;br>
+ *   "mydata": {&lt;br>
+ *      "__rawSectionName": "My data",&lt;br>
+ *      "thisis": " abc ",&lt;br>
+ *      "that": "abc"&lt;br>
+ *   }&lt;br>
+ * }&lt;br>
+ * &lt;/code>&lt;br>
+ * Duplicated sections and entries are automatically suffixed with a counter suffix - e.g.&lt;br>
+ * &lt;code>&lt;br>
+ * [main]&lt;br>
+ * a=1&lt;br>
+ * a=2&lt;br>
+ * a=3&lt;br>
+ * &lt;/code>&lt;br>
+ * is equivalent with&lt;br>
+ * &lt;code>&lt;br>
+ * [main]&lt;br>
+ * a=1&lt;br>
+ * a_2=2&lt;br>
+ * a_3=3&lt;br>
+ * &lt;/code>&lt;br>
+ * and&lt;br>
+ * &lt;code>&lt;br>
+ * [a]&lt;br>
+ * a=1&lt;br>
+ * [a]&lt;br>
+ * a=2&lt;br>
+ * &lt;/code>&lt;br>
  * is equivalent with
- * 
- * [a]
- * a=1
- * [a_2]
- * a=2
+ * &lt;code>&lt;br>
+ * [a]&lt;br>
+ * a=1&lt;br>
+ * [a_2]&lt;br>
+ * a=2&lt;br>
+ * &lt;/code>&lt;br>
  * 
  * @function readINI
  *
@@ -5867,8 +5874,8 @@ function S(stringCode, locale) {
 module.exports.S = S;
 
 /**
- * Send in activation data so the daemon can determine whether some software is currently activated or not.
- *
+ * Send in activation data so the daemon can determine whether some software is currently activated or not.&lt;br>
+ * &lt;br>
  * Needs to be followed by a &lt;code>sublicense()&lt;/code> call
  *
  * @function setIssuer
@@ -5931,21 +5938,19 @@ function setIssuer(issuerGUID, issuerEmail) {
 module.exports.setIssuer = setIssuer;
 
 /**
- * Wrap a string or a byte array into single quotes, encoding any
- * binary data as a string. Knows how to handle Unicode characters
- * or binary zeroes.
- *
- * When the input is a string, high Unicode characters are
- * encoded as &lt;code>\uHHHH&lt;/code>
- *
- * When the input is a byte array, all bytes are encoded as &lt;code>\xHH&lt;/code> escape sequences.
+ * Wrap a string or a byte array into single quotes, encoding any binary data as a string.&lt;br>
+ * Knows how to handle Unicode characters or binary zeroes.&lt;br>
+ * &lt;br>
+ * When the input is a string, high Unicode characters are encoded as &lt;code>\uHHHH&lt;/code>&lt;br>
+ * &lt;br>
+ * When the input is a byte array, all bytes are encoded as &lt;code>\xHH&lt;/code> escape sequences.&lt;br>
  *
  * @function sQ
  *
  * @param {string} s_or_ByteArr - a Unicode string or an array of bytes
- * @returns {string} a string enclosed in double quotes. This string is pure 7-bit
- * ASCII and can be used into generated script code
- * Example:
+ * @returns {string} a string enclosed in double quotes. This string is pure 7-bit ASCII and can&lt;br>
+ * be used into generated script code&lt;br>
+ * Example:&lt;br>
  * &lt;code>let script = "a=b(" + sQ(somedata) + ");";&lt;/code>
  */
 function sQ(s_or_ByteArr) {
@@ -5964,8 +5969,8 @@ function sQ(s_or_ByteArr) {
 module.exports.sQ = sQ;
 
 /**
- * Store some persistent data (e.g. a time stamp to determine a demo version lapsing)
- *
+ * Store some persistent data (e.g. a time stamp to determine a demo version lapsing)&lt;br>
+ * &lt;br>
  * Only available to paid developer accounts
  *
  * @function setPersistData
@@ -6041,8 +6046,7 @@ module.exports.setPersistData = setPersistData;
  * @function stripTrailingSeparator
  *
  * @param {string} filePath - a file path 
- * @param {string=} separator - the separator to use. If omitted, will try 
- * guess the separator.
+ * @param {string=} separator - the separator to use. If omitted, will try to guess the separator.
  * @returns the file path without trailing separator
  */
 
@@ -6126,8 +6130,9 @@ function strToUTF8(in_s) {
 module.exports.strToUTF8 = strToUTF8;
 
 /**
- * Send in sublicense info generated in the PluginInstaller so the daemon can determine whether some software is currently activated or not.
- *
+ * Send in sublicense info generated in the PluginInstaller so the daemon can determine whether some&lt;br>
+ * software is currently activated or not.&lt;br>
+ * &lt;br>
  * Needs to be preceded by a &lt;code>setIssuer()&lt;/code> call.
  *
  * @function sublicense
@@ -6284,7 +6289,7 @@ function testNetworkAccess() {
 module.exports.testNetworkAccess = testNetworkAccess;
 
 /**
- * Convert an integer into a hex representation with a fixed number of digits.
+ * Convert an integer into a hex representation with a fixed number of digits.&lt;br>
  * Negative numbers are converted using 2-s complement (so &lt;code>-15&lt;/code> results in &lt;code>0x01&lt;/code>)
  *
  * @function toHex
@@ -6489,7 +6494,7 @@ module.exports.waitForFile = waitForFile;</code></pre>
 <br class="clear">
 
 <footer>
-    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Fri Dec 06 2024 09:44:16 GMT+1300 (New Zealand Daylight Time) using the Minami theme.
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Fri Dec 06 2024 10:09:12 GMT+1300 (New Zealand Daylight Time) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>
