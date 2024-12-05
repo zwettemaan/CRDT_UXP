@@ -15,6 +15,10 @@ Some more information on the feature set:
 
 https://github.com/zwettemaan/CRDT_UXP/blob/main/docs.md
 
+## JSDoc pages
+
+https://zwettemaan.github.io/CRDT_UXP/
+
 ## PluginInstaller
 
 Before you can do anything you first need to download and install the _PluginInstaller_ app.
