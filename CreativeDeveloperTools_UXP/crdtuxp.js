@@ -1,40 +1,39 @@
 /**
- * Creative Developer Tools (CRDT) is a growing suite of tools aimed at script developers and plug-in developers for the Adobe Creative Cloud eco-system.
- *
- * There are two different versions of CRDT: one for UXP/UXPScript and another for ExtendScript.
- *
- * For downloading and installation info, visit
- *
+ * Creative Developer Tools (CRDT) is a growing suite of tools aimed at script developers and plug-in<br>
+ * developers for the Adobe Creative Cloud eco-system.<br>
+ * <br>
+ * There are two different versions of CRDT: one for UXP/UXPScript and another for ExtendScript.<br>
+ * <br>
+ * For downloading and installation info, visit<br>
+ * <br>
  * https://CreativeDeveloperTools.com
- *
- *  `crdtuxp` contains a number of useful functions. Some of these functions
- * are implemented in JavaScript in `crdtux.js` and are synchronous.
- *
- * Other functions are delegated to a daemon process, and are always asynchronous.
- *
- * The list of endpoints is further down
- *
- * `crdtuxp` steps out of the UXP security sandbox - which means that as a developer,
- * you need to be judicious when using this.
- *
- * Every solution operates in a unique context. The UXP security measures are
- * helpful in keeping things secure, but in many situations, they are a massive overkill.
- *
- * It should be up to the user/developer/IT department to decide how to handle security.
- *
- * Sometimes the whole workflow can live inside walled garden, on a disconnected network, 
- * without any contact with the outside world and not be allowed to run any
- * unvetted software.
- *
- * Or sometimes the OS security is safe enough for the workflow at hand.
- *
- * In those cases, the UXP security measures are counter-productive: they represent
- * unnessary hurdles to the software development, or make the user interace clunky and
- * user-unfriendly.
- *
- * Using the UXP sandboxing should be a developer-selectable option, not an enforced requirement, and it should
- * be up to the developer and/or the IT department to decide what is appropriate and what not.
- *
+ * <br>
+ *  <code>crdtuxp</code> contains a number of useful functions. Some of these functions are implemented in JavaScript<br>
+ * in <code>crdtux.js</code> and are synchronous.<br>
+ * <br>
+ * Other functions are delegated to a daemon process, and are always asynchronous.<br>
+ * <br>
+ * The list of endpoints is further down<br>
+ * <br>
+ * <code>crdtuxp</code> steps out of the UXP security sandbox - which means that as a developer, you need to be<br>
+ * judicious when using this.<br>
+ * <br>
+ * Every solution operates in a unique context. The UXP security measures are helpful in keeping things<br>
+ * secure, but in many situations, they are a massive overkill.<br>
+ * <br>
+ * It should be up to the user/developer/IT department to decide how to handle security.<br>
+ * <br>
+ * Sometimes the whole workflow can live inside walled garden, on a disconnected network, without any<br>
+ * contact with the outside world and not be allowed to run any unvetted software.<br>
+ * <br>
+ * Or sometimes the OS security is safe enough for the workflow at hand.<br>
+ * <br>
+ * In those cases, the UXP security measures are counter-productive: they represent unnessary hurdles to<br>
+ * the software development, or make the user interace clunky and user-unfriendly.<br>
+ * <br>
+ * Using the UXP sandboxing should be a developer-selectable option, not an enforced requirement, and it<br>
+ * should be up to the developer and/or the IT department to decide what is appropriate and what not.<br>
+ *<br>
  * @module crdtuxp
  */
 
@@ -74,8 +73,8 @@ platformGlobals.defineGlobalObject = function defineGlobalObject(globalName) {
 }
 
 /**
- * `localhost.tgrg.net` resolves to `127.0.0.1`
- *
+ * <code>localhost.tgrg.net</code> resolves to <code>127.0.0.1</code><br>
+ * <br>
  * The Tightener daemon manages the necessary certificate for https
  *
  * @constant {string} DNS_NAME_FOR_LOCALHOST
@@ -84,7 +83,7 @@ platformGlobals.defineGlobalObject = function defineGlobalObject(globalName) {
 const DNS_NAME_FOR_LOCALHOST = "localhost.tgrg.net";
 
 /**
- * The Tightener daemon listens for HTTPS connections on port `18888`.
+ * The Tightener daemon listens for HTTPS connections on port <code>18888</code>.
  *
  * @constant {number} PORT_TIGHTENER_DAEMON
  */
@@ -93,9 +92,9 @@ const PORT_TIGHTENER_DAEMON = 18888;
 const LOCALHOST_URL = "https://" + DNS_NAME_FOR_LOCALHOST+ ":" + PORT_TIGHTENER_DAEMON;
 
 /**
- * The Tightener daemon provides persistent named scopes (similar to persistent ExtendScript engines).
- *
- * When executing multiple TQL scripts in succession a named scope will retain any globals that
+ * The Tightener daemon provides persistent named scopes (similar to persistent ExtendScript engines).<br>
+ * <br>
+ * When executing multiple TQL scripts in succession a named scope will retain any globals that<br>
  * were defined by a previous script.
  *
  * @constant {string} TQL_SCOPE_NAME_DEFAULT
@@ -130,7 +129,7 @@ else {
 }
 
 /**
- * Setting log level to `LOG_LEVEL_OFF` causes all log output to be suppressed.
+ * Setting log level to <code>LOG_LEVEL_OFF</code> causes all log output to be suppressed.
  *
  * @constant {number} LOG_LEVEL_OFF
  */
@@ -138,7 +137,7 @@ const LOG_LEVEL_OFF = 0;
 module.exports.LOG_LEVEL_OFF = LOG_LEVEL_OFF;
 
 /**
- * Setting log level to `LOG_LEVEL_ERROR` causes all log output to be suppressed,
+ * Setting log level to <code>LOG_LEVEL_ERROR</code> causes all log output to be suppressed,<br>
  * except for errors.
  *
  * @constant {number} LOG_LEVEL_ERROR
@@ -147,7 +146,7 @@ const LOG_LEVEL_ERROR = 1;
 module.exports.LOG_LEVEL_ERROR = LOG_LEVEL_ERROR;
 
 /**
- * Setting log level to `LOG_LEVEL_WARNING` causes all log output to be suppressed,
+ * Setting log level to <code>LOG_LEVEL_WARNING</code> causes all log output to be suppressed,<br>
  * except for errors and warnings.
  *
  * @constant {number} LOG_LEVEL_WARNING
@@ -156,7 +155,7 @@ const LOG_LEVEL_WARNING = 2;
 module.exports.LOG_LEVEL_WARNING = LOG_LEVEL_WARNING;
 
 /**
- * Setting log level to `LOG_LEVEL_NOTE` causes all log output to be suppressed,
+ * Setting log level to <code>LOG_LEVEL_NOTE</code> causes all log output to be suppressed,<br>
  * except for errors, warnings and notes.
  *
  * @constant {number} LOG_LEVEL_NOTE
@@ -165,103 +164,103 @@ const LOG_LEVEL_NOTE = 3;
 module.exports.LOG_LEVEL_NOTE = LOG_LEVEL_NOTE;
 
 /**
- * Setting log level to `LOG_LEVEL_TRACE` causes all log output to be output.
+ * Setting log level to <code>LOG_LEVEL_TRACE</code> causes all log output to be output.
  *
  * @constant {number} LOG_LEVEL_TRACE
  */
 const LOG_LEVEL_TRACE = 4;
 module.exports.LOG_LEVEL_TRACE = LOG_LEVEL_TRACE;
 
-// Symbolic params to `getDir()`
+// Symbolic params to <code>getDir()</code>
 
 /**
- * Pass `DESKTOP_DIR` into `getDir()` to get the path of the user's Desktop folder.
+ * Pass <code>DESKTOP_DIR</code> into <code>getDir()</code> to get the path of the user's Desktop folder.
  *
  * @constant {string} DESKTOP_DIR
  */
 module.exports.DESKTOP_DIR    = "DESKTOP_DIR";
 
 /**
- * Pass `DOCUMENTS_DIR` into `getDir()` to get the path of the user's Documents folder.
+ * Pass <code>DOCUMENTS_DIR</code> into <code>getDir()</code> to get the path of the user's Documents folder.
  *
  * @constant {string} DOCUMENTS_DIR
  */
 module.exports.DOCUMENTS_DIR  = "DOCUMENTS_DIR";
 
 /**
- * Pass `HOME_DIR` into `getDir()` to get the path of the user's home folder.
+ * Pass <code>HOME_DIR</code> into <code>getDir()</code> to get the path of the user's home folder.
  *
  * @constant {string} HOME_DIR
  */
 module.exports.HOME_DIR       = "HOME_DIR";
 
 /**
- * Pass `LOG_DIR` into `getDir()` to get the path of the Tightener logging folder.
+ * Pass <code>LOG_DIR</code> into <code>getDir()</code> to get the path of the Tightener logging folder.
  *
  * @constant {string} LOG_DIR
  */
 module.exports.LOG_DIR        = "LOG_DIR";
 
 /**
- * Pass `SYSTEMDATA_DIR` into `getDir()` to get the path of the system data folder
- * (`%PROGRAMDATA%` or `/Library/Application Support`).
+ * Pass <code>SYSTEMDATA_DIR</code> into <code>getDir()</code> to get the path of the system data folder<br>
+ * (<code>%PROGRAMDATA%</code> or <code>/Library/Application Support</code>).
  *
  * @constant {string} SYSTEMDATA_DIR
  */
 module.exports.SYSTEMDATA_DIR = "SYSTEMDATA_DIR";
 
 /**
- * Pass `TMP_DIR` into `getDir()` to get the path of the temporary folder.
+ * Pass <code>TMP_DIR</code> into <code>getDir()</code> to get the path of the temporary folder.
  *
  * @constant {string} TMP_DIR
  */
 module.exports.TMP_DIR        = "TMP_DIR";
 
 /**
- * Pass `USERDATA_DIR` into `getDir()` to get the path to the user data folder
- * (`%APPDATA%` or `~/Library/Application Support`).
+ * Pass <code>USERDATA_DIR</code> into <code>getDir()</code> to get the path to the user data folder<br>
+ * (<code>%APPDATA%</code> or <code>~/Library/Application Support</code>).
  *
  * @constant {string} USERDATA_DIR
  */
 module.exports.USERDATA_DIR   = "USERDATA_DIR";
 
 /**
- * `UNIT_NAME_NONE` represents unit-less values.
+ * <code>UNIT_NAME_NONE</code> represents unit-less values.
  */
 module.exports.UNIT_NAME_NONE     = "NONE";
 
 /**
- * `UNIT_NAME_INCH` for inches.
+ * <code>UNIT_NAME_INCH</code> for inches.
  */
 module.exports.UNIT_NAME_INCH     = "\"";
 
 /**
- * `UNIT_NAME_CM` for centimeters
+ * <code>UNIT_NAME_CM</code> for centimeters
  */
 module.exports.UNIT_NAME_CM       = "cm";
 
 /**
- * `UNIT_NAME_MM` for millimeters
+ * <code>UNIT_NAME_MM</code> for millimeters
  */
 module.exports.UNIT_NAME_MM       = "mm";
 
 /**
- * `UNIT_NAME_CICERO` for ciceros
+ * <code>UNIT_NAME_CICERO</code> for ciceros
  */
 module.exports.UNIT_NAME_CICERO   = "cicero";
 
 /**
- * `UNIT_NAME_PICA` for picas
+ * <code>UNIT_NAME_PICA</code> for picas
  */
 module.exports.UNIT_NAME_PICA     = "pica";
 
 /**
- * `UNIT_NAME_PIXEL` for pixels
+ * <code>UNIT_NAME_PIXEL</code> for pixels
  */
 module.exports.UNIT_NAME_PIXEL    = "px";
 
 /**
- * `UNIT_NAME_POINT` for points
+ * <code>UNIT_NAME_POINT</code> for points
  */
 module.exports.UNIT_NAME_POINT    = "pt";
 
@@ -317,7 +316,7 @@ module.exports.LOCALE_EN_US                    = LOCALE_EN_US;
 
 //
 // UXP internally caches responses from the server - we need to avoid this as each script
-// run can return different results. `HTTP_CACHE_BUSTER` will be incremented after each use.
+// run can return different results. <code>HTTP_CACHE_BUSTER</code> will be incremented after each use.
 //
 let HTTP_CACHE_BUSTER         = Math.floor(Math.random() * 1000000);
 let LOG_LEVEL_STACK           = [];
@@ -342,8 +341,7 @@ let SYS_INFO;
  * @function addTrailingSeparator
  *
  * @param {string} filePath - a file path 
- * @param {string=} separator - the separator to use. If omitted, will try 
- * guess the separator.
+ * @param {string=} separator - the separator to use. If omitted, will try to guess the separator.
  * @returns file path with a terminating separator
  */
 
@@ -504,19 +502,18 @@ function alert(message) {
 module.exports.alert = alert;
 
 /**
- * Decode a string that was encoded using base64.
- *
- * The evalTQL variant of the function has not been speed-tested; it's mainly for 
- * testing things.
- *
- * I suspect it might only be beneficial for very large long strings, if that. 
+ * Decode a string that was encoded using base64.<br>
+ * <br>
+ * The evalTQL variant of the function has not been speed-tested; it's mainly for testing things.<br>
+ * <br>
+ * I suspect it might only be beneficial for very large long strings, if that.<br>
  * The overheads might be larger than the speed benefit.
  *
  * @function base64decode
  *
  * @param {string} base64Str - base64 encoded string
- * @param {object=} options - options: {
- *   isBinary: true/false, default false
+ * @param {object=} options - options: {<br>
+ *   isBinary: true/false, default false<br>
  * }
  * @returns {Promise<string|array|undefined>} decoded string
  */
@@ -603,12 +600,12 @@ function base64decode(base64Str, options) {
 module.exports.base64decode = base64decode;
 
 /**
- * Encode a string or an array of bytes using Base 64 encoding.
- *
- * The evalTQL variant of the function has not been speed-tested; it's mainly for 
- * testing things.
- *
- * I suspect it might only be beneficial for very large long strings, if that. 
+ * Encode a string or an array of bytes using Base 64 encoding.<br>
+ * <br>
+ * The evalTQL variant of the function has not been speed-tested; it's mainly for testing things.<br>
+ * <br>
+ * I suspect it might only be beneficial for very large long strings, if that.<br>
+ * <br>
  * The overheads might be larger than the speed benefit.
  *
  * @function base64encode
@@ -700,8 +697,7 @@ module.exports.base64encode = base64encode;
  * @function baseName
  *
  * @param {string} filePath - a file path 
- * @param {string=} separator - the separator to use. If omitted, will try 
- * guess the separator.
+ * @param {string=} separator - the separator to use. If omitted, will try to guess the separator.
  * @returns {string} the last segment of the path
  */
 
@@ -734,8 +730,7 @@ module.exports.path.baseName = baseName;
  *
  * @function binaryUTF8ToStr
  *
- * @param {array} in_byteArray - an array containing bytes (0-255)
- * for a string using UTF-8 encoding.
+ * @param {array} in_byteArray - an array containing bytes (0-255) for a string using UTF-8 encoding.
  * @returns {string|undefined} a string or undefined if the UTF-8 is not valid
  */
 function binaryUTF8ToStr(in_byteArray) {
@@ -881,12 +876,12 @@ function charCodeToUTF8__(in_charCode) {
  *
  * @function configLogger
  *
- * @param {object} logInfo - object with logger setup info
- *     logLevel: 0-4
- *     logEntryExit: boolean
- *     logToUXPConsole: boolean
- *     logToCRDT: boolean
- *     logToFilePath: undefined or a file path for logging
+ * @param {object} logInfo - object with logger setup info<br>
+ *     <code>logLevel: 0-4<br>
+ *     logEntryExit: boolean<br>
+ *     logToUXPConsole: boolean<br>
+ *     logToCRDT: boolean<br>
+ *     logToFilePath: undefined or a file path for logging<br></code>
  * 
  * @returns {boolean} success/failure
  */
@@ -932,9 +927,9 @@ function configLogger(logInfo) {
 module.exports.configLogger = configLogger;
 
 /**
- * Bottleneck for `console.log`. Only call this function for when crdtuxp.log... is not
- * available, e.g. before crdtux has loaded or from within functions used by the logging
- * functionaly like evalTQL()
+ * Bottleneck for <code>console.log</code>. Only call this function for when crdtuxp.log... is not<br>
+ * available, e.g. before crdtux has loaded or from within functions used by the logging<br>
+ * functionaly like evalTQL()<br>
  *
  * @function consoleLog
  *
@@ -955,8 +950,8 @@ function consoleLog(...args) {
 module.exports.consoleLog = consoleLog;
 
 /**
- * Reverse the operation of the `encrypt()` function.
- *
+ * Reverse the operation of the <code>encrypt()</code> function.<br>
+ * <br>
  * Only available to paid developer accounts
  *
  * @function decrypt
@@ -1082,12 +1077,12 @@ function delayFunction(delayTimeMilliseconds, ftn, ...args) {
 module.exports.delayFunction = delayFunction;
 
 /**
- * Reverse the operation of `dQ()` or `sQ()`.
+ * Reverse the operation of <code>dQ()</code> or <code>sQ()</code>.
  *
  * @function deQuote
  *
  * @param {string} quotedString - a quoted string
- * @returns {array} a byte array. If the quoted string contains any `\uHHHH` codes,
+ * @returns {array} a byte array. If the quoted string contains any <code>\uHHHH</code> codes,<br>
  * these are first re-encoded using UTF-8 before storing them into the byte array.
  */
 function deQuote(quotedString) {
@@ -1240,8 +1235,8 @@ function deQuote(quotedString) {
 module.exports.deQuote = deQuote;
 
 /**
- * Create a directory.
- *
+ * Create a directory.<br>
+ * <br>
  * Not restricted by the UXP security sandbox.
  *
  * @function dirCreate
@@ -1362,12 +1357,11 @@ function dirCreate(filePath) {
 module.exports.dirCreate = dirCreate;
 
 /**
- * Delete a directory.
- *
- * Not restricted by the UXP security sandbox.
- *
- * Be very careful with the `recurse` parameter! It is very easy to delete the wrong 
- * directory.
+ * Delete a directory.<br>
+ * <br>
+ * Not restricted by the UXP security sandbox.<br>
+ * <br>
+ * Be very careful with the <code>recurse</code> parameter! It is very easy to delete the wrong directory.
  *
  * @function dirDelete
  *
@@ -1591,11 +1585,11 @@ function dirDelete(filePath, recurse) {
 module.exports.dirDelete = dirDelete;
 
 /**
- * Verify whether a directory exists. Will return `false` if the path points to a file 
- * (instead of a directory).
- *
- * Also see `fileExists()`.
- *
+ * Verify whether a directory exists. Will return <code>false</code> if the path points to a file <br>
+ * (instead of a directory).<br>
+ * <br>
+ * Also see <code>fileExists()</code>.<br>
+ * <br>
  * Not restricted by the UXP security sandbox.
  *
  * @function dirExists
@@ -1687,11 +1681,11 @@ module.exports.dirExists = dirExists;
  * @function dirName
  *
  * @param {string} filePath - a file path 
- * @param {object=} options - options: 
- * { 
- *   addTrailingSeparator: true/false, default false,
- *   separator: separatorchar. the separator to use. If omitted, will try to guess the 
- *   separator.
+ * @param {object=} options - options:<br> 
+ * {<br>
+ *   addTrailingSeparator: true/false, default false,<br>
+ *   separator: separatorchar. the separator to use. If omitted, will try to guess the <br>
+ *   separator.<br>
  * }
  * @param {string=} separator - 
  * @returns the parent of the path
@@ -1736,8 +1730,8 @@ function dirName(filePath, options) {
 module.exports.path.dirName = dirName;
 
 /**
- * Scan a directory.
- *
+ * Scan a directory.<br>
+ * <br>
  * Not restricted by the UXP security sandbox.
  *
  * @function dirScan
@@ -1844,23 +1838,23 @@ function dirScan(filePath) {
 module.exports.dirScan = dirScan;
 
 /**
- * Wrap a string or a byte array into double quotes, encoding any
- * binary data as a string. Knows how to handle Unicode characters
- * or binary zeroes.
- *
- * When the input is a string, high Unicode characters are
- * encoded as `\uHHHH`.
- *
- * When the input is a byte array, all bytes are encoded
- * as characters or as `\xHH` escape sequences.
+ * Wrap a string or a byte array into double quotes, encoding any<br>
+ * binary data as a string. Knows how to handle Unicode characters<br>
+ * or binary zeroes.<br>
+ * <br>
+ * When the input is a string, high Unicode characters are<br>
+ * encoded as <code>\uHHHH</code>.<br>
+ * <br>
+ * When the input is a byte array, all bytes are encoded<br>
+ * as characters or as <code>\xHH</code> escape sequences.
  *
  * @function dQ
  *
  * @param {string|Array} s_or_ByteArr - a Unicode string or an array of bytes
- * @returns {string|undefined} a string enclosed in double quotes. This string is pure 7-bit
- * ASCII and can be used into generated script code
- * Example:
- * `let script = "a=b(" + dQ(somedata) + ");";`
+ * @returns {string|undefined} a string enclosed in double quotes. This string is pure 7-bit<br>
+ * ASCII and can be used into generated script code<br>
+ * Example:<br>
+ * <code>let script = "a=b(" + dQ(somedata) + ");";</code>
  */
 function dQ(s_or_ByteArr) {
 // coderstate: function
@@ -2504,7 +2498,7 @@ module.exports.fileAppendString = fileAppendString;
  *
  * @function fileClose
  *
- * @param {number} fileHandle - a file handle as returned by `fileOpen()`.
+ * @param {number} fileHandle - a file handle as returned by <code>fileOpen()</code>.
  * @returns {Promise<boolean|undefined>} success or failure
  */
 
@@ -2746,9 +2740,9 @@ function fileDelete(filePath) {
 module.exports.fileDelete = fileDelete;
 
 /**
- * Check if a file exists. Will return `false` if the file path points to a directory.
+ * Check if a file exists. Will return <code>false</code> if the file path points to a directory.
  *
- * Also see `dirExists()`.
+ * Also see <code>dirExists()</code>.
  *
  * Not restricted by the UXP security sandbox.
  *
@@ -2875,7 +2869,7 @@ module.exports.path.fileNameExtension = fileNameExtension;
  * @function fileOpen
  *
  * @param {string} filePath - a native full file path to the file
- * @param {string} mode - one of `'a'`, `'r'`, `'w'` (append, read, write)
+ * @param {string} mode - one of <code>'a'</code>, <code>'r'</code>, <code>'w'</code> (append, read, write)
  * @returns {Promise<Number|undefined>} file handle
  */
 
@@ -3035,7 +3029,7 @@ module.exports.fileOpen = fileOpen;
  *
  * @function fileRead
  *
- * @param {number} fileHandle - a file handle as returned by `fileOpen()`.
+ * @param {number} fileHandle - a file handle as returned by <code>fileOpen()</code>.
  * @param {boolean|object=} options - options: { isBinary: true/false, default false }
  * @returns {Promise<any>} either a byte array or a string
  */
@@ -3162,7 +3156,7 @@ module.exports.fileRead = fileRead;
  *
  * @function fileWrite
  *
- * @param {number} fileHandle - a file handle as returned by `fileOpen()`.
+ * @param {number} fileHandle - a file handle as returned by <code>fileOpen()</code>.
  * @param {string|Array} s_or_ByteArr - data to write to the file
  * @returns {Promise<boolean|undefined>} success or failure
  */
@@ -3276,7 +3270,7 @@ module.exports.finalize = finalize;
  *
  * @function functionNameFromArguments
  *
- * @param {object} functionArguments - pass in the current `arguments` to the function. This is used to determine the function's name
+ * @param {object} functionArguments - pass in the current <code>arguments</code> to the function. This is used to determine the function's name
  * @returns {string} function name
  */
 
@@ -3302,7 +3296,7 @@ module.exports.functionNameFromArguments = functionNameFromArguments;
  * @function getBooleanFromINI
  *
  * @param {string} in_value - ini value
- * @param {string} in_default - value to use if `undefined` or `""`
+ * @param {string} in_default - value to use if <code>undefined</code> or <code>""</code>
  * @returns {boolean} value
  */
 
@@ -3341,8 +3335,8 @@ module.exports.getBooleanFromINI = getBooleanFromINI;
  *
  * @param {string} issuer - a GUID identifier for the developer account as seen in the PluginInstaller
  * @param {string} capabilityCode - a code for the software features to be activated (as determined by the developer who owns the account).
- * `capabilityCode` is not the same as `orderProductCode` - there can be multiple `orderProductCode` associated with 
- * a single `capabilityCode` (e.g. `capabilityCode` 'XYZ', `orderProductCode` 'XYZ_1YEAR', 'XYZ_2YEAR'...).
+ * <code>capabilityCode</code> is not the same as <code>orderProductCode</code> - there can be multiple <code>orderProductCode</code> associated with 
+ * a single <code>capabilityCode</code> (e.g. <code>capabilityCode</code> 'XYZ', <code>orderProductCode</code> 'XYZ_1YEAR', 'XYZ_2YEAR'...).
  * @param {string} encryptionKey - the secret encryption key (created by the developer) needed to decode the capability data. You want to make
  * sure this password is obfuscated and contained within encrypted script code.
  * @returns {Promise<string|undefined>} a JSON-encoded object with meta object (containing customer GUID, seatIndex, decrypted developer-provided data from the activation file).
@@ -3525,7 +3519,7 @@ module.exports.path.getCurrentScriptPath = getCurrentScriptPath;
  * @function getDir
  *
  * @param {string} dirTag - a tag representing the dir:
- * ```
+ * <code>
  *    DESKTOP_DIR
  *    DOCUMENTS_DIR
  *    HOME_DIR
@@ -3533,7 +3527,7 @@ module.exports.path.getCurrentScriptPath = getCurrentScriptPath;
  *    SYSTEMDATA_DIR
  *    TMP_DIR
  *    USERDATA_DIR
- * ```
+ * </code>
  * @returns {Promise<string|undefined>} file path of dir or undefined. Directory paths include a trailing slash or backslash.
  */
 function getDir(dirTag) {
@@ -4657,9 +4651,9 @@ module.exports.injectProxyPromiseClass = injectProxyPromiseClass;
 
 /**
  * Calculate an integer power of an int value. Avoids using floating point, so
- * should not have any floating-point round-off errors. `Math.pow()` will probably
- * give the exact same result, but I am doubtful that some implementations might internally use `log` and `exp`
- * to handle `Math.pow()`
+ * should not have any floating-point round-off errors. <code>Math.pow()</code> will probably
+ * give the exact same result, but I am doubtful that some implementations might internally use <code>log</code> and <code>exp</code>
+ * to handle <code>Math.pow()</code>
  *
  * @function intPow
  *
@@ -4824,7 +4818,7 @@ function isDaemonResponsive() {
 module.exports.isDaemonResponsive = isDaemonResponsive;
     
 /**
- * Extend or shorten a string to an exact length, adding `padChar` as needed
+ * Extend or shorten a string to an exact length, adding <code>padChar</code> as needed
  *
  * @function leftPad
  *
@@ -4868,11 +4862,11 @@ function leftPad(s, padChar, len) {
 module.exports.leftPad = leftPad;
 
 /**
- * Make a log entry of the call of a function. Pass in the `arguments` keyword as a parameter.
+ * Make a log entry of the call of a function. Pass in the <code>arguments</code> keyword as a parameter.
  *
  * @function logEntry
  *
- * @param {array} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
+ * @param {array} reportingFunctionArguments - pass in the current <code>arguments</code> to the function. This is used to determine the function's name for the log
  * @returns {Promise} - a promise that can be used to await the log call completion
  */
 
@@ -4889,12 +4883,12 @@ function logEntry(reportingFunctionArguments) {
 module.exports.logEntry = logEntry;
 
 /**
- * Make a log entry of an error message. Pass in the `arguments` keyword as the first parameter
- * If the error level is below `LOG_LEVEL_ERROR` nothing happens
+ * Make a log entry of an error message. Pass in the <code>arguments</code> keyword as the first parameter
+ * If the error level is below <code>LOG_LEVEL_ERROR</code> nothing happens
  *
  * @function logError
  *
- * @param {any} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
+ * @param {any} reportingFunctionArguments - pass in the current <code>arguments</code> to the function. This is used to determine the function's name for the log
  * @param {any} message - error message
  * @returns {Promise} - a promise that can be used to await the log call completion
  */
@@ -4915,11 +4909,11 @@ function logError(reportingFunctionArguments, message) {
 module.exports.logError = logError;
 
 /**
- * Make a log entry of the exit of a function. Pass in the `arguments` keyword as a parameter.
+ * Make a log entry of the exit of a function. Pass in the <code>arguments</code> keyword as a parameter.
  *
  * @function logExit
  *
- * @param {any} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
+ * @param {any} reportingFunctionArguments - pass in the current <code>arguments</code> to the function. This is used to determine the function's name for the log
  * @returns {Promise} - a promise that can be used to await the log call completion
  */
 
@@ -4936,11 +4930,11 @@ function logExit(reportingFunctionArguments) {
 module.exports.logExit = logExit;
 
 /**
- * Output a log message. Pass in the `arguments` keyword as the first parameter.
+ * Output a log message. Pass in the <code>arguments</code> keyword as the first parameter.
  * 
  * @function logMessage
  *
- * @param {any} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
+ * @param {any} reportingFunctionArguments - pass in the current <code>arguments</code> to the function. This is used to determine the function's name for the log
  * @param {number} logLevel - log level 0 - 4
  * @param {string} message - the note to output
  * @returns {Promise} - a promise that can be used to await the log call completion
@@ -5090,12 +5084,12 @@ function logMessage(reportingFunctionArguments, logLevel, message) {
 module.exports.logMessage = logMessage;
 
 /**
- * Make a log entry of a note. Pass in the `arguments` keyword as the first parameter.
- * If the error level is below `LOG_LEVEL_NOTE` nothing happens
+ * Make a log entry of a note. Pass in the <code>arguments</code> keyword as the first parameter.
+ * If the error level is below <code>LOG_LEVEL_NOTE</code> nothing happens
  *
  * @function logNote
  *
- * @param {any} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
+ * @param {any} reportingFunctionArguments - pass in the current <code>arguments</code> to the function. This is used to determine the function's name for the log
  * @param {any} message - the note to output
  * @returns {Promise} - a promise that can be used to await the log call completion
  */
@@ -5116,12 +5110,12 @@ function logNote(reportingFunctionArguments, message) {
 module.exports.logNote = logNote;
 
 /**
- * Emit a trace messsage into the log. Pass in the `arguments` keyword as the first parameter.
- * If the error level is below `LOG_LEVEL_TRACE` nothing happens
+ * Emit a trace messsage into the log. Pass in the <code>arguments</code> keyword as the first parameter.
+ * If the error level is below <code>LOG_LEVEL_TRACE</code> nothing happens
  *
  * @function logTrace
  *
- * @param {any} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
+ * @param {any} reportingFunctionArguments - pass in the current <code>arguments</code> to the function. This is used to determine the function's name for the log
  * @param {any} message - the trace message to output
  * @returns {Promise} - a promise that can be used to await the log call completion
  */
@@ -5142,12 +5136,12 @@ function logTrace(reportingFunctionArguments, message) {
 module.exports.logTrace = logTrace;
 
 /**
- * Emit a warning messsage into the log. Pass in the `arguments` keyword as the first parameter.
- * If the error level is below `LOG_LEVEL_WARNING` nothing happens
+ * Emit a warning messsage into the log. Pass in the <code>arguments</code> keyword as the first parameter.
+ * If the error level is below <code>LOG_LEVEL_WARNING</code> nothing happens
  *
  * @function logWarning
  *
- * @param {any} reportingFunctionArguments - pass in the current `arguments` to the function. This is used to determine the function's name for the log
+ * @param {any} reportingFunctionArguments - pass in the current <code>arguments</code> to the function. This is used to determine the function's name for the log
  * @param {any} message - the warning message to output
 */
 function logWarning(reportingFunctionArguments, message) {
@@ -5167,13 +5161,13 @@ function logWarning(reportingFunctionArguments, message) {
 module.exports.logWarning = logWarning;
 
 /**
- * The unique `GUID` of this computer
+ * The unique <code>GUID</code> of this computer
  *
  * Only available to paid developer accounts
  * 
  * @function machineGUID
  *
- * @returns {Promise<string | undefined>} a `GUID` string
+ * @returns {Promise<string | undefined>} a <code>GUID</code> string
  */
 function machineGUID() {
 // coderstate: promisor
@@ -5442,14 +5436,14 @@ module.exports.rawStringToByteArray = rawStringToByteArray;
  *
  * The following flexibilities have been built-in:
  *
- * - Attribute names are case-insensitive and anything not `a-z 0-9` is ignored.
- * Entries like `this or that = ...` or `thisOrThat = ...` or `this'orThat = ...` are
+ * - Attribute names are case-insensitive and anything not <code>a-z 0-9</code> is ignored.
+ * Entries like <code>this or that = ...</code> or <code>thisOrThat = ...</code> or <code>this'orThat = ...</code> are
  * all equivalent. Only letters and digits are retained, and converted to lowercase.
  *
  * - Attribute values can be quoted with either single, double, curly quotes.
  * This often occurs because InDesign can be configured to convert normal quotes into
  * curly quotes automatically.
- * Attribute values without quotes are trimmed (e.g. `bla =    x  ` is the same as `bla=x`)
+ * Attribute values without quotes are trimmed (e.g. <code>bla =    x  </code> is the same as <code>bla=x</code>)
  * Spaces are retained in quoted attribute values.
  *
  * - Any text will be ignore if not properly formatted as either a section name or an attribute-value
@@ -5459,13 +5453,13 @@ module.exports.rawStringToByteArray = rawStringToByteArray;
  *
  * The return value is an object with the section names at the top level, and attribute names
  * below that. The following .INI
- * ```
+ * <code>
  * [My data]
  * this is = " abc "
  * that =      abc
- * ```
+ * </code>
  * returns
- * ```
+ * <code>
  * {
  *   "mydata": {
  *      "__rawSectionName": "My data",
@@ -5473,7 +5467,7 @@ module.exports.rawStringToByteArray = rawStringToByteArray;
  *      "that": "abc"
  *   }
  * }
- * ```
+ * </code>
  *
  * Duplicated sections and entries are automatically suffixed with a counter suffix - e.g.
  * 
@@ -5504,7 +5498,7 @@ module.exports.rawStringToByteArray = rawStringToByteArray;
  * @function readINI
  *
  * @param {string} in_text - raw text, which might or might not contain some INI-formatted data mixed with normal text
- * @returns {object} either the ini data or `undefined`.
+ * @returns {object} either the ini data or <code>undefined</code>.
  */
 
 function readINI(in_text) {
@@ -5745,7 +5739,7 @@ function relativeTo(rootPath, targetPath, pathSeparator) {
 module.exports.path.relativeTo = relativeTo;
 
 /**
- * Extend or shorten a string to an exact length, adding `padChar` as needed
+ * Extend or shorten a string to an exact length, adding <code>padChar</code> as needed
  *
  * @function rightPad
  *
@@ -5834,7 +5828,7 @@ module.exports.S = S;
 /**
  * Send in activation data so the daemon can determine whether some software is currently activated or not.
  *
- * Needs to be followed by a `sublicense()` call
+ * Needs to be followed by a <code>sublicense()</code> call
  *
  * @function setIssuer
  *
@@ -5901,9 +5895,9 @@ module.exports.setIssuer = setIssuer;
  * or binary zeroes.
  *
  * When the input is a string, high Unicode characters are
- * encoded as `\uHHHH`
+ * encoded as <code>\uHHHH</code>
  *
- * When the input is a byte array, all bytes are encoded as `\xHH` escape sequences.
+ * When the input is a byte array, all bytes are encoded as <code>\xHH</code> escape sequences.
  *
  * @function sQ
  *
@@ -5911,7 +5905,7 @@ module.exports.setIssuer = setIssuer;
  * @returns {string} a string enclosed in double quotes. This string is pure 7-bit
  * ASCII and can be used into generated script code
  * Example:
- * `let script = "a=b(" + sQ(somedata) + ");";`
+ * <code>let script = "a=b(" + sQ(somedata) + ");";</code>
  */
 function sQ(s_or_ByteArr) {
 // coderstate: function
@@ -6093,7 +6087,7 @@ module.exports.strToUTF8 = strToUTF8;
 /**
  * Send in sublicense info generated in the PluginInstaller so the daemon can determine whether some software is currently activated or not.
  *
- * Needs to be preceded by a `setIssuer()` call.
+ * Needs to be preceded by a <code>setIssuer()</code> call.
  *
  * @function sublicense
  *
@@ -6250,7 +6244,7 @@ module.exports.testNetworkAccess = testNetworkAccess;
 
 /**
  * Convert an integer into a hex representation with a fixed number of digits.
- * Negative numbers are converted using 2-s complement (so `-15` results in `0x01`)
+ * Negative numbers are converted using 2-s complement (so <code>-15</code> results in <code>0x01</code>)
  *
  * @function toHex
  *
@@ -6318,7 +6312,7 @@ module.exports.toHex = toHex;
  *
  * @function unitToInchFactor
  *
- * @param {string} in_unit - unit name (`crdtes.UNIT_NAME...`)
+ * @param {string} in_unit - unit name (<code>crdtes.UNIT_NAME...</code>)
  * @returns {number} conversion factor or 1.0 if unknown/not applicable
  */
 
