@@ -367,10 +367,10 @@ let LOG_LEVEL                 = LOG_LEVEL_OFF;
 let IN_LOGGER                 = false;
 let LOG_TO_UXPDEVTOOL_CONSOLE = true;
 let LOG_TO_CRDT               = false;
-let LOG_TO_FILEPATH           = undefined;
+let LOG_TO_FILE_PATH          = undefined;
 
 // Inefficient logging using readSync/writeSync
-let SYNC_LOG_TO_FILEPATH      = undefined;
+let SYNC_LOG_TO_FILE_PATH     = undefined;
 
 // Set to false to suppress calls to consoleLog 
 let LOG_TO_CONSOLE            = true;
@@ -955,10 +955,10 @@ function configLogger(logInfo) {
                 LOG_TO_CRDT = logInfo.logToCRDT;
             }
             if ("logToFilePath" in logInfo) {
-                LOG_TO_FILEPATH = logInfo.logToFilePath;
+                LOG_TO_FILE_PATH = logInfo.logToFilePath;
             }
             if ("syncLogToFilePath" in logInfo) {
-                SYNC_LOG_TO_FILEPATH = logInfo.syncLogToFilePath;
+                SYNC_LOG_TO_FILE_PATH = logInfo.syncLogToFilePath;
             }
             retVal = true;
         }
@@ -988,8 +988,8 @@ function consoleLog(...args) {
         console.log(...args);
     }
 
-    if (SYNC_LOG_TO_FILEPATH) {
-        fileAppend_(SYNC_LOG_TO_FILEPATH, args[0] + "\n");
+    if (SYNC_LOG_TO_FILE_PATH) {
+        fileAppend_(SYNC_LOG_TO_FILE_PATH, args[0] + "\n");
     }
 
 }
@@ -4436,76 +4436,86 @@ function init(context) {
             }
 
             // Use crdtuxp.js as a reference point
-            // RUNPATH_CRDT_UXP_JS is the path to crdtuxp.js
-            if (! context.RUNPATH_CRDT_UXP_JS) {
-                context.RUNPATH_CRDT_UXP_JS = crdtuxp.path.getCurrentScriptPath();
-                if (! context.RUNPATH_CRDT_UXP_JS) {
-                    consoleLog("context.RUNPATH_CRDT_UXP_JS is not defined");
+            // FILE_PATH_CRDT_UXP_JS is the path to crdtuxp.js
+            if (! context.FILE_PATH_CRDT_UXP_JS) {
+                context.FILE_PATH_CRDT_UXP_JS = crdtuxp.path.getCurrentScriptPath();
+                if (! context.FILE_PATH_CRDT_UXP_JS) {
+                    consoleLog("context.FILE_PATH_CRDT_UXP_JS is not defined");
                     break;
                 }
             }
 
-            // RUNPATH_CRDT_UXP_FOLDER is the folder containing crdtuxp.js
-            if (! context.RUNPATH_CRDT_UXP_FOLDER) {
-                context.RUNPATH_CRDT_UXP_FOLDER = 
+            // FILE_PATH_CRDT_UXP_FOLDER is the folder containing crdtuxp.js
+            if (! context.FILE_PATH_CRDT_UXP_FOLDER) {
+                context.FILE_PATH_CRDT_UXP_FOLDER = 
                     crdtuxp.path.dirName(
-                        context.RUNPATH_CRDT_UXP_JS,
+                        context.FILE_PATH_CRDT_UXP_JS,
                         { addTrailingSeparator: true }
                     );
-                if (! context.RUNPATH_CRDT_UXP_FOLDER) {
-                    consoleLog("context.RUNPATH_CRDT_UXP_FOLDER is not defined");
+                if (! context.FILE_PATH_CRDT_UXP_FOLDER) {
+                    consoleLog("context.FILE_PATH_CRDT_UXP_FOLDER is not defined");
                     break;
                 }
             }
 
-            // RUNPATH_PROJECT_FOLDER is the folder containing the project
-            if (! context.RUNPATH_PROJECT_FOLDER) {
-                context.RUNPATH_PROJECT_FOLDER = 
-                    crdtuxp.path.dirName(
-                        context.RUNPATH_CRDT_UXP_FOLDER,
-                        { addTrailingSeparator: true }
-                    );
-                if (! context.RUNPATH_PROJECT_FOLDER) {
-                    consoleLog("context.RUNPATH_PROJECT_FOLDER is not defined");
-                    break;
+            // FILE_PATH_PROJECT_FOLDER is the folder containing the project
+            if (! context.FILE_PATH_PROJECT_FOLDER) {
+                if (context.PATH_LAUNCHER_SCRIPT_PARENT) {
+                    context.FILE_PATH_PROJECT_FOLDER = context.PATH_LAUNCHER_SCRIPT_PARENT;
+                }
+                else {
+                    context.FILE_PATH_PROJECT_FOLDER = 
+                        crdtuxp.path.dirName(
+                            context.FILE_PATH_CRDT_UXP_FOLDER,
+                            { addTrailingSeparator: true }
+                        );
+                    if (! context.FILE_PATH_PROJECT_FOLDER) {
+                        consoleLog("context.FILE_PATH_PROJECT_FOLDER is not defined");
+                        break;
+                    }
                 }
             }
             
-            // RUN_PATH_ROOT is the path of the parent folder for the main script file, 
+            // RUNPATH_ROOT is the path of the parent folder for the main script file, 
             // not of the PluginInstaller-generated wrapper launcher script file that 
             // might live in another folder
             //
-            // RUNPATH_ROOT_RESOLVED is the absolute path that corresponds to RUNPATH_ROOT
+            // FILE_PATH_ROOT is the absolute path that corresponds to RUNPATH_ROOT
             //
-            // RUNPATH_ROOT is used with require()
+            // RUNPATH_ROOT can be used with require()
             //
-            // RUNPATH_ROOT_RESOLVED is used for crdtuxp.file... operations; it cannot be used with require()
+            // FILE_PATH_ROOT can be used for crdtuxp.file... operations; it cannot be used with require()
 
-            if (! context.RUNPATH_ROOT_RESOLVED) {
-                context.RUNPATH_ROOT_RESOLVED = context.RUNPATH_PROJECT_FOLDER;
+            if (! context.FILE_PATH_ROOT) {
+                context.FILE_PATH_ROOT = context.FILE_PATH_PROJECT_FOLDER;
             }
 
             //
-            // RUN_PATH_ROOT is used with 'require' which in UXP does not accept absolute 
+            // RUNPATH_ROOT is used with 'require' which in UXP does not accept absolute 
             // paths
+            //
             if (! context.RUNPATH_ROOT) {
                 // Use slash separator - it's needed for require()
                 if (
-                    context.RUNPATH_ROOT_RESOLVED
+                    context.FILE_PATH_ROOT
                 &amp;&amp; 
-                    context.RUNPATH_PROJECT_FOLDER 
+                    context.FILE_PATH_PROJECT_FOLDER 
                 &amp;&amp;
-                    context.RUNPATH_ROOT_RESOLVED != context.RUNPATH_PROJECT_FOLDER
+                    context.FILE_PATH_ROOT != context.FILE_PATH_PROJECT_FOLDER
                 ) {
-                    let slashedRunpathRootResolved = context.RUNPATH_ROOT_RESOLVED.replace(/\\/g,"/");
-                    let slashedRunpathProjectFolder = context.RUNPATH_PROJECT_FOLDER.replace(/\\/g,"/");
-                    context.RUNPATH_ROOT = crdtuxp.path.relativeTo(slashedRunpathRootResolved, slashedRunpathProjectFolder, "/")
+                    let slashedFilePathRootResolved = context.FILEPath_ROOT.replace(/\\/g,"/");
+                    let slashedFilePathProjectFolder = context.FILEPath_PROJECT_FOLDER.replace(/\\/g,"/");
+                    context.RUNPATH_ROOT = crdtuxp.path.relativeTo(slashedFilePathRootResolved, slashedFilePathProjectFolder, "/")
                 }
                 else {
                     // If the two folder are the same, or one of them is not defined yet, 
                     // use the current folder
                     context.RUNPATH_ROOT = "./";
                 }
+            }
+
+            if (! context.RUNPATH_CRDT_UXP) {
+                context.RUNPATH_CRDT_UXP = context.RUNPATH_ROOT + "/" + crdtuxp.path.baseName(context.FILE_PATH_CRDT_UXP_FOLDER);
             }
 
             if (context.ISSUER_GUID &amp;&amp; context.ISSUER_EMAIL) {
@@ -5054,8 +5064,8 @@ function logMessage(reportingFunctionArguments, logLevel, message) {
                 consoleLog(logLine);
             }
             else {
-                if (SYNC_LOG_TO_FILEPATH) {
-                    fileAppend_(SYNC_LOG_TO_FILEPATH, logLine + "\n");
+                if (SYNC_LOG_TO_FILE_PATH) {
+                    fileAppend_(SYNC_LOG_TO_FILE_PATH, logLine + "\n");
                 }
             }
 
@@ -5093,10 +5103,10 @@ function logMessage(reportingFunctionArguments, logLevel, message) {
                 }
             }
 
-            if (LOG_TO_FILEPATH) {
+            if (LOG_TO_FILE_PATH) {
                 let appendPromise = 
                     fileAppendString(
-                        LOG_TO_FILEPATH, 
+                        LOG_TO_FILE_PATH, 
                         logLine + "\n",
                         evalTQLOptions);
                 if (waitForLogConfirmation) {
@@ -6485,7 +6495,7 @@ module.exports.waitForFile = waitForFile;</code></pre>
 <br class="clear">
 
 <footer>
-    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Thu Dec 05 2024 19:32:05 GMT+1300 (New Zealand Daylight Time) using the Minami theme.
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Thu Dec 05 2024 23:15:33 GMT+1300 (New Zealand Daylight Time) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>
