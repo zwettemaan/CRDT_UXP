@@ -13,10 +13,6 @@ Adobe® Photoshop® and Adobe® InDesign.
 
 Some more information on the feature set:
 
-https://github.com/zwettemaan/CRDT_UXP/blob/main/docs.md
-
-## JSDoc pages
-
 https://zwettemaan.github.io/CRDT_UXP/
 
 ## PluginInstaller
