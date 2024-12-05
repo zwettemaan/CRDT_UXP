@@ -1258,7 +1258,7 @@ function dirCreate(filePath) {
 
         try {
 
-            let context = getUXPContext();
+            let context = getContext();
             let uxpContext = getUXPContext();
             if (uxpContext.hasDirectFileAccess && ! context.IS_FORCE_USE_DAEMON) {
 
@@ -1384,7 +1384,7 @@ function dirDelete(filePath, recurse) {
 
         try {
 
-            let context = getUXPContext();
+            let context = getContext();
             let uxpContext = getUXPContext();
             if (uxpContext.hasDirectFileAccess && ! context.IS_FORCE_USE_DAEMON) {
 
@@ -1612,7 +1612,7 @@ function dirExists(dirPath) {
 
         try {
 
-            let context = getUXPContext();
+            let context = getContext();
             let uxpContext = getUXPContext();
             if (uxpContext.hasDirectFileAccess && ! context.IS_FORCE_USE_DAEMON) {
 
@@ -1755,7 +1755,7 @@ function dirScan(filePath) {
         try {
             // https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Modules/fs/
 
-            let context = getUXPContext();
+            let context = getContext();
             let uxpContext = getUXPContext();
             if (uxpContext.hasDirectFileAccess && ! context.IS_FORCE_USE_DAEMON) {
 
@@ -2516,7 +2516,7 @@ function fileClose(fileHandle) {
 
         try {
 
-            let context = getUXPContext();
+            let context = getContext();
             let uxpContext = getUXPContext();
             if (uxpContext.hasDirectFileAccess && ! context.IS_FORCE_USE_DAEMON) {
                 let fileInfo = uxpContext.fileInfoByFileHandle[fileHandle];
@@ -2659,7 +2659,7 @@ function fileDelete(filePath) {
 
         try {
 
-            let context = getUXPContext();
+            let context = getContext();
             let uxpContext = getUXPContext();
             if (uxpContext.hasDirectFileAccess && ! context.IS_FORCE_USE_DAEMON) {
 
@@ -2766,7 +2766,7 @@ function fileExists(filePath) {
 
         try {
 
-            let context = getUXPContext();
+            let context = getContext();
             let uxpContext = getUXPContext();
             if (uxpContext.hasDirectFileAccess && ! context.IS_FORCE_USE_DAEMON) {
 
@@ -2887,7 +2887,7 @@ function fileOpen(filePath, mode) {
 
         try {
 
-            let context = getUXPContext();
+            let context = getContext();
             let uxpContext = getUXPContext();
             if (uxpContext.hasDirectFileAccess && ! context.IS_FORCE_USE_DAEMON) {
                 let parentPath = crdtuxp.path.dirName(filePath); 
@@ -3054,7 +3054,7 @@ function fileRead(fileHandle, options) {
                 };
             }
 
-            let context = getUXPContext();
+            let context = getContext();
             let uxpContext = getUXPContext();
             if (uxpContext.hasDirectFileAccess && ! context.IS_FORCE_USE_DAEMON) {
 
@@ -3182,7 +3182,7 @@ function fileWrite(fileHandle, s_or_ByteArr) {
                 byteArray = s_or_ByteArr;
             }
 
-            let context = getUXPContext();
+            let context = getContext();
             let uxpContext = getUXPContext();
             if (uxpContext.hasDirectFileAccess && ! context.IS_FORCE_USE_DAEMON) {
 
@@ -4394,33 +4394,77 @@ function init(context) {
                 context = crdtuxp.context;
             }
 
-            if (! context.RUNPATH_ROOT) {
-                // Use slash separator - it's used for require()
-                context.RUNPATH_ROOT = "./";
+            // Use crdtuxp.js as a reference point
+            // RUNPATH_CRDT_UXP_JS is the path to crdtuxp.js
+            if (! context.RUNPATH_CRDT_UXP_JS) {
+                context.RUNPATH_CRDT_UXP_JS = crdtuxp.path.getCurrentScriptPath();
+                if (! context.RUNPATH_CRDT_UXP_JS) {
+                    consoleLog("context.RUNPATH_CRDT_UXP_JS is not defined");
+                    break;
+                }
             }
 
-            if (! context.RUNPATH_ROOT_RESOLVED) {
-
-                // crdtuxp_js_path is the path to crdtuxp.js
-                let crdtuxp_js_path = crdtuxp.path.getCurrentScriptPath();
-                if (! crdtuxp_js_path) {
-                    consoleLog("crdtuxp_js_path is not defined");
-                    break;
-                }
-
-                // crdtuxp_folder is the folder containing crdtuxp.js
-                let crdtuxp_folder = crdtuxp.path.dirName(crdtuxp_js_path);            
-                if (! crdtuxp_folder) {
-                    consoleLog("crdtuxp_folder is not defined");
-                    break;
-                }
-
-                // Assume one level above crdtuxp_folder
-                context.RUNPATH_ROOT_RESOLVED = 
+            // RUNPATH_CRDT_UXP_FOLDER is the folder containing crdtuxp.js
+            if (! context.RUNPATH_CRDT_UXP_FOLDER) {
+                context.RUNPATH_CRDT_UXP_FOLDER = 
                     crdtuxp.path.dirName(
-                        crdtuxp_folder, 
+                        context.RUNPATH_CRDT_UXP_JS,
                         { addTrailingSeparator: true }
                     );
+                if (! context.RUNPATH_CRDT_UXP_FOLDER) {
+                    consoleLog("context.RUNPATH_CRDT_UXP_FOLDER is not defined");
+                    break;
+                }
+            }
+
+            // RUNPATH_PROJECT_FOLDER is the folder containing the project
+            if (! context.RUNPATH_PROJECT_FOLDER) {
+                context.RUNPATH_PROJECT_FOLDER = 
+                    crdtuxp.path.dirName(
+                        context.RUNPATH_CRDT_UXP_FOLDER,
+                        { addTrailingSeparator: true }
+                    );
+                if (! context.RUNPATH_PROJECT_FOLDER) {
+                    consoleLog("context.RUNPATH_PROJECT_FOLDER is not defined");
+                    break;
+                }
+            }
+            
+            // RUN_PATH_ROOT is the path of the parent folder for the main script file, 
+            // not of the PluginInstaller-generated wrapper launcher script file that 
+            // might live in another folder
+            //
+            // RUNPATH_ROOT_RESOLVED is the absolute path that corresponds to RUNPATH_ROOT
+            //
+            // RUNPATH_ROOT is used with require()
+            //
+            // RUNPATH_ROOT_RESOLVED is used for crdtuxp.file... operations; it cannot be used with require()
+
+            if (! context.RUNPATH_ROOT_RESOLVED) {
+                context.RUNPATH_ROOT_RESOLVED = context.RUNPATH_PROJECT_FOLDER;
+            }
+
+            //
+            // RUN_PATH_ROOT is used with 'require' which in UXP does not accept absolute 
+            // paths
+            if (! context.RUNPATH_ROOT) {
+                // Use slash separator - it's needed for require()
+                if (
+                    context.RUNPATH_ROOT_RESOLVED
+                && 
+                    context.RUNPATH_PROJECT_FOLDER 
+                &&
+                    context.RUNPATH_ROOT_RESOLVED != context.RUNPATH_PROJECT_FOLDER
+                ) {
+                    let slashedRunpathRootResolved = context.RUNPATH_ROOT_RESOLVED.replace(/\\/g,"/");
+                    let slashedRunpathProjectFolder = context.RUNPATH_PROJECT_FOLDER.replace(/\\/g,"/");
+                    context.RUNPATH_ROOT = crdtuxp.path.relativeTo(slashedRunpathRootResolved, slashedRunpathProjectFolder, "/")
+                }
+                else {
+                    // If the two folder are the same, or one of them is not defined yet, 
+                    // use the current folder
+                    context.RUNPATH_ROOT = "./";
+                }
             }
 
             if (context.ISSUER_GUID && context.ISSUER_EMAIL) {
@@ -5616,6 +5660,79 @@ function readINI(in_text) {
     return retVal;
 }
 module.exports.readINI = readINI;
+
+/**
+ * Calculate the relative path to go from a root path to a target path
+ *
+ * @function relativeTo
+ *
+ * @param {string} rootPath - the base path to relate to
+ * @param {string} targetPath - the base path to reach from the root path
+ * @returns {string|undefined} relative path
+ */
+
+function relativeTo(rootPath, targetPath, pathSeparator) {
+// coderstate: function
+    let retVal = undefined;
+
+    do {
+
+        try {
+
+            if (! pathSeparator) {
+                pathSeparator = module.exports.path.SEPARATOR
+            }
+            
+            let splitRootPath = rootPath.split(pathSeparator);
+            let splitTargetPath = targetPath.split(pathSeparator);
+            
+            let relativePath = "";
+            let rootIdx = 0;
+            let targetIdx = 0;
+            while (rootIdx < splitRootPath.length || targetIdx < splitTargetPath.length) {
+                
+                // Skip empty segments
+                let rootSegment = undefined;
+                while (! rootSegment && rootIdx < splitRootPath.length) {
+                    rootSegment = splitRootPath[rootIdx];
+                    rootIdx++;
+                }    
+                
+                let targetSegment = undefined;
+                while (! targetSegment && targetIdx < splitTargetPath.length) {
+                    targetSegment = splitTargetPath[targetIdx];
+                    targetIdx++;
+                }
+
+                if (rootSegment && targetSegment) {
+                    if (rootSegment != targetSegment) {
+                        if (! relativePath) {
+                            relativePath = ".." + pathSeparator + targetSegment;
+                        }
+                        else {
+                            relativePath = ".." + pathSeparator + relativePath + pathSeparator + targetSegment;
+                        }
+                    }
+                }
+                else if (rootSegment) {
+                    relativePath = ".." + pathSeparator + relativePath;
+                }
+                else if (targetSegment) {
+                    relativePath = relativePath + pathSeparator + targetSegment;
+                }
+            }
+
+            retVal = relativePath;
+        }
+        catch (err) {
+            crdtuxp.logError(arguments, "throws " + err);
+        }
+    }
+    while (false);
+
+    return retVal;
+}
+module.exports.path.relativeTo = relativeTo;
 
 /**
  * Extend or shorten a string to an exact length, adding `padChar` as needed
