@@ -38,8 +38,11 @@
  * @module crdtuxp
  */
 
-const DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS   = 1000;
+const DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS   =  1000;
 const DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS    = 60000;
+
+const RESPONSE_CHECK_FILE_INTERVAL_MILLISECONDS =   500;
+const RESPONSE_CHECK_FILE_TIMEOUT_MILLISECONDS  =  1000;
 
 const UXP_VARIANT_PHOTOSHOP_UXP                 = "UXP_VARIANT_PHOTOSHOP_UXP";
 const UXP_VARIANT_PHOTOSHOP_UXPSCRIPT           = "UXP_VARIANT_PHOTOSHOP_UXPSCRIPT";
@@ -327,6 +330,9 @@ let LOG_TO_FILEPATH           = undefined;
 
 // Inefficient logging using readSync/writeSync
 let SYNC_LOG_TO_FILEPATH      = undefined;
+
+// Set to false to suppress calls to consoleLog 
+let LOG_TO_CONSOLE            = true;
 
 let SYS_INFO;
 
@@ -926,15 +932,20 @@ function configLogger(logInfo) {
 module.exports.configLogger = configLogger;
 
 /**
- * Bottleneck for `console.log`
+ * Bottleneck for `console.log`. Only call this function for when crdtuxp.log... is not
+ * available, e.g. before crdtux has loaded or from within functions used by the logging
+ * functionaly like evalTQL()
  *
  * @function consoleLog
  *
  * @param {...*} args - args for function
  */
-function consoleLog(...args) {
+function consoleLog(...args) {    
 // coderstate: function
-    console.log(...args);
+
+    if (LOG_TO_CONSOLE) {
+        console.log(...args);
+    }
 
     if (SYNC_LOG_TO_FILEPATH) {
         fileAppend_(SYNC_LOG_TO_FILEPATH, args[0] + "\n");
@@ -2016,13 +2027,12 @@ function enQuote__(s_or_ByteArr, quoteChar) {
  * @function evalTQL
  *
  * @param {string} tqlScript - a script to run
- * @param {string=} tqlScopeName - a scope name to use. Scopes are persistent for the 
- * duration of the daemon process and can be used to pass data between different 
- * processes
  * @param {object=} options - optional. 
  *   options.wait when false don't wait to resolve, default true
  *   options.isBinary default false
  *   options.tqlScopeName default TQL_SCOPE_NAME_DEFAULT
+ *   options.waitFileTimeout default DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS
+ *   options.waitFileCheckInterval default DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS
  * or can be decoded as a string
  * @returns {Promise<any>} a string or a byte array
  */
@@ -2039,11 +2049,15 @@ function evalTQL(tqlScript, options) {
             let resultIsRawBinary = false;
             let wait = true;
             let tqlScopeName = TQL_SCOPE_NAME_DEFAULT;
+            let waitFileTimeout = DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS;
+            let waitFileCheckInterval = DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS;
 
             if (options) {
                 resultIsRawBinary = !!options.isBinary;
                 wait = options.wait === undefined ? true : options.wait;
                 tqlScopeName = options.tqlScopeName || TQL_SCOPE_NAME_DEFAULT;
+                waitFileTimeout = options.waitFileTimeout || DEFAULT_WAIT_FILE_TIMEOUT_MILLISECONDS;
+                waitFileCheckInterval = options.waitFileCheckInterval || DEFAULT_WAIT_FILE_INTERVAL_MILLISECONDS;
             }
 
             let uxpContext = getUXPContext();
@@ -2220,9 +2234,14 @@ function evalTQL(tqlScript, options) {
                     break;
                 }
 
-                retVal = crdtuxp.waitForFile(responseFilePath).then(
-                    responseWaitResolveFtn,
-                    responseWaitRejectFtn
+                retVal = 
+                    crdtuxp.waitForFile(
+                        responseFilePath,
+                        waitFileCheckInterval,
+                        waitFileTimeout
+                    ).then(
+                        responseWaitResolveFtn,
+                        responseWaitRejectFtn
                 );
 
                 break;
@@ -2381,7 +2400,7 @@ function fileAppend_(filePath, data) {
 module.exports.fileAppend_ = fileAppend_;
 
 /**
- * Append a string to a file (useful for logging)
+ * Append a string to a file (useful for logging). 
  *
  * Not restricted by the UXP security sandbox.
  *
@@ -2479,7 +2498,7 @@ function fileAppendString(fileName, in_appendStr, options) {
 module.exports.fileAppendString = fileAppendString;
 
 /**
- * Close a currently open file
+ * Close a currently open file.
  *
  * Not restricted by the UXP security sandbox.
  *
@@ -2556,7 +2575,7 @@ function fileClose(fileHandle) {
 module.exports.fileClose = fileClose;
 
 /**
- * Copy a file
+ * Copy a file.
  *
  * Not restricted by the UXP security sandbox.
  *
@@ -2622,7 +2641,7 @@ function fileCopy(fileFromPath, fileToPath) {
 module.exports.fileCopy = fileCopy;
 
 /**
- * Delete a file
+ * Delete a file.
  *
  * Not restricted by the UXP security sandbox.
  *
@@ -2849,7 +2868,7 @@ function fileNameExtension(filePath, separator) {
 module.exports.path.fileNameExtension = fileNameExtension;
 
 /**
- * Open a binary file and return a handle
+ * Open a binary file and return a handle.
  *
  * Not restricted by the UXP security sandbox.
  *
@@ -3010,7 +3029,7 @@ function fileOpen(filePath, mode) {
 module.exports.fileOpen = fileOpen;
 
 /**
- * Read a file into memory
+ * Read a file into memory.
  *
  * Not restricted by the UXP security sandbox.
  *
@@ -3137,7 +3156,7 @@ function fileRead(fileHandle, options) {
 module.exports.fileRead = fileRead;
 
 /**
- * Binary write to a file. Strings are written as UTF-8
+ * Binary write to a file. Strings are written as UTF-8.
  *
  * Not restricted by the UXP security sandbox.
  *
@@ -3460,7 +3479,7 @@ function getCreativeDeveloperToolsLevel() {
 module.exports.getCreativeDeveloperToolsLevel = getCreativeDeveloperToolsLevel;
 
 /**
- * Get the path of the current script of the caller (_not_ the path of this file)
+ * Get the path of the current script of the caller (_not_ the path of this file).
  *
  * Not restricted by the UXP security sandbox.
  *
@@ -3499,7 +3518,7 @@ function getCurrentScriptPath() {
 module.exports.path.getCurrentScriptPath = getCurrentScriptPath;
 
 /**
- * Get the path of a system directory
+ * Get the path of a system directory.
  *
  * Not restricted by the UXP security sandbox.
  *
@@ -3612,7 +3631,7 @@ function getDir(dirTag) {
 module.exports.getDir = getDir;
 
 /**
- * Access the environment as available to the daemon program
+ * Access the environment as available to the daemon program.
  *
  * Not restricted by the UXP security sandbox.
  *
@@ -4354,53 +4373,68 @@ function init(context) {
 // coderstate: promisor
     let retVal = RESOLVED_PROMISE_UNDEFINED;
 
-    try {
+    do {
+        try {
 
-        if (! crdtuxp.isProxyPromiseInjected) {
-            injectProxyPromiseClass();
-        }
-
-        if (! context) {
-            context = {};
-        }
-
-        if (! crdtuxp.context) {
-            crdtuxp.context = context;
-        }
-        else {
-            for (attr in context) {
-                crdtuxp.context[attr] = context[attr];
+            if (! crdtuxp.isProxyPromiseInjected) {
+                injectProxyPromiseClass();
             }
-            context = crdtuxp.context;
-        }
 
-        if (! context.RUNPATH_ROOT) {
-            context.RUNPATH_ROOT = "." + module.exports.path.SEPARATOR;
-        }
+            if (! context) {
+                context = {};
+            }
 
-        if (! context.RUNPATH_ROOT_RESOLVED) {
-            // crdtuxp_js_path is the path to crdtuxp.js
-            let crdtuxp_js_path = crdtuxp.path.getCurrentScriptPath();
-            // crdtuxp_folder is the folder containing crdtuxp.js
-            let crdtuxp_folder = crdtuxp.path.dirName(crdtuxp_js_path);            
-            // Assume one level above crdtuxp_folder
-            context.RUNPATH_ROOT_RESOLVED = 
-                crdtuxp.path.dirName(
-                    crdtuxp_folder, 
-                    { addTrailingSeparator: true }
-                );
-        }
+            if (! crdtuxp.context) {
+                crdtuxp.context = context;
+            }
+            else {
+                for (attr in context) {
+                    crdtuxp.context[attr] = context[attr];
+                }
+                context = crdtuxp.context;
+            }
 
-        if (context.ISSUER_GUID && context.ISSUER_EMAIL) {
-            retVal = crdtuxp.setIssuer(context.ISSUER_GUID, context.ISSUER_EMAIL);
+            if (! context.RUNPATH_ROOT) {
+                // Use slash separator - it's used for require()
+                context.RUNPATH_ROOT = "./";
+            }
+
+            if (! context.RUNPATH_ROOT_RESOLVED) {
+
+                // crdtuxp_js_path is the path to crdtuxp.js
+                let crdtuxp_js_path = crdtuxp.path.getCurrentScriptPath();
+                if (! crdtuxp_js_path) {
+                    consoleLog("crdtuxp_js_path is not defined");
+                    break;
+                }
+
+                // crdtuxp_folder is the folder containing crdtuxp.js
+                let crdtuxp_folder = crdtuxp.path.dirName(crdtuxp_js_path);            
+                if (! crdtuxp_folder) {
+                    consoleLog("crdtuxp_folder is not defined");
+                    break;
+                }
+
+                // Assume one level above crdtuxp_folder
+                context.RUNPATH_ROOT_RESOLVED = 
+                    crdtuxp.path.dirName(
+                        crdtuxp_folder, 
+                        { addTrailingSeparator: true }
+                    );
+            }
+
+            if (context.ISSUER_GUID && context.ISSUER_EMAIL) {
+                retVal = crdtuxp.setIssuer(context.ISSUER_GUID, context.ISSUER_EMAIL);
+            }
+            else {
+                retVal = RESOLVED_PROMISE_TRUE;
+            }
         }
-        else {
-            retVal = RESOLVED_PROMISE_TRUE;
+        catch (err) {
+            consoleLog("init throws " + err);
         }
     }
-    catch (err) {
-        consoleLog("init throws " + err);
-    }
+    while (false);
 
     return retVal;
 }
@@ -4667,6 +4701,74 @@ function intPow(i, intPower) {
 }
 module.exports.intPow = intPow;
 
+/**
+ * Check if the daemon is running.
+ *
+ * @function isDaemonResponsive
+ *
+ * @returns {Promise<boolean|undefined>} is the Creative Developer Tools daemon responsive? 
+ */
+
+function isDaemonResponsive() {
+// coderstate: promisor
+    let retVal = RESOLVED_PROMISE_UNDEFINED;
+
+    do {
+
+        try {
+           
+            const options = {
+                waitFileTimeout: RESPONSE_CHECK_FILE_TIMEOUT_MILLISECONDS,
+                waitFileCheckInterval: RESPONSE_CHECK_FILE_INTERVAL_MILLISECONDS
+            };
+
+            const isDaemonResponsivePromise = 
+                evalTQL(
+                    "'OK'", 
+                    options);
+
+            if (! isDaemonResponsivePromise) {
+                break;
+            }
+
+            function evalTQLResolveFtn(response) {
+                // coderstate: resolver
+                let retVal;
+
+                do {
+                    if (! response || response.error) {
+                        retVal = false;
+                        break;
+                    }
+
+                    retVal = response.text == "OK";
+                }
+                while (false);
+
+                return retVal;
+            };
+
+            function evalTQLRejectFtn(reason) {
+                // coderstate: rejector
+                consoleLog(arguments, "rejected for " + reason);
+                return false;
+            };
+
+            retVal = isDaemonResponsivePromise.then(
+                evalTQLResolveFtn,
+                evalTQLRejectFtn
+            );
+        }
+        catch (err) {
+            consoleLog(arguments, "throws " + err);
+        }
+    }
+    while (false);
+
+    return retVal;
+}
+module.exports.isDaemonResponsive = isDaemonResponsive;
+    
 /**
  * Extend or shorten a string to an exact length, adding `padChar` as needed
  *

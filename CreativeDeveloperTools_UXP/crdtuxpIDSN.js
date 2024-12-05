@@ -1,3 +1,10 @@
+/**
+ * Creative Developer Tools (CRDT) is a growing suite of tools aimed at script developers and plug-in developers for the Adobe Creative Cloud eco-system.
+ *
+ * This module provides functions that are specific to Adobe InDesign.
+ * 
+ * @module crdtuxpIDSN
+ */
 
 if (! module.exports) {
     module.exports = {};
