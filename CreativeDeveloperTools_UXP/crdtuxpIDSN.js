@@ -5,6 +5,7 @@
  * This module provides functions that are specific to Adobe InDesign.
  * 
  * @module crdtuxpIDSN
+ * @namespace crdtuxpIDSN
  */
 
 if (! module.exports) {
@@ -16,6 +17,7 @@ let crdtuxpIDSN = module.exports;
  * Convert an InDesign collection into a pure JavaScript array
  *
  * @function collectionToArray
+ * @memberOf crdtuxpIDSN
  *
  * @param {Collection} coll - an InDesign collection
  * @returns array with the collection elements

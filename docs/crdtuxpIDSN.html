@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>crdtuxpIDSN.js - Documentation</title>
+    <title>crdtuxpIDSN - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,74 +29,255 @@
 
 <div id="main">
     
-    <h1 class="page-title">crdtuxpIDSN.js</h1>
+    <h1 class="page-title">crdtuxpIDSN</h1>
     
 
     
 
 
 
+
+<section>
+
+<header>
     
-    <section>
-        <article>
-            <pre class="prettyprint source linenums"><code>/**
- * Creative Developer Tools (CRDT) is a growing suite of tools aimed at script developers&lt;br>
- * and plug-in developers for the Adobe Creative Cloud eco-system.&lt;br>
- * &lt;br>
- * This module provides functions that are specific to Adobe InDesign.
- * 
- * @module crdtuxpIDSN
- * @namespace crdtuxpIDSN
- */
+        <h2>
+        crdtuxpIDSN
+        </h2>
+        
+    
+</header>
 
-if (! module.exports) {
-    module.exports = {};
-}
-let crdtuxpIDSN = module.exports;
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description">Creative Developer Tools (CRDT) is a growing suite of tools aimed at script developers<br>
+and plug-in developers for the Adobe Creative Cloud eco-system.<br>
+<br>
+This module provides functions that are specific to Adobe InDesign.</div>
+        
 
-/**
- * Convert an InDesign collection into a pure JavaScript array
- *
- * @function collectionToArray
- * @memberOf crdtuxpIDSN
- *
- * @param {Collection} coll - an InDesign collection
- * @returns array with the collection elements
- */
+        
 
-function collectionToArray(coll) {
-// coderstate: function
-    let retVal = undefined;
 
-    do {
+<dl class="details">
 
-        try {
+    
 
-            if (! coll) {
-                break; 
-            }
+    
 
-            if (coll instanceof Array) {
-                retVal = coll.slice(0);
-            }
-            else {
-                retVal = coll.everyItem().getElements().slice(0); 
-            }
+    
 
-        }
-        catch (err) {
-            crdtuxp.logError(arguments, "throws " + err);
-        }
-    }
-    while (false);
+    
 
-    return retVal;
-}
+    
 
-module.exports.collectionToArray = collectionToArray;
-</code></pre>
-        </article>
-    </section>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="crdtuxpIDSN.js.html">crdtuxpIDSN.js</a>, <a href="crdtuxpIDSN.js.html#line1">line 1</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+<div class="section-method">
+
+    
+
+    <h4 class="name" id=".collectionToArray"><span class="type-signature">(static) </span>collectionToArray<span class="signature">(coll)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Convert an InDesign collection into a pure JavaScript array
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="crdtuxpIDSN.js.html">crdtuxpIDSN.js</a>, <a href="crdtuxpIDSN.js.html#line16">line 16</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>coll</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Collection</code></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                an InDesign collection
+                
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="section-returns">
+<h5>Returns:</h5>
+
+        
+
+
+<div class="param-desc">
+    array with the collection elements
+</div>
+
+    
+</div>
+
+
+
+</div>
+        
+    
+
+    
+
+    
+</article>
+
+</section>
 
 
 
