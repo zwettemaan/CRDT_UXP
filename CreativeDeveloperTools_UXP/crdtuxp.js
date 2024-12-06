@@ -3535,27 +3535,22 @@ function getCurrentScriptPath() {
 
     let retVal = undefined;
 
-    do {
+    try {
+        // Intentionally throw an error to capture the stack trace
+        throw new Error();
+    } catch (err) {
+        // Parse the stack trace to extract the script path
+        const stackLines = err.stack.split("\n");
 
-        try {
-            // Intentionally throw an error to capture the stack trace
-            throw new Error();
-        } catch (err) {
-            // Parse the stack trace to extract the script path
-            const stackLines = err.stack.split("\n");
-
-            // We are interested in the script path for the caller of this function, not the path for crdtuxp.js::getCurrentScriptPath
-            const NUM_STEPS_FROM_STACK_TOP = 2;
-            const scriptPathLine = stackLines[NUM_STEPS_FROM_STACK_TOP];
-            const scriptPathMatch = scriptPathLine.match(/(\/.*?|[A-Za-z]:\\.*?|\\\\.*?\\.*?):\d+:\d+/); 
-            if (scriptPathMatch) {
-                retVal = scriptPathMatch[1];
-            }
+        // We are interested in the script path for the caller of this function, not the path for crdtuxp.js::getCurrentScriptPath
+        const NUM_STEPS_FROM_STACK_TOP = 2;
+        const scriptPathLine = stackLines[NUM_STEPS_FROM_STACK_TOP];
+        const scriptPathMatch = scriptPathLine.match(/(\/.*?|[A-Za-z]:\\.*?|\\\\.*?\\.*?):\d+:\d+/); 
+        if (scriptPathMatch) {
+            retVal = scriptPathMatch[1];
         }
+    }
         
-    }    
-    while (false);
-
     return retVal;
 }
 module.exports.getCurrentScriptPath = getCurrentScriptPath;
@@ -3570,13 +3565,13 @@ module.exports.getCurrentScriptPath = getCurrentScriptPath;
  *
  * @param {string} dirTag - a tag representing the dir:
  * <code><br>
- *    DESKTOP_DIR<br>
- *    DOCUMENTS_DIR<br>
- *    HOME_DIR<br>
- *    LOG_DIR<br>
- *    SYSTEMDATA_DIR<br>
- *    TMP_DIR<br>
- *    USERDATA_DIR<br>
+ *    crdtuxp.DESKTOP_DIR<br>
+ *    crdtuxp.DOCUMENTS_DIR<br>
+ *    crdtuxp.HOME_DIR<br>
+ *    crdtuxp.LOG_DIR<br>
+ *    crdtuxp.SYSTEMDATA_DIR<br>
+ *    crdtuxp.TMP_DIR<br>
+ *    crdtuxp.USERDATA_DIR<br>
  * </code>
  * @returns {Promise<string|undefined>} file path of dir or undefined. Directory paths include a trailing slash or backslash.
  */
