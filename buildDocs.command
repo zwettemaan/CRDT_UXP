@@ -19,11 +19,11 @@ cat > /tmp/crdt_uxp_jsdoc.json << EOF
   "opts": {
     "destination": "./docs/",
     "recurse": true,
-    "template": "node_modules/minami"
+    "template": "custom_minami"
   }
 }
 EOF
 
-npm i --save-dev jsdoc minami taffydb
+npm i --save-dev jsdoc taffydb
 jsdoc -c /tmp/crdt_uxp_jsdoc.json 
 
