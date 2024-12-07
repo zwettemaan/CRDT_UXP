@@ -11,9 +11,13 @@ added to a 'to do' list.
 This is the UXP version. It enhances the UXP/UXPScript environments in
 Adobe® Photoshop® and Adobe® InDesign.
 
-Some more information on the feature set:
+Documentation for Creative Developer Tools for UXP and UXPScript
 
 https://zwettemaan.github.io/CRDT_UXP/crdtuxp.html
+
+Documentation for the related Creative Developer Tools for ExtendScript
+
+https://zwettemaan.github.io/CRDT_ES/crdtes.html
 
 ## PluginInstaller
 
