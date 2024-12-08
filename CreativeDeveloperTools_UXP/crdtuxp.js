@@ -5426,6 +5426,7 @@ module.exports.promisify = promisify;
  * @memberof crdtuxp
  *
  * @param {function} ftn - callback-based function
+ * @param {object} context - A context for the callback
  * @returns {function} promisified function
  */
 
@@ -5757,6 +5758,7 @@ module.exports.readINI = readINI;
  *
  * @param {string} rootPath - the base path to relate to
  * @param {string} targetPath - the base path to reach from the root path
+ * @param {string=} pathSeparator - optional: the separator to use. Defaults to the system separator
  * @returns {string|undefined} relative path
  */
 
