@@ -72,6 +72,7 @@ entrypoints.setup({
     }
 });
 
+document.querySelector("#evalTQL_in").oninput=()           => evalTQLDemo();
 document.querySelector("#dQ_in").oninput=()                => dQDemo();
 document.querySelector("#base64encode_in").oninput=()      => base64encodeDemo();
 document.querySelector("#base64decode_in").oninput=()      => base64decodeDemo();
@@ -120,6 +121,18 @@ async function decryptDemo() {
 
     document.getElementById("decrypt_out").textContent = plainText;
 
+}
+
+async function evalTQLDemo() {
+
+    var result = "APID ToolAssistant not installed";
+
+    var uxpContext = crdtuxp.getUXPContext();
+    if (uxpContext.hasAPIDToolAssistant) {
+        result = uxpContext.app.evalTQL(document.getElementById("evalTQL_in").value);
+    }
+
+    document.getElementById("evalTQL_out").textContent = result;
 }
 
 async function dQDemo() {

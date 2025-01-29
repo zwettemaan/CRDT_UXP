@@ -4332,6 +4332,11 @@ function getUXPContext() {
                 }
                 else {
                     uxpContext.uxpVariant = UXP_VARIANT_INDESIGN_UXPSCRIPT;
+                    if ("evalTQL" in uxpContext.app)
+                    {
+                        uxpContext.hasAPIDToolAssistant = true;
+                    }
+                    
                     let commandId = uxpContext.uxp?.script?.executionContext?.commandInfo?._manifestCommand?.commandId;
                     if (commandId == "scriptMainCommand") {
                         uxpContext.uxpVariant = UXP_VARIANT_INDESIGN_UXPSCRIPT;
