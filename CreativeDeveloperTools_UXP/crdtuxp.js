@@ -896,7 +896,8 @@ function charCodeToUTF8__(in_charCode) {
  *     logEntryExit: boolean<br>
  *     logToUXPConsole: boolean<br>
  *     logToCRDT: boolean<br>
- *     logToFilePath: undefined or a file path for logging<br></code>
+ *     logToFilePath: undefined or a file path for logging through the daemon<br>
+ *     syncLogToFilePath: undefined or a file path for direct synchronous append logging<br></code>
  * 
  * @returns {boolean} success/failure
  */
@@ -3293,10 +3294,16 @@ function fileWrite(fileHandle, s_or_ByteArr) {
 module.exports.fileWrite = fileWrite;
 
 /**
- * Terminate crdtuxp
+ * Terminate crdtuxp.<br>
+ * <br>
+ * In UXPScript this is the call that drains any still-pending tracked promises before the
+ * top-level script returns. For bridged or standalone InDesign launchers, end the launcher with
+ * <code>return crdtuxp.finalize();</code> if you need fire-and-forget CRDT promises such as logging
+ * to finish before the host tears the script down.
  *
  * @function finalize
  * @memberof crdtuxp
+ * @returns {Promise<any>} resolves when tracked promises have settled
  */
 
 function finalize() {

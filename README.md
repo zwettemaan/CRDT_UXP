@@ -15,6 +15,10 @@ Documentation for Creative Developer Tools for UXP and UXPScript
 
 https://zwettemaan.github.io/CRDT_UXP/crdtuxp.html
 
+Repository runtime notes and bridge guidance
+
+./mddocs/docs.md
+
 Documentation for the related Creative Developer Tools for ExtendScript
 
 https://zwettemaan.github.io/CRDT_ES/crdtes.html
