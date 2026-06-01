@@ -1,3 +1,7 @@
+// Copyright (c) 2024–present Rorohiko Ltd. All rights reserved.
+// SPDX-License-Identifier: Elastic-2.0
+// https://github.com/zwettemaan/CRDT_UXP
+
 const { entrypoints } = require("uxp");
 
 var app;
