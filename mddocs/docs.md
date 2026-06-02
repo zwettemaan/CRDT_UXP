@@ -6,7 +6,7 @@ The short version is:
 
 - UXP panels and UXPScript launchers are not the same runtime.
 - InDesign UXPScript appears to have two launch modes, and the top-level launcher text matters.
-- A top-level launcher that contains the token `async` can become much slower and can redraw even when `enableRedraw` is false.
+- A top-level launcher that matches obvious async syntax outside comments can become much slower and can redraw even when `enableRedraw` is false.
 - Fire-and-forget Promise work is unsafe at raw UXPScript shutdown unless the launcher drains pending CRDT promises before returning.
 - CRDT_UXP now includes an InDesign bridge in `crdtuxpIDSN.js` so panel code can hand work over to a host-owned UXPScript launch path.
 
@@ -49,17 +49,19 @@ Observed InDesign behavior suggests that the main `.idjs` launcher is inspected 
 Two practical rules follow from that:
 
 1. The top-level launcher text matters.
-2. The token `async` in that launcher can switch the launch into a slower redraw-heavy mode.
+2. Real async syntax in that launcher can switch the launch into a slower redraw-heavy mode.
 
 Important details:
 
-- the token appears to matter even in comments or strings
+- current observation is that comments are ignored
+- the bridge strips comments and quoted strings, then applies a rough async-syntax heuristic; it is intentionally not a full parser
+- a top-level `async function dummy() {}` declaration is enough to trigger the slow mode
 - submodules loaded through `require()` do not appear to trigger the same behavior
 - Photoshop does not appear to show the same behavior in the same way
 
 The safe rule for InDesign launchers is therefore:
 
-> Keep the top-level bridged launcher free of `async` and `await` tokens unless you intentionally want that behavior.
+> Keep the top-level bridged launcher free of obvious async syntax unless you intentionally want that behavior.
 
 For the launcher itself, prefer Promise-returning functions and `.then(...)` chains instead of `async` / `await`.
 
@@ -98,8 +100,9 @@ The new functions are:
 
 Use this as a fail-loud preflight on the exact top-level launcher text.
 
-- It returns `true` when the launcher contains the token `async`.
-- It is a heuristic based on observed InDesign behavior, not an Adobe-documented contract.
+- It returns `true` when the launcher matches the rough async-mode heuristic after comments and quoted strings are stripped.
+- The current heuristic looks for common async forms such as `async function ...`, `async (...) => ...`, and similar async method shapes.
+- It is a heuristic based on observed InDesign behavior, not an Adobe-documented contract, and it is intentionally not a full JavaScript parser.
 
 ### `doUXPScript(scriptText, options)`
 
@@ -107,13 +110,13 @@ Runs a UXPScript source string through the bridge.
 
 Default behavior:
 
-- rejects source containing `async`
+- rejects source matching the rough async-mode heuristic
 - writes the source to a temporary `.idjs` payload file and launches it through the bridge runner with redraw disabled
 - does not keep a persistent engine or idle-task queue between calls
 
 Supported options:
 
-- `allowAsyncToken`: allow source containing `async`
+- `allowAsyncToken`: bypass the rough async-mode heuristic
 - `clearPending`: accepted for backward compatibility; currently ignored
 - `engineName`: accepted for backward compatibility; currently ignored
 - `taskName`: accepted for backward compatibility; currently ignored
@@ -127,7 +130,7 @@ Supported options:
 - `basePath`: base folder used to resolve relative paths
 - `sourceText`: optional launcher text used for sync-mode inspection
 - `requireSourceInspection`: reject when `sourceText` is not supplied
-- `allowAsyncToken`: allow inspected source containing `async`
+- `allowAsyncToken`: bypass the rough async-mode heuristic
 - `clearPending`: accepted for backward compatibility; currently ignored
 - `engineName`: accepted for backward compatibility; currently ignored
 - `taskName`: accepted for backward compatibility; currently ignored
@@ -186,7 +189,7 @@ await crdtuxp.init({
 const launcherText = await launcherEntry.read();
 
 if (crdtuxpIDSN.wouldUXPScriptRunInAsyncMode(launcherText)) {
-    throw new Error("Launcher text contains the token async.");
+    throw new Error("Launcher text matches the async-mode heuristic.");
 }
 
 await crdtuxpIDSN.doUXPScriptFile(launcherEntry.nativePath, {
@@ -199,7 +202,7 @@ await crdtuxpIDSN.doUXPScriptFile(launcherEntry.nativePath, {
 
 The example below is the shape to aim for in the top-level `.idjs` launcher.
 
-It intentionally avoids `async` / `await` in the launcher text and ends with `crdtuxp.finalize()`.
+It intentionally avoids obvious async syntax in the launcher text and ends with `crdtuxp.finalize()`.
 
 ```javascript
 });
@@ -242,9 +245,9 @@ When using the bridge, keep these rules together:
 
 1. Do outward work in panel code.
 2. Do the final InDesign DOM pass in a bridged UXPScript launcher.
-3. Keep the top-level launcher free of `async` and `await` tokens.
+3. Keep the top-level launcher free of obvious async syntax.
 4. If the launcher uses CRDT Promise-based services, end with `crdtuxp.finalize()`.
-5. If you want fail-loud launcher inspection, run `wouldUXPScriptRunInAsyncMode()` on the exact launcher text before bridging it.
+5. If you want fail-loud launcher inspection, run `wouldUXPScriptRunInAsyncMode()` on the exact launcher text before bridging it. The scan is intentionally rough and can be bypassed with `allowAsyncToken`.
 
 ## Historical Notes
 

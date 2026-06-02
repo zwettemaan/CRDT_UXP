@@ -47,24 +47,26 @@ One developer reported a yearly calendar build going from about 15 seconds in CE
 Adobe's docs make an important distinction: UXP scripts and UXP plugins live in different execution contexts with different lifecycles.
 
 - the same code running within a UXP panel or plugin context behaves differently compared to a UXPScript context
-- the presence of the word 'async' _anywhere_ in top-level source code text matters for the InDesign UXPScript
+- async syntax in top-level source code text matters for the InDesign UXPScript
 - Promise lifetime at UXPScript shutdown behaves in unexpected ways
 
 ## The Weird Part: InDesign Seems To Inspect The Top-Level `.idjs` Launcher
 
 Based on repeated observation in InDesign, the top-level UXPScript code appears to be inspected before execution, and the exact source code text can affect the launch behavior.
 
-You have to keep the top-level bridged launcher free of the string `async` (and probably also `await`) unless you intentionally want to risk running in a slower redraw-heavy launch mode.
+You have to keep the top-level bridged launcher free of obvious async syntax unless you intentionally want to risk running in a slower redraw-heavy launch mode.
 
-The odd part is that the string appears to matter even when it occurs in places where it should not matter semantically:
+The current evidence no longer points to a raw token scan that blindly hits comments. What still reproduces the problem is real async syntax in the top-level launcher, and comments mentioning `async` no longer seem to trigger it by themselves.
 
-What I observed is that adding a dummy comment line like:
+What I observed is that adding a dummy declaration like:
 
 ```javascript
-// async whatever
+async function dummy() {}
 ```
 
-to the main `.idjs` launcher would make the same UXPScript much slower and visibly redraw-heavy, even when `app.scriptPreferences.enableRedraw = false` was set.
+near the start of the main `.idjs` launcher would make the same UXPScript much slower and visibly redraw-heavy, even when `app.scriptPreferences.enableRedraw = false` was set.
+
+In CRDT_UXP I therefore use a rough preflight heuristic rather than a full parser: strip comments and quoted strings, look for common async forms, and let the caller opt out with `allowAsyncToken` when needed.
 
 ## The Other Weird Part: Promises Can Fall Off The End Of A Raw UXPScript Launcher
 
@@ -128,7 +130,7 @@ await crdtuxp.init({
 const launcherText = await launcherEntry.read();
 
 if (crdtuxpIDSN.wouldUXPScriptRunInAsyncMode(launcherText)) {
-    throw new Error("Launcher text contains the token async.");
+    throw new Error("Launcher text matches the async-mode heuristic.");
 }
 
 await crdtuxpIDSN.doUXPScriptFile(launcherEntry.nativePath, {
@@ -183,7 +185,7 @@ The closing `})` is intentionally not in the launcher file itself. That closing 
 
 Three things matter here:
 
-- no top-level `async` / `await` tokens
+- no top-level async syntax that matches the rough heuristic
 - Promise chaining rather than `async` syntax in the launcher text
 - explicit `crdtuxp.finalize()` before returning
 
@@ -208,7 +210,7 @@ Here is where I think the public evidence stands at the moment:
 - Multiple public reports from InDesign developers describe UXP DOM work as substantially slower than older scripting paths for real jobs.
 - Public articles and forum threads show that mixed-technology solutions are a normal production strategy in the InDesign world.
 - Public `doScript` usage across scripting boundaries is common.
-- The exact top-level `async` token trigger for redraw-heavy UXPScript launches still appears to be a less widely documented finding.
+- The exact top-level async-syntax trigger for redraw-heavy UXPScript launches still appears to be a less widely documented finding.
 
 So the broad problem is externally corroborated.
 
@@ -239,9 +241,9 @@ If you only remember one thing from this post, make it this:
 
 1. Do outward async work in the UXP panel.
 2. Do the final heavy InDesign DOM pass in a bridged UXPScript launcher.
-3. Keep the top-level launcher free of `async` and `await` tokens.
+3. Keep the top-level launcher free of obvious async syntax.
 4. If the launcher uses CRDT Promise-based services, end with `crdtuxp.finalize()`.
-5. If you want fail-loud behavior, inspect the exact launcher text before bridging it.
+5. If you want fail-loud behavior, inspect the exact launcher text before bridging it. The current check is intentionally rough and can be bypassed.
 
 That combination turns an ugly, vague pain point into a repeatable pattern.
 

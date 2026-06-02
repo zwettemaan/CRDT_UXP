@@ -1,6 +1,6 @@
 # InDesign UXPScript Speed
 
-Or, “how a single comment line can make an InDesign UXPScript run more than five times slower”.
+Or, “how a dummy async declaration can make an InDesign UXPScript run more than five times slower”.
 
 ## The Issue
 
@@ -8,21 +8,21 @@ I discovered a weird anomaly in InDesign UXP Scripting which can adversely affec
 
 I also tried it out with Photoshop. As far as I can tell, Photoshop UXPScript is not affected by this.
 
-Simply adding a _comment_ line like
+Current InDesign builds still slow down if I add a real top-level async declaration like
 
-`// async whatever`
+`async function dummy() {}`
 
 into the ‘main’ `.idjs` file makes my script way, way slower.
 
 A noticeable difference is a different redraw behavior while the script is executing.
 
-I suspect the InDesign internal UXP Scripting module performs some crude preliminary textual scan of the script source code before launching the script, and InDesign behaves differently depending on whether it found certain keyword patterns or not.
+I suspect the InDesign internal UXP Scripting module still performs some kind of preliminary inspection of the script source code before launching the script, and InDesign behaves differently depending on what async-related syntax it finds.
 
-The textual scan does not seem to care _where_ the patterns occur: e.g. in comments, or in strings or in actual source code.
+That inspection now appears to be more selective than I first found.
 
 The issue does not occur for anything that appears in a submodules (`require`). I am guessing the preliminary textual scan only inspects the ‘top level’ `.idjs` script.
 
-Because this textual scan does not account for patterns occurring in comments, I can simply add a dummy comment line with the right pattern and trigger the behavior, and make my script become much slower.
+The important update is that comments no longer seem to trigger the slow mode on their own. What still does trigger it is real async syntax in the top-level launcher.
 
 It took me a fair amount of time to figure this out, because the same behavior _also_ occurs when you run the script from the _Adobe UXP Developer Tools_.
 
@@ -46,13 +46,13 @@ On my M2 Max MacBook Pro, the script executes in about 0.5 seconds for a 19×19 
 
 While the script is running, the screen will not update, and the script does not redraw the page until it has completed the calculation.
 
-Then I add a single comment line with the word `async` followed by a space and another word, like
+Then I add a dummy async declaration at the start of the launcher, like
 
 ```
-// async whatever
+async function dummy() {}
 ```
 
-anywhere in the _InDesignBrot.idjs_ script.
+near the start of the _InDesignBrot.idjs_ script.
 
 This innocuous change makes the redraw behavior change, and I can now see individual frames being filled, despite InDesign being set to
 
@@ -65,6 +65,8 @@ In the end, the same script will take around 3 seconds or more to execute.
 [![](https://coppieters.nz/wp-content/uploads/2024/08/Screenshot-2024-08-08-at-6.13.45 PM-1024x699.png)](https://coppieters.nz/wp-content/uploads/2024/08/Screenshot-2024-08-08-at-6.13.45%E2%80%AFPM.png)
 
 The _InDesignBrot_ script can be reconfigured by way of a text frame on the pasteboard. If I change the `num pixels` to 29, the times become 1 second vs 20 seconds.
+
+So the older “comment containing async” explanation no longer matches current InDesign behavior. The safer updated rule is: keep real async syntax out of the top-level launcher if you want the fast Scripts Panel path.
 
 If you’re interested in trying this out for yourself, I’ve made a specific branch in the InDesignBrot Github repo. This branch has been trimmed down to remove stuff that’s not relevant to the discussion.
 
