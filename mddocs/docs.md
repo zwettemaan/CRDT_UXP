@@ -93,7 +93,6 @@ The new functions are:
 - `crdtuxpIDSN.wouldUXPScriptRunInAsyncMode(scriptText)`
 - `crdtuxpIDSN.doUXPScript(scriptText, options)`
 - `crdtuxpIDSN.doUXPScriptFile(filePath, options)`
-- `crdtuxpIDSN.clearUXPScriptBridge(options)`
 
 ### `wouldUXPScriptRunInAsyncMode(scriptText)`
 
@@ -109,15 +108,15 @@ Runs a UXPScript source string through the bridge.
 Default behavior:
 
 - rejects source containing `async`
-- clears any stale pending bridge task before queueing the new run
-- uses a persistent ExtendScript engine and a one-shot idle task under the hood
+- writes the source to a temporary `.idjs` payload file and launches it through the bridge runner with redraw disabled
+- does not keep a persistent engine or idle-task queue between calls
 
 Supported options:
 
 - `allowAsyncToken`: allow source containing `async`
-- `clearPending`: set to `false` to keep the previous queue instead of replacing it
-- `engineName`: custom persistent ExtendScript engine name
-- `taskName`: custom idle-task name
+- `clearPending`: accepted for backward compatibility; currently ignored
+- `engineName`: accepted for backward compatibility; currently ignored
+- `taskName`: accepted for backward compatibility; currently ignored
 
 ### `doUXPScriptFile(filePath, options)`
 
@@ -129,29 +128,23 @@ Supported options:
 - `sourceText`: optional launcher text used for sync-mode inspection
 - `requireSourceInspection`: reject when `sourceText` is not supplied
 - `allowAsyncToken`: allow inspected source containing `async`
-- `clearPending`: set to `false` to keep the previous queue instead of replacing it
-- `engineName`: custom persistent ExtendScript engine name
-- `taskName`: custom idle-task name
+- `clearPending`: accepted for backward compatibility; currently ignored
+- `engineName`: accepted for backward compatibility; currently ignored
+- `taskName`: accepted for backward compatibility; currently ignored
 
 If you want fail-loud inspection for file-based launchers, pass the same source text you wrote to disk as `options.sourceText` and set `requireSourceInspection: true`.
-
-### `clearUXPScriptBridge(options)`
-
-Removes the current bridge idle task and clears any queued runs for the selected task name.
-
-Use this if a project wants explicit teardown before panel shutdown or before switching bridge names.
 
 ## Bridge Flow
 
 The bridge path is:
 
 1. panel code calls `crdtuxpIDSN.doUXPScript(...)` or `crdtuxpIDSN.doUXPScriptFile(...)`
-2. CRDT_UXP executes an ExtendScript bridge through `app.doScript(..., ScriptLanguage.JAVASCRIPT)`
-3. that bridge installs or reuses a persistent ExtendScript engine
-4. the bridge creates a named idle task, removing stale duplicates first
-5. on idle, the bridge disables redraw, launches the UXPScript payload with `app.doScript(..., ScriptLanguage.UXPSCRIPT)`, then tears the idle task down when the queue is empty
+2. `doUXPScript(...)` writes a temporary `.idjs` payload file, while `doUXPScriptFile(...)` uses the supplied path directly
+3. CRDT_UXP stores the payload path on an InDesign label and launches `crdtuxpIDSN_bridge_runner.idjs` with `app.doScript(..., ScriptLanguage.UXPSCRIPT)`
+4. the runner waits for the InDesign app, disables redraw, and launches the payload with `app.doScript(..., ScriptLanguage.UXPSCRIPT)`
+5. the runner finalizes and returns without keeping a persistent engine or idle-task queue alive
 
-This is intentionally convoluted. The point is not elegance. The point is moving the InDesign-facing work onto a host-owned script path.
+This is intentionally small. The point is moving the InDesign-facing work onto a host-owned script path, not keeping extra bridge state alive.
 
 ## Logger Behavior In Bridged UXPScript
 
@@ -198,8 +191,7 @@ if (crdtuxpIDSN.wouldUXPScriptRunInAsyncMode(launcherText)) {
 
 await crdtuxpIDSN.doUXPScriptFile(launcherEntry.nativePath, {
     sourceText: launcherText,
-    requireSourceInspection: true,
-    clearPending: true
+    requireSourceInspection: true
 });
 ```
 
@@ -253,7 +245,6 @@ When using the bridge, keep these rules together:
 3. Keep the top-level launcher free of `async` and `await` tokens.
 4. If the launcher uses CRDT Promise-based services, end with `crdtuxp.finalize()`.
 5. If you want fail-loud launcher inspection, run `wouldUXPScriptRunInAsyncMode()` on the exact launcher text before bridging it.
-6. If you need explicit bridge cleanup, call `clearUXPScriptBridge()`.
 
 ## Historical Notes
 

@@ -17,9 +17,10 @@ if (! module.exports) {
 }
 let crdtuxpIDSN = module.exports;
 
-const JAVASCRIPT_LANG = 1246920229;
 const DEFAULT_UXPSCRIPT_BRIDGE_ENGINE = "CRDT_UXP_UXPScriptBridge";
 const DEFAULT_UXPSCRIPT_BRIDGE_TASK_NAME = "CRDT_UXP_UXPScriptBridgeTask";
+const BRIDGE_RUNNER_FILE_NAME = "crdtuxpIDSN_bridge_runner.idjs";
+const BRIDGE_PAYLOAD_LABEL = "__CRDT_UXP_INDESIGN_UXPSCRIPT_BRIDGE_PAYLOAD__";
 const UXP_VARIANT_INDESIGN_UXP = "UXP_VARIANT_INDESIGN_UXP";
 const UXP_VARIANT_INDESIGN_UXPSCRIPT = "UXP_VARIANT_INDESIGN_UXPSCRIPT";
 
@@ -63,20 +64,41 @@ function logBridgeError(reportingFunctionArguments, message) {
     }
 }
 
-function quoteForJavaScript(value) {
-// coderstate: function
-    let crdtuxp = getCRDTUXP();
-
-    if (crdtuxp && typeof crdtuxp.dQ == "function") {
-        return crdtuxp.dQ(value);
-    }
-
-    return JSON.stringify(String(value == null ? "" : value));
-}
-
 function isAbsoluteNativePath(filePath) {
 // coderstate: function
     return /^(\/|[A-Za-z]:[\\/])/.test(String(filePath || ""));
+}
+
+function normalizeNativePath(filePath) {
+// coderstate: function
+    let retVal = undefined;
+
+    do {
+        try {
+            if (filePath === undefined || filePath === null || filePath === "") {
+                break;
+            }
+
+            retVal = String(filePath);
+
+            if (retVal.indexOf("plugin:") == 0) {
+                let nativePath = retVal.substring("plugin:".length);
+
+                if (! isAbsoluteNativePath(nativePath)) {
+                    throw new Error("Unsupported plugin path: " + retVal);
+                }
+
+                retVal = nativePath;
+            }
+        }
+        catch (err) {
+            logBridgeError(arguments, "normalizeNativePath throws " + err);
+            retVal = undefined;
+        }
+    }
+    while (false);
+
+    return retVal;
 }
 
 function getBridgeEngineName(options) {
@@ -94,7 +116,6 @@ function getBridgeEngineName(options) {
 
     return retVal;
 }
-
 function getBridgeTaskName(options) {
 // coderstate: function
     let retVal = DEFAULT_UXPSCRIPT_BRIDGE_TASK_NAME;
@@ -153,45 +174,6 @@ function getBridgeContext() {
     return retVal;
 }
 
-function getJavaScriptLanguage(uxpContext) {
-// coderstate: function
-    let retVal = JAVASCRIPT_LANG;
-
-    do {
-        try {
-            if (
-                uxpContext
-            &&
-                uxpContext.indesign
-            &&
-                uxpContext.indesign.ScriptLanguage
-            &&
-                uxpContext.indesign.ScriptLanguage.JAVASCRIPT
-            ) {
-                retVal = uxpContext.indesign.ScriptLanguage.JAVASCRIPT;
-                break;
-            }
-
-            if (
-                global.indesignAPI
-            &&
-                global.indesignAPI.ScriptLanguage
-            &&
-                global.indesignAPI.ScriptLanguage.JAVASCRIPT
-            ) {
-                retVal = global.indesignAPI.ScriptLanguage.JAVASCRIPT;
-                break;
-            }
-        }
-        catch (err) {
-            logBridgeError(arguments, "getJavaScriptLanguage throws " + err);
-        }
-    }
-    while (false);
-
-    return retVal;
-}
-
 function wouldUXPScriptRunInAsyncMode(scriptText) {
 // coderstate: function
     let retVal = false;
@@ -238,10 +220,12 @@ function resolveUXPScriptFilePath(filePath, options) {
                 break;
             }
 
-            retVal = String(filePath);
+            retVal = normalizeNativePath(filePath);
             if (isAbsoluteNativePath(retVal)) {
                 break;
             }
+
+            retVal = String(filePath);
 
             let bridgeContext = getBridgeContext();
             let crdtuxp = bridgeContext.crdtuxp;
@@ -265,6 +249,7 @@ function resolveUXPScriptFilePath(filePath, options) {
                 typeof uxpContext.path.resolve == "function"
             ) {
                 retVal = uxpContext.path.resolve(String(basePath), retVal);
+                retVal = normalizeNativePath(retVal);
             }
         }
         catch (err) {
@@ -277,294 +262,124 @@ function resolveUXPScriptFilePath(filePath, options) {
     return retVal;
 }
 
-function buildBridgeSource(options) {
+function getUXPScriptLanguage(uxpContext) {
 // coderstate: function
-    let taskName = getBridgeTaskName(options);
-    let engineName = getBridgeEngineName(options);
+    let retVal = undefined;
 
-    return [
-        "#targetengine " + quoteForJavaScript(engineName),
-        "",
-        "if (\"undefined\" == typeof CRDTUXPInDesignUXPScriptBridge) {",
-        "    CRDTUXPInDesignUXPScriptBridge = {};",
-        "}",
-        "",
-        "(function (bridge) {",
-        "    var STATE_NAME = \"__CRDT_UXP_INDESIGN_UXPSCRIPT_BRIDGE_STATE__\";",
-        "    var DEFAULT_TASK_NAME = " + quoteForJavaScript(taskName) + ";",
-        "",
-        "    function getTaskName(entry) {",
-        "        if (entry && entry.taskName) {",
-        "            return String(entry.taskName);",
-        "        }",
-        "        return DEFAULT_TASK_NAME;",
-        "    }",
-        "",
-        "    function getNamedTasks(taskName) {",
-        "        var matches = [];",
-        "        var targetName = String(taskName || DEFAULT_TASK_NAME);",
-        "",
-        "        try {",
-        "            var tasks = app.idleTasks.everyItem().getElements();",
-        "            for (var index = 0; index < tasks.length; index++) {",
-        "                if (tasks[index] && tasks[index].isValid && tasks[index].name == targetName) {",
-        "                    matches.push(tasks[index]);",
-        "                }",
-        "            }",
-        "        }",
-        "        catch (err) {",
-        "        }",
-        "",
-        "        return matches;",
-        "    }",
-        "",
-        "    function removeTask(task) {",
-        "        try {",
-        "            if (task && task.isValid) {",
-        "                task.remove();",
-        "            }",
-        "        }",
-        "        catch (err) {",
-        "        }",
-        "    }",
-        "",
-        "    function clearNamedTasks(taskName) {",
-        "        var matches = getNamedTasks(taskName);",
-        "",
-        "        for (var index = matches.length - 1; index >= 0; index--) {",
-        "            removeTask(matches[index]);",
-        "        }",
-        "    }",
-        "",
-        "    function getState() {",
-        "        var state = $.global[STATE_NAME];",
-        "",
-        "        if (! state) {",
-        "            state = {",
-        "                queue: [],",
-        "                task: null,",
-        "                boundTask: null,",
-        "                taskName: DEFAULT_TASK_NAME,",
-        "                handlerInstalled: false,",
-        "                onIdle: null",
-        "            };",
-        "            $.global[STATE_NAME] = state;",
-        "        }",
-        "",
-        "        if (! state.onIdle) {",
-        "            state.onIdle = function () {",
-        "                var activeState = getState();",
-        "                var pending = activeState.queue.slice(0);",
-        "                activeState.queue = [];",
-        "",
-        "                try {",
-        "                    if (activeState.task && activeState.task.isValid) {",
-        "                        activeState.task.sleep = 0;",
-        "                    }",
-        "                }",
-        "                catch (sleepErr) {",
-        "                }",
-        "",
-        "                for (var index = 0; index < pending.length; index++) {",
-        "                    try {",
-        "                        runEntry(pending[index]);",
-        "                    }",
-        "                    catch (runErr) {",
-        "                        $.writeln(\"[CRDT_UXP UXPScriptBridge] \" + runErr);",
-        "                    }",
-        "                }",
-        "",
-        "                if (activeState.queue.length > 0) {",
-        "                    try {",
-        "                        if (activeState.task && activeState.task.isValid) {",
-        "                            activeState.task.sleep = 1;",
-        "                        }",
-        "                    }",
-        "                    catch (wakeErr) {",
-        "                    }",
-        "                }",
-        "                else {",
-        "                    detachTask(activeState);",
-        "                }",
-        "            };",
-        "        }",
-        "",
-        "        return state;",
-        "    }",
-        "",
-        "    function detachTask(state) {",
-        "        if (! state) {",
-        "            return;",
-        "        }",
-        "",
-        "        try {",
-        "            if (state.handlerInstalled && state.boundTask && state.boundTask.isValid) {",
-        "                state.boundTask.removeEventListener(IdleTask.ON_IDLE, state.onIdle);",
-        "            }",
-        "        }",
-        "        catch (removeListenerErr) {",
-        "        }",
-        "",
-        "        removeTask(state.boundTask || state.task);",
-        "        state.task = null;",
-        "        state.boundTask = null;",
-        "        state.handlerInstalled = false;",
-        "    }",
-        "",
-        "    function normalizeEntry(entry) {",
-        "        var normalized = {",
-        "            mode: null,",
-        "            taskName: getTaskName(entry),",
-        "            clearPending: ! entry || entry.clearPending !== false",
-        "        };",
-        "",
-        "        if (! entry || ! entry.mode) {",
-        "            throw new Error(\"Bridge payload is missing mode.\");",
-        "        }",
-        "",
-        "        normalized.mode = String(entry.mode);",
-        "",
-        "        if (normalized.mode == \"file\") {",
-        "            if (! entry.filePath) {",
-        "                throw new Error(\"Bridge payload is missing filePath.\");",
-        "            }",
-        "            normalized.filePath = String(entry.filePath);",
-        "            return normalized;",
-        "        }",
-        "",
-        "        if (normalized.mode == \"text\") {",
-        "            normalized.scriptText = String(entry.scriptText || \"\");",
-        "            return normalized;",
-        "        }",
-        "",
-        "        throw new Error(\"Unsupported bridge mode: \" + normalized.mode);",
-        "    }",
-        "",
-        "    function getOrCreateTask(taskName) {",
-        "        var matches = getNamedTasks(taskName);",
-        "        var task = null;",
-        "",
-        "        if (matches.length > 0) {",
-        "            task = matches[0];",
-        "            for (var duplicateIndex = matches.length - 1; duplicateIndex >= 1; duplicateIndex--) {",
-        "                removeTask(matches[duplicateIndex]);",
-        "            }",
-        "            return task;",
-        "        }",
-        "",
-        "        task = app.idleTasks.add();",
-        "        task.name = String(taskName || DEFAULT_TASK_NAME);",
-        "        task.sleep = 0;",
-        "        return task;",
-        "    }",
-        "",
-        "    function runWithRedrawDisabled(work) {",
-        "        var originalEnableRedraw = null;",
-        "        var redrawChanged = false;",
-        "",
-        "        try {",
-        "            if (app && app.scriptPreferences && typeof app.scriptPreferences.enableRedraw != \"undefined\") {",
-        "                originalEnableRedraw = app.scriptPreferences.enableRedraw;",
-        "                app.scriptPreferences.enableRedraw = false;",
-        "                redrawChanged = true;",
-        "            }",
-        "",
-        "            return work();",
-        "        }",
-        "        finally {",
-        "            if (redrawChanged) {",
-        "                try {",
-        "                    app.scriptPreferences.enableRedraw = originalEnableRedraw;",
-        "                }",
-        "                catch (restoreErr) {",
-        "                }",
-        "            }",
-        "        }",
-        "    }",
-        "",
-        "    function runEntry(entry) {",
-        "        return runWithRedrawDisabled(function () {",
-        "            if (entry.mode == \"file\") {",
-        "                app.doScript(File(entry.filePath), ScriptLanguage.UXPSCRIPT);",
-        "                return;",
-        "            }",
-        "",
-        "            if (entry.mode == \"text\") {",
-        "                app.doScript(entry.scriptText, ScriptLanguage.UXPSCRIPT);",
-        "                return;",
-        "            }",
-        "",
-        "            throw new Error(\"Unsupported bridge mode: \" + entry.mode);",
-        "        });",
-        "    }",
-        "",
-        "    bridge.handle = function (entry) {",
-        "        var normalizedEntry = normalizeEntry(entry);",
-        "        var state = getState();",
-        "",
-        "        if (normalizedEntry.clearPending) {",
-        "            state.queue = [];",
-        "            detachTask(state);",
-        "            clearNamedTasks(normalizedEntry.taskName);",
-        "        }",
-        "",
-        "        state.taskName = normalizedEntry.taskName;",
-        "        state.task = getOrCreateTask(normalizedEntry.taskName);",
-        "        if (state.boundTask !== state.task) {",
-        "            state.boundTask = state.task;",
-        "            state.handlerInstalled = false;",
-        "        }",
-        "",
-        "        if (! state.handlerInstalled) {",
-        "            state.task.addEventListener(IdleTask.ON_IDLE, state.onIdle);",
-        "            state.handlerInstalled = true;",
-        "        }",
-        "",
-        "        state.queue.push(normalizedEntry);",
-        "        state.task.sleep = 1;",
-        "        return true;",
-        "    };",
-        "",
-        "    bridge.clear = function (entry) {",
-        "        var state = getState();",
-        "        var taskName = getTaskName(entry);",
-        "",
-        "        state.queue = [];",
-        "        detachTask(state);",
-        "        clearNamedTasks(taskName);",
-        "        return true;",
-        "    };",
-        "",
-        "    bridge.handleFromJson = function (rawPayload) {",
-        "        return bridge.handle(eval(\"(\" + rawPayload + \")\"));",
-        "    };",
-        "",
-        "    bridge.clearFromJson = function (rawPayload) {",
-        "        return bridge.clear(eval(\"(\" + rawPayload + \")\"));",
-        "    };",
-        "})(CRDTUXPInDesignUXPScriptBridge);"
-    ].join("\n");
+    do {
+        try {
+            if (
+                uxpContext
+            &&
+                uxpContext.indesign
+            &&
+                uxpContext.indesign.ScriptLanguage
+            &&
+                uxpContext.indesign.ScriptLanguage.UXPSCRIPT
+            ) {
+                retVal = uxpContext.indesign.ScriptLanguage.UXPSCRIPT;
+                break;
+            }
+
+            if (
+                global.indesignAPI
+            &&
+                global.indesignAPI.ScriptLanguage
+            &&
+                global.indesignAPI.ScriptLanguage.UXPSCRIPT
+            ) {
+                retVal = global.indesignAPI.ScriptLanguage.UXPSCRIPT;
+                break;
+            }
+        }
+        catch (err) {
+            logBridgeError(arguments, "getUXPScriptLanguage throws " + err);
+        }
+    }
+    while (false);
+
+    return retVal;
 }
 
-function buildInvocationSource(payload, options) {
+function resolveBridgeRunnerPath(bridgeContext) {
 // coderstate: function
-    let payloadJson = JSON.stringify(payload || {});
+    let retVal = undefined;
 
-    return buildBridgeSource(options)
-        + "\nCRDTUXPInDesignUXPScriptBridge.handleFromJson(" + quoteForJavaScript(payloadJson) + ");\n";
+    do {
+        try {
+            let crdtuxp = bridgeContext && bridgeContext.crdtuxp;
+            let uxpContext = bridgeContext && bridgeContext.uxpContext;
+            let crdtuxpFolderPath = undefined;
+
+            if (
+                crdtuxp
+            &&
+                crdtuxp.context
+            &&
+                crdtuxp.context.FILE_PATH_CRDT_UXP_FOLDER
+            ) {
+                crdtuxpFolderPath = String(crdtuxp.context.FILE_PATH_CRDT_UXP_FOLDER);
+            }
+
+            if (! crdtuxpFolderPath && typeof __filename == "string" && __filename) {
+                if (! crdtuxp || ! crdtuxp.path || typeof crdtuxp.path.dirName != "function") {
+                    throw new Error("crdtuxp.path.dirName() is unavailable.");
+                }
+
+                crdtuxpFolderPath = crdtuxp.path.dirName(__filename, {
+                    addTrailingSeparator: true
+                });
+            }
+
+            if (! crdtuxpFolderPath && crdtuxp && typeof crdtuxp.getCurrentScriptPath == "function") {
+                let modulePath = crdtuxp.getCurrentScriptPath();
+
+                if (modulePath) {
+                    if (! crdtuxp || ! crdtuxp.path || typeof crdtuxp.path.dirName != "function") {
+                        throw new Error("crdtuxp.path.dirName() is unavailable.");
+                    }
+
+                    crdtuxpFolderPath = crdtuxp.path.dirName(modulePath, {
+                        addTrailingSeparator: true
+                    });
+                }
+            }
+
+            if (! crdtuxpFolderPath) {
+                throw new Error("Could not determine the CRDT_UXP folder path.");
+            }
+
+            if (uxpContext && uxpContext.path && typeof uxpContext.path.resolve == "function") {
+                retVal = uxpContext.path.resolve(crdtuxpFolderPath, BRIDGE_RUNNER_FILE_NAME);
+                retVal = normalizeNativePath(retVal);
+                break;
+            }
+
+            retVal = String(crdtuxpFolderPath) + BRIDGE_RUNNER_FILE_NAME;
+            retVal = normalizeNativePath(retVal);
+        }
+        catch (err) {
+            logBridgeError(arguments, "resolveBridgeRunnerPath throws " + err);
+            retVal = undefined;
+        }
+    }
+    while (false);
+
+    return retVal;
 }
 
-function buildClearSource(options) {
-// coderstate: function
-    let payloadJson = JSON.stringify({
-        taskName: getBridgeTaskName(options)
-    });
+function setBridgePayload(bridgeContext, payload) {
+// coderstate: procedure
+    let app = bridgeContext && bridgeContext.uxpContext && bridgeContext.uxpContext.app;
 
-    return buildBridgeSource(options)
-        + "\nCRDTUXPInDesignUXPScriptBridge.clearFromJson(" + quoteForJavaScript(payloadJson) + ");\n";
+    if (! app || typeof app.insertLabel != "function") {
+        throw new Error("InDesign label API is unavailable.");
+    }
+
+    app.insertLabel(BRIDGE_PAYLOAD_LABEL, JSON.stringify(payload || {}));
 }
 
-function executeBridgeSource(sourceText) {
+function executeBridgePayload(payload) {
 // coderstate: promisor
     let retVal = Promise.resolve(undefined);
 
@@ -572,9 +387,23 @@ function executeBridgeSource(sourceText) {
         try {
             let bridgeContext = getBridgeContext();
             let uxpContext = bridgeContext.uxpContext;
-            let javascriptLanguage = getJavaScriptLanguage(uxpContext);
+            let uxpscriptLanguage = getUXPScriptLanguage(uxpContext);
+            let runnerPath = resolveBridgeRunnerPath(bridgeContext);
 
-            retVal = Promise.resolve(uxpContext.app.doScript(sourceText, javascriptLanguage));
+            if (! uxpscriptLanguage) {
+                throw new Error("InDesign UXPSCRIPT language is unavailable.");
+            }
+
+            if (! runnerPath) {
+                throw new Error("Could not resolve the bridge runner path.");
+            }
+
+            if (! isAbsoluteNativePath(runnerPath)) {
+                throw new Error("Bridge runner path is not absolute: " + runnerPath);
+            }
+
+            setBridgePayload(bridgeContext, payload);
+            retVal = Promise.resolve(uxpContext.app.doScript(runnerPath, uxpscriptLanguage));
         }
         catch (err) {
             retVal = Promise.reject(err);
@@ -585,11 +414,82 @@ function executeBridgeSource(sourceText) {
     return retVal;
 }
 
+function createTempBridgeScriptFile(scriptText) {
+// coderstate: promisor
+    let retVal = Promise.resolve(undefined);
+
+    do {
+        try {
+            let crdtuxp = getCRDTUXP();
+            if (! crdtuxp || typeof crdtuxp.getDir != "function") {
+                throw new Error("crdtuxp.getDir() is unavailable.");
+            }
+
+            retVal = Promise.resolve(crdtuxp.getDir(crdtuxp.TMP_DIR)).then(function handleTmpDirResolve(tmpDirPath) {
+                let tempFilePath = undefined;
+
+                if (! tmpDirPath) {
+                    throw new Error("Could not resolve the temporary directory.");
+                }
+
+                tempFilePath = String(tmpDirPath)
+                    + "crdtuxpIDSN_bridge_"
+                    + String(Date.now())
+                    + "_"
+                    + String(Math.floor(Math.random() * 1000000000))
+                    + ".idjs";
+
+                return Promise.resolve(crdtuxp.fileAppendString(tempFilePath, String(scriptText))).then(function handleWriteResolve(writeSucceeded) {
+                    if (! writeSucceeded) {
+                        throw new Error("Could not write the temporary bridge payload file.");
+                    }
+
+                    return tempFilePath;
+                });
+            });
+        }
+        catch (err) {
+            retVal = Promise.reject(err);
+        }
+    }
+    while (false);
+
+    return retVal;
+}
+
+function cleanupTempBridgeScriptFile(filePath) {
+// coderstate: procedure
+    try {
+        let crdtuxp = getCRDTUXP();
+
+        if (! filePath || ! crdtuxp || typeof crdtuxp.fileDelete != "function") {
+            return;
+        }
+
+        Promise.resolve(crdtuxp.fileDelete(String(filePath))).then(
+            function handleDeleteResolve(deleteSucceeded) {
+                if (! deleteSucceeded) {
+                    logBridgeError(arguments, "Could not delete temporary bridge payload file " + filePath);
+                }
+            },
+            function handleDeleteReject(err) {
+                logBridgeError(arguments, "Deleting temporary bridge payload file throws " + err);
+            }
+        );
+    }
+    catch (err) {
+        logBridgeError(arguments, "cleanupTempBridgeScriptFile throws " + err);
+    }
+}
+
 /**
- * Run a UXPScript source string through the InDesign idle-task bridge.<br>
+ * Run a UXPScript source string through the InDesign bridge.<br>
  * <br>
  * This is meant for panel-side code that needs the final InDesign-facing work to run as
  * a host-owned UXPScript launch instead of directly inside the panel runtime.<br>
+ * <br>
+ * The bridge launches a clean UXPScript runner file and hands it a payload file path.<br>
+ * For string input, the source is first written to a temporary <code>.idjs</code> file.<br>
  * <br>
  * By default, the bridge rejects source that contains the token <code>async</code>, because
  * observed InDesign behavior suggests that the top-level launcher can switch into a slower,
@@ -601,9 +501,9 @@ function executeBridgeSource(sourceText) {
  * @param {string} scriptText - UXPScript source to run
  * @param {object=} options - <code>{<br>
  *     allowAsyncToken: false to reject source containing the token async<br>
- *     clearPending: true to replace any earlier pending bridge launch<br>
- *     engineName: persistent ExtendScript engine name used for the bridge<br>
- *     taskName: idle task name used for the bridge<br>
+ *     clearPending: accepted for backward compatibility; currently ignored<br>
+ *     engineName: accepted for backward compatibility; currently ignored<br>
+ *     taskName: accepted for backward compatibility; currently ignored<br>
  * }</code>
  * @returns {Promise<any>} result returned by InDesign <code>doScript()</code>
  */
@@ -620,17 +520,23 @@ function doUXPScript(scriptText, options) {
 
             validateSyncSafeSource(scriptText, options);
 
-            retVal = executeBridgeSource(
-                buildInvocationSource(
-                    {
-                        mode: "text",
-                        scriptText: String(scriptText),
-                        clearPending: ! options || options.clearPending !== false,
-                        taskName: getBridgeTaskName(options)
+            retVal = createTempBridgeScriptFile(String(scriptText)).then(function handleTempBridgeScriptResolve(tempFilePath) {
+                return executeBridgePayload({
+                    mode: "file",
+                    filePath: tempFilePath,
+                    clearPending: ! options || options.clearPending !== false,
+                    taskName: getBridgeTaskName(options)
+                }).then(
+                    function handleBridgeResolve(value) {
+                        cleanupTempBridgeScriptFile(tempFilePath);
+                        return value;
                     },
-                    options
-                )
-            );
+                    function handleBridgeReject(err) {
+                        cleanupTempBridgeScriptFile(tempFilePath);
+                        throw err;
+                    }
+                );
+            });
         }
         catch (err) {
             retVal = Promise.reject(err);
@@ -644,7 +550,7 @@ function doUXPScript(scriptText, options) {
 module.exports.doUXPScript = doUXPScript;
 
 /**
- * Run a UXPScript file through the InDesign idle-task bridge.<br>
+ * Run a UXPScript file through the InDesign bridge.<br>
  * <br>
  * If you want fail-loud inspection for the top-level launcher text, pass that source in
  * <code>options.sourceText</code> and set <code>options.requireSourceInspection = true</code>.
@@ -658,9 +564,9 @@ module.exports.doUXPScript = doUXPScript;
  *     sourceText: optional source text for sync-mode inspection<br>
  *     requireSourceInspection: reject if sourceText is not supplied<br>
  *     allowAsyncToken: false to reject inspected source containing the token async<br>
- *     clearPending: true to replace any earlier pending bridge launch<br>
- *     engineName: persistent ExtendScript engine name used for the bridge<br>
- *     taskName: idle task name used for the bridge<br>
+ *     clearPending: accepted for backward compatibility; currently ignored<br>
+ *     engineName: accepted for backward compatibility; currently ignored<br>
+ *     taskName: accepted for backward compatibility; currently ignored<br>
  * }</code>
  * @returns {Promise<any>} result returned by InDesign <code>doScript()</code>
  */
@@ -678,17 +584,12 @@ function doUXPScriptFile(filePath, options) {
 
             validateSyncSafeSource(options && options.sourceText, options);
 
-            retVal = executeBridgeSource(
-                buildInvocationSource(
-                    {
-                        mode: "file",
-                        filePath: resolvedPath,
-                        clearPending: ! options || options.clearPending !== false,
-                        taskName: getBridgeTaskName(options)
-                    },
-                    options
-                )
-            );
+            retVal = executeBridgePayload({
+                mode: "file",
+                filePath: resolvedPath,
+                clearPending: ! options || options.clearPending !== false,
+                taskName: getBridgeTaskName(options)
+            });
         }
         catch (err) {
             retVal = Promise.reject(err);
@@ -700,37 +601,6 @@ function doUXPScriptFile(filePath, options) {
 }
 
 module.exports.doUXPScriptFile = doUXPScriptFile;
-
-/**
- * Remove the current bridge idle task and clear any queued launches.
- *
- * @function clearUXPScriptBridge
- * @memberOf crdtuxpIDSN
- *
- * @param {object=} options - <code>{<br>
- *     engineName: persistent ExtendScript engine name used for the bridge<br>
- *     taskName: idle task name used for the bridge<br>
- * }</code>
- * @returns {Promise<any>} result returned by InDesign <code>doScript()</code>
- */
-function clearUXPScriptBridge(options) {
-// coderstate: promisor
-    let retVal = Promise.resolve(undefined);
-
-    do {
-        try {
-            retVal = executeBridgeSource(buildClearSource(options));
-        }
-        catch (err) {
-            retVal = Promise.reject(err);
-        }
-    }
-    while (false);
-
-    return retVal;
-}
-
-module.exports.clearUXPScriptBridge = clearUXPScriptBridge;
 
 /**
  * Convert an InDesign collection into a pure JavaScript array
