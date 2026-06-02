@@ -103,6 +103,7 @@ Use this as a fail-loud preflight on the exact top-level launcher text.
 - It returns `true` when the launcher matches the rough async-mode heuristic after comments and quoted strings are stripped.
 - The current heuristic looks for common async forms such as `async function ...`, `async (...) => ...`, and similar async method shapes.
 - It is a heuristic based on observed InDesign behavior, not an Adobe-documented contract, and it is intentionally not a full JavaScript parser.
+- It is optional. The bridge APIs can be used without this preflight when you do not want the extra gate.
 
 ### `doUXPScript(scriptText, options)`
 
@@ -110,7 +111,7 @@ Runs a UXPScript source string through the bridge.
 
 Default behavior:
 
-- rejects source matching the rough async-mode heuristic
+- conservatively rejects source matching the rough async-mode heuristic
 - writes the source to a temporary `.idjs` payload file and launches it through the bridge runner with redraw disabled
 - does not keep a persistent engine or idle-task queue between calls
 
@@ -128,14 +129,14 @@ Runs a UXPScript file path through the same bridge.
 Supported options:
 
 - `basePath`: base folder used to resolve relative paths
-- `sourceText`: optional launcher text used for sync-mode inspection
+- `sourceText`: optional launcher text used for conservative sync-mode inspection
 - `requireSourceInspection`: reject when `sourceText` is not supplied
 - `allowAsyncToken`: bypass the rough async-mode heuristic
 - `clearPending`: accepted for backward compatibility; currently ignored
 - `engineName`: accepted for backward compatibility; currently ignored
 - `taskName`: accepted for backward compatibility; currently ignored
 
-If you want fail-loud inspection for file-based launchers, pass the same source text you wrote to disk as `options.sourceText` and set `requireSourceInspection: true`.
+If you want fail-loud inspection for file-based launchers, pass the same source text you wrote to disk as `options.sourceText` and set `requireSourceInspection: true`. If you omit `sourceText`, the bridge does not perform that preflight.
 
 ## Bridge Flow
 
@@ -186,17 +187,10 @@ await crdtuxp.init({
     FILE_PATH_PROJECT_FOLDER: pluginFolder.nativePath + "/"
 });
 
-const launcherText = await launcherEntry.read();
-
-if (crdtuxpIDSN.wouldUXPScriptRunInAsyncMode(launcherText)) {
-    throw new Error("Launcher text matches the async-mode heuristic.");
-}
-
-await crdtuxpIDSN.doUXPScriptFile(launcherEntry.nativePath, {
-    sourceText: launcherText,
-    requireSourceInspection: true
-});
+await crdtuxpIDSN.doUXPScriptFile(launcherEntry.nativePath);
 ```
+
+The optional preflight fits when you explicitly want that extra conservative gate. It is not required for the bridge call itself.
 
 ## Example Bridged Launcher Shape
 

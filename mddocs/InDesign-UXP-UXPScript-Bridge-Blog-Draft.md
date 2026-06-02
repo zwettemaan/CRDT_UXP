@@ -54,7 +54,7 @@ Adobe's docs make an important distinction: UXP scripts and UXP plugins live in 
 
 Based on repeated observation in InDesign, the top-level UXPScript code appears to be inspected before execution, and the exact source code text can affect the launch behavior.
 
-You have to keep the top-level bridged launcher free of obvious async syntax unless you intentionally want to risk running in a slower redraw-heavy launch mode.
+You have to keep the top-level launcher free of obvious async syntax when you care about the fast Scripts Panel path.
 
 The current evidence no longer points to a raw token scan that blindly hits comments. What still reproduces the problem is real async syntax in the top-level launcher, and comments mentioning `async` no longer seem to trigger it by themselves.
 
@@ -66,7 +66,7 @@ async function dummy() {}
 
 near the start of the main `.idjs` launcher would make the same UXPScript much slower and visibly redraw-heavy, even when `app.scriptPreferences.enableRedraw = false` was set.
 
-In CRDT_UXP I therefore use a rough preflight heuristic rather than a full parser: strip comments and quoted strings, look for common async forms, and let the caller opt out with `allowAsyncToken` when needed.
+CRDT_UXP exposes a rough optional preflight heuristic rather than a full parser: strip comments and quoted strings, look for common async forms, and let the caller opt out with `allowAsyncToken` when needed. That check is conservative; the bridge path itself does not have to rely on it.
 
 ## The Other Weird Part: Promises Can Fall Off The End Of A Raw UXPScript Launcher
 
@@ -127,22 +127,13 @@ await crdtuxp.init({
     FILE_PATH_PROJECT_FOLDER: pluginFolder.nativePath + "/"
 });
 
-const launcherText = await launcherEntry.read();
-
-if (crdtuxpIDSN.wouldUXPScriptRunInAsyncMode(launcherText)) {
-    throw new Error("Launcher text matches the async-mode heuristic.");
-}
-
-await crdtuxpIDSN.doUXPScriptFile(launcherEntry.nativePath, {
-    sourceText: launcherText,
-    requireSourceInspection: true
-});
+await crdtuxpIDSN.doUXPScriptFile(launcherEntry.nativePath);
 ```
 
 There are two ideas here that matter:
 
-- inspect the exact top-level launcher text before launch
 - keep the panel focused on orchestration, not the final heavy DOM pass
+- add the async preflight only if you explicitly want that extra conservative check
 
 ## A Simple Bridged Launcher Shape
 
