@@ -46,7 +46,7 @@ else
     PYTHON_FILTER="import sys, json; print(json.load(sys.stdin)['${JSON_ATTRNAME}']);"
 fi
 
-export SYSTEM_DAEMON=~/"Library/Application Support/net.tightener/SysConfig/Tightener"
+export SYSTEM_DAEMON=~/"Library/Application Support/net.tightener/SysConfig/PluginInstallerDaemon"
 
 if [ ! -f "${SYSTEM_DAEMON}" ]; then
     export MACHINE_INFO=~/"Library/Application Support/net.tightener/Licensing/Machine/machineInfo.json"
