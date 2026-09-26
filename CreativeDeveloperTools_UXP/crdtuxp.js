@@ -2424,6 +2424,232 @@ function evalTQL(tqlScript, options) {
 module.exports.evalTQL = evalTQL;
 
 /**
+ * Write raw binary data directly into a TQL scope variable over the daemon's
+ * HTTPS channel, bypassing TQL string-literal escaping entirely. Large-data
+ * counterpart to <code>evalTQL()</code> - a normal TQL script body has to be
+ * valid TQL source, so a large binary payload embedded there always paid for
+ * being encoded into a safe string literal first. This calls a dedicated
+ * raw-byte protocol extension instead (<code>X-Tightener-Set-Var</code> +
+ * <code>Content-Type: application/octet-stream</code>), so the bytes travel
+ * unescaped, exactly as given.<br>
+ * <br>
+ * Not supported over the file-based fallback transport (only the direct
+ * network path) - needs <code>uxpContext.hasNetworkAccess</code>.<br>
+ * <br>
+ * A daemon that doesn't understand this protocol extension yet (old,
+ * not-yet-upgraded) either rejects the request outright or falls through to
+ * treating the raw bytes as a TQL script, which fails to parse - either way
+ * the response text won't be the expected <code>"OK"</code>, and this
+ * resolves to an error result rather than silently corrupting anything.
+ * There is no automatic fallback to the escaped-string <code>evalTQL()</code>
+ * path here; callers that need one should retry through that path themselves.
+ *
+ * @function setBinaryVar
+ * @memberof crdtuxp
+ *
+ * @param {string} varName - name of the TQL variable to set, in the target scope
+ * @param {ArrayBuffer|Uint8Array} byteData - raw bytes to write
+ * @param {object=} options - <code>{ tqlScopeName }</code>, default scope <code>defaultScope</code>
+ * @returns {Promise<any>} <code>{ ok: true }</code> on success, <code>{ error: ... }</code> otherwise
+ */
+function setBinaryVar(varName, byteData, options) {
+// coderstate: promisor
+    let retVal = Promise.resolve({ error: true });
+
+    do {
+        try {
+            let uxpContext = getUXPContext();
+            if (! uxpContext.hasNetworkAccess) {
+                consoleLog("setBinaryVar needs network access");
+                break;
+            }
+
+            let tqlScopeName = (options && options.tqlScopeName) || TQL_SCOPE_NAME_DEFAULT;
+
+            let bytes = (byteData instanceof Uint8Array) ? byteData : new Uint8Array(byteData);
+
+            const init = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/octet-stream",
+                    "X-Tightener-Set-Var": varName
+                },
+                body: bytes
+            };
+
+            const responsePromise =
+                fetch(LOCALHOST_URL + "/" + tqlScopeName + "?" + HTTP_CACHE_BUSTER, init);
+            HTTP_CACHE_BUSTER = HTTP_CACHE_BUSTER + 1;
+
+            function setBinaryVarResolveFtn(response) {
+                // coderstate: resolver
+                return response.text().then(function setBinaryVarTextResolveFtn(text) {
+                    // coderstate: resolver
+                    return text === "OK" ?
+                        { ok: true } :
+                        { error: "unexpected daemon response - daemon may not support setBinaryVar" };
+                });
+            }
+
+            function setBinaryVarRejectFtn(reason) {
+                // coderstate: rejector
+                consoleLog("setBinaryVar rejected for " + reason);
+                return { error: reason };
+            }
+
+            retVal = responsePromise.then(
+                setBinaryVarResolveFtn,
+                setBinaryVarRejectFtn
+            );
+        }
+        catch (err) {
+            consoleLog("setBinaryVar throws " + err);
+        }
+    }
+    while (false);
+
+    return retVal;
+}
+module.exports.setBinaryVar = setBinaryVar;
+
+/**
+ * Read raw binary data directly from a TQL scope variable over the daemon's
+ * HTTPS channel, bypassing the UTF-8 text decode + unescape steps
+ * <code>evalTQL()</code>'s <code>isBinary</code> option still goes through
+ * today (it always calls <code>response.text()</code> first, which corrupts
+ * byte sequences that aren't valid UTF-8). Large-data counterpart to
+ * <code>evalTQL()</code>, symmetric with <code>setBinaryVar()</code>.<br>
+ * <br>
+ * Not supported over the file-based fallback transport (only the direct
+ * network path) - needs <code>uxpContext.hasNetworkAccess</code>.<br>
+ * <br>
+ * Resolves to <code>undefined</code> if the variable doesn't exist, isn't a
+ * string-typed value, or the daemon doesn't understand this protocol
+ * extension yet (old, not-yet-upgraded) - these three cases aren't
+ * distinguished. A caller that needs to tell them apart should check
+ * existence via a normal <code>evalTQL()</code> call first.
+ *
+ * @function getBinaryVar
+ * @memberof crdtuxp
+ *
+ * @param {string} varName - name of the TQL variable to read, in the target scope
+ * @param {object=} options - <code>{ tqlScopeName }</code>, default scope <code>defaultScope</code>
+ * @returns {Promise<Uint8Array|undefined>} raw bytes, or <code>undefined</code>
+ */
+function getBinaryVar(varName, options) {
+// coderstate: promisor
+    let retVal = Promise.resolve(undefined);
+
+    do {
+        try {
+            let uxpContext = getUXPContext();
+            if (! uxpContext.hasNetworkAccess) {
+                consoleLog("getBinaryVar needs network access");
+                break;
+            }
+
+            let tqlScopeName = (options && options.tqlScopeName) || TQL_SCOPE_NAME_DEFAULT;
+
+            const init = {
+                method: "POST",
+                headers: {
+                    "X-Tightener-Get-Var": varName
+                }
+            };
+
+            const responsePromise =
+                fetch(LOCALHOST_URL + "/" + tqlScopeName + "?" + HTTP_CACHE_BUSTER, init);
+            HTTP_CACHE_BUSTER = HTTP_CACHE_BUSTER + 1;
+
+            function getBinaryVarResolveFtn(response) {
+                // coderstate: resolver
+                if (response.headers.get("Content-Type") !== "application/octet-stream") {
+                    // Not a raw-binary response - either the variable wasn't
+                    // found, or this daemon doesn't support the raw-var
+                    // protocol extension at all. Both look the same from here.
+                    return undefined;
+                }
+
+                return response.arrayBuffer().then(function getBinaryVarBufferResolveFtn(buf) {
+                    // coderstate: resolver
+                    return new Uint8Array(buf);
+                });
+            }
+
+            function getBinaryVarRejectFtn(reason) {
+                // coderstate: rejector
+                consoleLog("getBinaryVar rejected for " + reason);
+                return undefined;
+            }
+
+            retVal = responsePromise.then(
+                getBinaryVarResolveFtn,
+                getBinaryVarRejectFtn
+            );
+        }
+        catch (err) {
+            consoleLog("getBinaryVar throws " + err);
+        }
+    }
+    while (false);
+
+    return retVal;
+}
+module.exports.getBinaryVar = getBinaryVar;
+
+/**
+ * (Internal) Find out, once per session, whether the daemon understands the
+ * raw-var protocol extension (<code>setBinaryVar()</code>/
+ * <code>getBinaryVar()</code>), using a small fixed-size test payload -
+ * never the caller's real (possibly large) data. Callers that are about to
+ * hand a potentially large payload to <code>setBinaryVar()</code> (e.g.
+ * <code>fileWrite()</code>) must call this first and branch on the result,
+ * rather than discovering non-support only after sending the real payload.<br>
+ * <br>
+ * Sticky: caches the result on <code>uxpContext.isOldDaemon</code>
+ * (<code>true</code>/<code>false</code>/<code>undefined</code> = not yet
+ * probed) and only probes once - concurrent callers during the first probe
+ * share the same in-flight promise rather than each firing their own.
+ * A caller that already knows <code>uxpContext.isOldDaemon</code> is settled
+ * has no reason to call this - it's only for the "not yet known" case.
+ *
+ * @function probeDaemonBinaryProtocol_
+ *
+ * @returns {Promise<boolean>} true if the raw-var protocol is supported
+ */
+function probeDaemonBinaryProtocol_() {
+// coderstate: promisor
+    let uxpContext = getUXPContext();
+
+    if (uxpContext.isOldDaemon !== undefined) {
+        return Promise.resolve(! uxpContext.isOldDaemon);
+    }
+
+    if (uxpContext.isOldDaemonProbePromise) {
+        return uxpContext.isOldDaemonProbePromise;
+    }
+
+    // Deliberately tiny (includes a NUL byte, since that's exactly the case
+    // the old TQL-string-escaped protocol couldn't carry) - this must never
+    // be the caller's real payload.
+    const probeBytes = new Uint8Array([0x00, 0x01]);
+
+    function probeResolveFtn(setResult) {
+        // coderstate: resolver
+        let isSupported = !! (setResult && setResult.ok);
+        uxpContext.isOldDaemon = ! isSupported;
+        uxpContext.isOldDaemonProbePromise = undefined;
+        return isSupported;
+    }
+
+    uxpContext.isOldDaemonProbePromise =
+        setBinaryVar("__crdtuxp_raw_probe", probeBytes).then(probeResolveFtn);
+
+    return uxpContext.isOldDaemonProbePromise;
+}
+module.exports.probeDaemonBinaryProtocol_ = probeDaemonBinaryProtocol_;
+
+/**
  * (Internal) Inefficient file append, for debugging use
  *
  * @function fileAppend_
@@ -3172,62 +3398,170 @@ function fileRead(fileHandle, options) {
                 break;
             }
 
-            let evalTQLOptions = {
-                isBinary: options?.isBinary
-            };
+            // Old protocol: bytes travel TQL-string-escaped both ways
+            // (enquote() server-side, deQuote()+binaryUTF8ToStr() client-side).
+            // Kept as the fallback for a daemon that doesn't understand the
+            // raw-var protocol extension (setBinaryVar()/getBinaryVar()) yet.
+            function fileReadOldProtocol() {
+                let evalTQLOptions = {
+                    isBinary: options?.isBinary
+                };
 
-            const responsePromise = 
-                evalTQL(
-                    "enquote(fileRead(" + fileHandle + "))", 
-                    evalTQLOptions);
-            if (! responsePromise) {
+                const responsePromise =
+                    evalTQL(
+                        "enquote(fileRead(" + fileHandle + "))",
+                        evalTQLOptions);
+                if (! responsePromise) {
+                    return RESOLVED_PROMISE_UNDEFINED;
+                }
+
+                function evalTQLResolveFtn(response) {
+                    // coderstate: resolver
+                    let retVal;
+
+                    do {
+                        if (! response || response.error) {
+                            crdtuxp.logError(arguments, "bad response, error = " + response?.error);
+                            break;
+                        }
+
+                        let byteArrayStr = deQuote(response.text);
+                        if (! byteArrayStr) {
+                            crdtuxp.logError(arguments, "no byteArrayStr");
+                            break;
+                        }
+
+                        let str = binaryUTF8ToStr(byteArrayStr);
+                        if (! str) {
+                            crdtuxp.logError(arguments, "no str");
+                            break;
+                        }
+
+                        if (! options?.isBinary) {
+                            retVal = str;
+                            break;
+                        }
+
+                        retVal = deQuote(str);
+                    }
+                    while (false);
+
+                    return retVal;
+                };
+
+                function evalTQLRejectFtn(reason) {
+                    // coderstate: rejector
+                    crdtuxp.logError(arguments, "rejected for " + reason);
+                    return undefined;
+                };
+
+                return responsePromise.then(
+                    evalTQLResolveFtn,
+                    evalTQLRejectFtn
+                );
+            }
+
+            // New protocol: read the file server-side into a scope variable
+            // (tiny script, no bulk data in the script text), then pull it
+            // back over the raw binary channel - no TQL-string escaping, no
+            // response.text() UTF-8 decode. Two small round trips instead of
+            // one large escaped one; setBinaryVar()/getBinaryVar() carry the
+            // actual payload. Only called once isOldDaemon is known false -
+            // never used to *discover* support (that's probeDaemonBinaryProtocol_()'s
+            // job, with a small fixed-size test, so a big file read never
+            // has to fail once before falling back).
+            function fileReadNewProtocol() {
+                let rawVarName = "__crdtuxp_raw_" + fileHandle;
+
+                const assignPromise =
+                    evalTQL(
+                        "var " + rawVarName + " = fileRead(" + fileHandle + "); " +
+                        rawVarName + " != undefined ? \"true\" : \"false\"");
+
+                function assignResolveFtn(response) {
+                    // coderstate: resolver
+                    let retVal = RESOLVED_PROMISE_UNDEFINED;
+
+                    do {
+                        if (! response || response.error || response.text != "true") {
+                            // Genuine read failure (bad handle, etc), or the
+                            // assignment script itself didn't run - not a
+                            // protocol-support question, so isOldDaemon is
+                            // left alone. Same failure result the old
+                            // protocol would give for the same underlying
+                            // problem.
+                            break;
+                        }
+
+                        retVal = getBinaryVar(rawVarName).then(
+                            function getBinaryVarResolveFtn(rawBytes) {
+                                // coderstate: resolver
+                                let retVal;
+
+                                do {
+                                    if (rawBytes === undefined) {
+                                        // The assignment above genuinely
+                                        // succeeded, so a missing raw-get
+                                        // response here means the daemon
+                                        // stopped understanding the raw-var
+                                        // protocol extension since it was
+                                        // last confirmed (e.g. an old daemon
+                                        // got relaunched mid-session) - fall
+                                        // back for this call, and update the
+                                        // sticky flag so later calls adapt
+                                        // too. A future successful call
+                                        // flips it back.
+                                        uxpContext.isOldDaemon = true;
+                                        retVal = fileReadOldProtocol();
+                                        break;
+                                    }
+
+                                    uxpContext.isOldDaemon = false;
+                                    retVal = options?.isBinary ? rawBytes : binaryUTF8ToStr(rawBytes);
+                                }
+                                while (false);
+
+                                return retVal;
+                            }
+                        );
+                    }
+                    while (false);
+
+                    return retVal;
+                }
+
+                function assignRejectFtn(reason) {
+                    // coderstate: rejector
+                    crdtuxp.logError(arguments, "rejected for " + reason);
+                    return undefined;
+                }
+
+                return assignPromise.then(
+                    assignResolveFtn,
+                    assignRejectFtn
+                );
+            }
+
+            if (uxpContext.isOldDaemon) {
+                retVal = fileReadOldProtocol();
                 break;
             }
 
-            function evalTQLResolveFtn(response) {
-                // coderstate: resolver
-                let retVal;
-
-                do {
-                    if (! response || response.error) {
-                        crdtuxp.logError(arguments, "bad response, error = " + response?.error);
-                        break;
+            if (uxpContext.isOldDaemon === undefined) {
+                // Not yet known whether this daemon supports the raw-var
+                // protocol extension - settle that with a small fixed-size
+                // probe first. A real (possibly large) file never gets read
+                // speculatively just to find out.
+                retVal = probeDaemonBinaryProtocol_().then(
+                    function probeResolveFtn(isSupported) {
+                        // coderstate: resolver
+                        return isSupported ? fileReadNewProtocol() : fileReadOldProtocol();
                     }
+                );
+                break;
+            }
 
-                    let byteArrayStr = deQuote(response.text);
-                    if (! byteArrayStr) {
-                        crdtuxp.logError(arguments, "no byteArrayStr");
-                        break;
-                    }
-
-                    let str = binaryUTF8ToStr(byteArrayStr);
-                    if (! str) {
-                        crdtuxp.logError(arguments, "no str");
-                        break;
-                    }
-
-                    if (! options?.isBinary) {
-                        retVal = str;
-                        break;
-                    }
-
-                    retVal = deQuote(str);
-                }
-                while (false);
-
-                return retVal;
-            };
-
-            function evalTQLRejectFtn(reason) {
-                // coderstate: rejector
-                crdtuxp.logError(arguments, "rejected for " + reason);
-                return undefined;
-            };
-            
-            retVal = responsePromise.then(
-                evalTQLResolveFtn,
-                evalTQLRejectFtn
-            );
+            retVal = fileReadNewProtocol();
         }
         catch (err) {
             crdtuxp.logError(arguments, "throws " + err);
@@ -3298,41 +3632,143 @@ function fileWrite(fileHandle, s_or_ByteArr) {
                 break;
             }
 
-            const responsePromise = 
-                evalTQL(
-                    "fileWrite(" + fileHandle + "," + dQ(byteArray) + ") ? \"true\" : \"false\""
+            // Old protocol: the whole byte array travels embedded as an
+            // escaped TQL string literal in the script text (dQ()). Kept as
+            // the fallback for a daemon that doesn't understand the raw-var
+            // protocol extension (setBinaryVar()/getBinaryVar()) yet.
+            function fileWriteOldProtocol() {
+                const responsePromise =
+                    evalTQL(
+                        "fileWrite(" + fileHandle + "," + dQ(byteArray) + ") ? \"true\" : \"false\""
+                    );
+                if (! responsePromise) {
+                    return RESOLVED_PROMISE_UNDEFINED;
+                }
+
+                function evalTQLResolveFtn(response) {
+                    // coderstate: resolver
+                    let retVal;
+
+                    do {
+                        if (! response || response.error) {
+                            crdtuxp.logError(arguments, "bad response, error = " + response?.error);
+                            break;
+                        }
+
+                        retVal = response.text == "true";
+                    }
+                    while (false);
+
+                    return retVal;
+                };
+
+                function evalTQLRejectFtn(reason) {
+                    // coderstate: rejector
+                    crdtuxp.logError(arguments, "rejected for " + reason);
+                    return undefined;
+                };
+
+                return responsePromise.then(
+                    evalTQLResolveFtn,
+                    evalTQLRejectFtn
                 );
-            if (! responsePromise) {
+            }
+
+            // New protocol: the raw bytes go straight into a scope variable
+            // over the raw binary channel (no escaping), then a tiny script
+            // tells the daemon's own fileWrite() builtin to use it by name -
+            // the actual payload never appears in TQL script text at all.
+            // Only called once isOldDaemon is known false - never used to
+            // *discover* support (that's probeDaemonBinaryProtocol_()'s job,
+            // with a small fixed-size test, so a large write is never sent
+            // speculatively just to find out it wasn't supported).
+            function fileWriteNewProtocol() {
+                let rawVarName = "__crdtuxp_raw_" + fileHandle;
+
+                return setBinaryVar(rawVarName, byteArray).then(
+                    function setBinaryVarResolveFtn(setResult) {
+                        // coderstate: resolver
+                        let retVal;
+
+                        do {
+                            if (! setResult || setResult.error) {
+                                // This was already trusted to support the
+                                // raw-var protocol extension, so a failure
+                                // here means the daemon stopped supporting
+                                // it since it was last confirmed (e.g. an
+                                // old daemon got relaunched mid-session) -
+                                // fall back for this call (byteArray is
+                                // already in hand either way, no re-send
+                                // needed), and update the sticky flag so
+                                // later calls adapt too. A future successful
+                                // call flips it back.
+                                uxpContext.isOldDaemon = true;
+                                retVal = fileWriteOldProtocol();
+                                break;
+                            }
+
+                            uxpContext.isOldDaemon = false;
+
+                            const responsePromise =
+                                evalTQL(
+                                    "fileWrite(" + fileHandle + ", " + rawVarName + ") ? \"true\" : \"false\""
+                                );
+
+                            function fileWriteResolveFtn(response) {
+                                // coderstate: resolver
+                                let retVal;
+
+                                do {
+                                    if (! response || response.error) {
+                                        crdtuxp.logError(arguments, "bad response, error = " + response?.error);
+                                        break;
+                                    }
+
+                                    retVal = response.text == "true";
+                                }
+                                while (false);
+
+                                return retVal;
+                            }
+
+                            function fileWriteRejectFtn(reason) {
+                                // coderstate: rejector
+                                crdtuxp.logError(arguments, "rejected for " + reason);
+                                return undefined;
+                            }
+
+                            retVal = responsePromise.then(
+                                fileWriteResolveFtn,
+                                fileWriteRejectFtn
+                            );
+                        }
+                        while (false);
+
+                        return retVal;
+                    }
+                );
+            }
+
+            if (uxpContext.isOldDaemon) {
+                retVal = fileWriteOldProtocol();
                 break;
             }
 
-            function evalTQLResolveFtn(response) {
-                // coderstate: resolver
-                let retVal;
-
-                do {
-                    if (! response || response.error) {
-                        crdtuxp.logError(arguments, "bad response, error = " + response?.error);
-                        break;
+            if (uxpContext.isOldDaemon === undefined) {
+                // Not yet known whether this daemon supports the raw-var
+                // protocol extension - settle that with a small fixed-size
+                // probe first. The real (possibly large) byteArray is never
+                // sent speculatively just to find out.
+                retVal = probeDaemonBinaryProtocol_().then(
+                    function probeResolveFtn(isSupported) {
+                        // coderstate: resolver
+                        return isSupported ? fileWriteNewProtocol() : fileWriteOldProtocol();
                     }
+                );
+                break;
+            }
 
-                    retVal = response.text == "true";
-                }
-                while (false);
-
-                return retVal;
-            };
-
-            function evalTQLRejectFtn(reason) {
-                // coderstate: rejector
-                crdtuxp.logError(arguments, "rejected for " + reason);
-                return undefined;
-            };
-            
-            retVal = responsePromise.then(
-                evalTQLResolveFtn,
-                evalTQLRejectFtn
-            );
+            retVal = fileWriteNewProtocol();
         }
         catch (err) {
             crdtuxp.logError(arguments, "throws " + err);
