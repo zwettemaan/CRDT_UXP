@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="main.js"></script>
+</head>
+
+<style>
+body {
+  background-color: var(--uxp-host-background-color);
+  color: var(--uxp-host-text-color);
+  border-color: var(--uxp-host-border-color);
+  font-size: var(--uxp-host-font-size);
+  margin: 0;
+}
+
+/*
+ * Plain HTML/CSS throughout - no Spectrum (sp-*) web components. A first
+ * pass using sp-button/sp-body rendered a hugely oversized, overlapping
+ * button (shadow-DOM sizing quirk, not reproducible/debuggable without a
+ * live host to inspect) - switched to hand-styled elements instead, the
+ * same approach already proven reliable in Tightener's own UXP panels.
+ */
+
+.wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+h3 {
+    margin: 0 0 6px 0;
+}
+
+p {
+    margin: 0 0 10px 0;
+    font-size: 11px;
+}
+
+code {
+    font-family: monospace;
+}
+
+#run_button {
+    align-self: flex-start;
+    padding: 6px 14px;
+    font-size: var(--uxp-host-font-size);
+    color: var(--uxp-host-text-color);
+    background-color: var(--uxp-host-background-color);
+    border: 1px solid var(--uxp-host-border-color);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#run_button:hover {
+    background-color: var(--uxp-host-border-color);
+}
+
+#run_button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+#status {
+    margin: 8px 0;
+    font-size: 11px;
+}
+
+#report_out {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 11px;
+    border: 1px solid var(--uxp-host-border-color);
+    padding: 8px;
+    box-sizing: border-box;
+}
+</style>
+
+<body>
+  <div class="wrapper">
+    <h3>CRDT_UXP File Throughput Test</h3>
+    <p>Runs the same benchmark as <code>../throughput-script/throughput_test.psjs</code> - see <code>../shared/throughputTest.js</code> for what's measured.</p>
+    <button id="run_button">Run Throughput Test</button>
+    <div id="status"></div>
+    <div id="report_out"></div>
+  </div>
+</body>
+</html>
