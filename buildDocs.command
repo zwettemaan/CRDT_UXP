@@ -14,7 +14,7 @@ cat > /tmp/crdt_uxp_jsdoc.json << EOF
   "source": {
     "include": ["./"],
     "includePattern": ".+\\\\.js?\$",
-    "excludePattern": "(^|\\\\/|\\\\\\\\)(node_modules|docs|custom_minami)(\\\\/|\\\\\\\\).*\$"
+    "excludePattern": "(^|\\\\/|\\\\\\\\)(node_modules|docs|custom_minami|samples)(\\\\/|\\\\\\\\).*\$"
   },
   "opts": {
     "destination": "./docs/",
@@ -25,5 +25,8 @@ cat > /tmp/crdt_uxp_jsdoc.json << EOF
 EOF
 
 npm i --save-dev minami jsdoc taffydb
-jsdoc -c /tmp/crdt_uxp_jsdoc.json 
+jsdoc -c /tmp/crdt_uxp_jsdoc.json
+
+# Strip the JSDoc-generated timestamp so unchanged docs don't dirty git on every rebuild.
+find docs -name "*.html" -exec sed -i '' -E 's/(JSDoc [0-9.]+<\/a>) on [A-Za-z]+ [A-Za-z]+ [0-9]+ [0-9]+ [0-9:]+ GMT[+-][0-9]+ \([^)]+\)/\1/' {} +
 
