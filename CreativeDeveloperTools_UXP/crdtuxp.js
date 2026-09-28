@@ -1224,6 +1224,18 @@ function deQuote(quotedString) {
                         buffer.push(0x0A);
                         state = 0;
                     }
+                    else if (c == 'v') {
+                        buffer.push(0x0B);
+                        state = 0;
+                    }
+                    else if (c == 'f') {
+                        buffer.push(0x0C);
+                        state = 0;
+                    }
+                    else if (c == 'b') {
+                        buffer.push(0x08);
+                        state = 0;
+                    }
                     else {
                         buffer.push(c.charCodeAt(0));
                         state = 0;
@@ -3399,17 +3411,28 @@ function fileRead(fileHandle, options) {
             }
 
             // Old protocol: bytes travel TQL-string-escaped both ways
-            // (enquote() server-side, deQuote()+binaryUTF8ToStr() client-side).
-            // Kept as the fallback for a daemon that doesn't understand the
-            // raw-var protocol extension (setBinaryVar()/getBinaryVar()) yet.
+            // (enquote() server-side, deQuote() client-side - which already
+            // yields the raw bytes; binaryUTF8ToStr() is only applied when a
+            // string result was asked for). Kept as the fallback for a
+            // daemon that doesn't understand the raw-var protocol extension
+            // (setBinaryVar()/getBinaryVar()) yet.
             function fileReadOldProtocol() {
                 let evalTQLOptions = {
                     isBinary: options?.isBinary
                 };
 
+                // No explicit enquote() here: the daemon's HTTP response
+                // writer already serializes any String-typed script result
+                // through its own quoting/escaping (TghHTTPServer.cpp's
+                // STATE_PROCESSING -> IOMNode::toString(), which for
+                // OMType::String calls the same Utils::enquoteString()
+                // enquote() itself uses). Wrapping the result in an explicit
+                // enquote() here double-escapes it - backslashes doubled,
+                // wrapped in an extra quote layer - which deQuote() below
+                // only partially undoes, corrupting the bytes.
                 const responsePromise =
                     evalTQL(
-                        "enquote(fileRead(" + fileHandle + "))",
+                        "fileRead(" + fileHandle + ")",
                         evalTQLOptions);
                 if (! responsePromise) {
                     return RESOLVED_PROMISE_UNDEFINED;
@@ -3425,24 +3448,26 @@ function fileRead(fileHandle, options) {
                             break;
                         }
 
-                        let byteArrayStr = deQuote(response.text);
-                        if (! byteArrayStr) {
-                            crdtuxp.logError(arguments, "no byteArrayStr");
+                        let byteArray = deQuote(response.text);
+                        if (! byteArray) {
+                            crdtuxp.logError(arguments, "no byteArray");
                             break;
                         }
 
-                        let str = binaryUTF8ToStr(byteArrayStr);
-                        if (! str) {
+                        if (options?.isBinary) {
+                            // byteArray is already the raw bytes - do not
+                            // round-trip through binaryUTF8ToStr(), which
+                            // doesn't validate continuation-byte tags and
+                            // silently corrupts arbitrary (non-UTF8) binary
+                            // payloads.
+                            retVal = new Uint8Array(byteArray);
+                            break;
+                        }
+
+                        retVal = binaryUTF8ToStr(byteArray);
+                        if (! retVal) {
                             crdtuxp.logError(arguments, "no str");
-                            break;
                         }
-
-                        if (! options?.isBinary) {
-                            retVal = str;
-                            break;
-                        }
-
-                        retVal = deQuote(str);
                     }
                     while (false);
 

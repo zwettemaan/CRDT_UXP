@@ -15,23 +15,28 @@
       "domains": [
         "localhost.tgrg.net"
       ]
-    }
+    },
+    "clipboard": "readAndWrite"
   },
   "entrypoints": [
     {
       "type": "panel",
       "id": "showPanel",
       "minimumSize": {
-        "width": 420,
-        "height": 320
+        "width": 600,
+        "height": 500
+      },
+      "maximumSize": {
+        "width": 2400,
+        "height": 1800
       },
       "preferredDockedSize": {
-        "width": 480,
-        "height": 640
+        "width": 900,
+        "height": 800
       },
       "preferredFloatingSize": {
-        "width": 480,
-        "height": 640
+        "width": 900,
+        "height": 800
       },
       "label": {
         "default": "CRDT_UXP Throughput Test"

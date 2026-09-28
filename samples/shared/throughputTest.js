@@ -38,7 +38,7 @@ if (! module.exports) {
 }
 
 // Payload sizes to benchmark, in bytes.
-const DEFAULT_TEST_SIZES = [4 * 1024, 64 * 1024, 512 * 1024, 2 * 1024 * 1024];
+const DEFAULT_TEST_SIZES = [4 * 1024, 64 * 1024, 512 * 1024, 2 * 1024 * 1024, 8 * 1024 * 1024 ];
 module.exports.DEFAULT_TEST_SIZES = DEFAULT_TEST_SIZES;
 
 // Deterministic pseudo-random fill (FNV-1a-ish, not crypto - just needs to
