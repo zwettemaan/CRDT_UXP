@@ -37,3 +37,8 @@ feature-demo sample plugin) so this folder can grow independently.
   `shared/throughputTest.js`. Run the script via Photoshop's
   File ▸ Scripts, or load the panel via UXP Developer Tools
   (*Add Plugin* → `throughput-panel/manifest.json` → *Load*).
+- **`evaltql-script/`** - unforced `crdtuxp.evalTQL()` round trip
+  (`shared/evalTqlTest.js`), run via Photoshop's File ▸ Scripts. A standalone
+  UXPScript has no network access, so this exercises the daemon's file-drop
+  transport (`DAEMON_LISTEN_LOCAL_FILE`) rather than HTTPS - confirms the
+  daemon is reachable from a plain script/`.psjs` with no manifest at all.

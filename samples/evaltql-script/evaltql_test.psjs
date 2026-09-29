@@ -1,0 +1,68 @@
+// Copyright (c) 2024–present Rorohiko Ltd. All rights reserved.
+// SPDX-License-Identifier: Elastic-2.0
+// https://github.com/zwettemaan/CRDT_UXP
+
+//
+// evalTQL() round-trip test (Photoshop UXPScript). Run via File > Scripts,
+// or through a Scripts panel double-click - Photoshop executes .psjs files
+// in the UXPScript engine, not classic ExtendScript. That engine is exactly
+// the context this test is meant to exercise: hasDirectFileAccess = true,
+// hasNetworkAccess = false, so crdtuxp.evalTQL() should auto-negotiate the
+// daemon's file-drop transport (DAEMON_LISTEN_LOCAL_FILE) instead of HTTPS -
+// no manifest, no network permission needed.
+//
+// Requires PluginInstaller running with its daemon enabled (default: yes,
+// launched with -m 3 = DAEMON_LISTEN_HTTPS | DAEMON_LISTEN_LOCAL_FILE).
+//
+// This is a thin standalone runner - the actual test logic lives in
+// ../shared/evalTqlTest.js (symlinked in here as ./evalTqlTest.js) so it can
+// also run unchanged from inside a real UXP plugin panel later; see
+// ../throughput-script/ + ../throughput-panel/ for that script/panel split.
+//
+// `crdtuxp.js` here is a symlink to ../../CreativeDeveloperTools_UXP/crdtuxp.js
+// - kept as a local symlink (rather than a `../../` require path) because a
+// packaged UXP plugin cannot require() outside its own folder, and every
+// sample in this repo uses the same `./crdtuxp.js` require regardless of
+// whether it happens to be a loose script or a plugin.
+//
+
+if (! global.crdtuxp) {
+    global.crdtuxp = global.require("./crdtuxp.js");
+    crdtuxp.init();
+}
+
+const evalTqlTest = global.require("./evalTqlTest.js");
+
+async function main() {
+    const result = await evalTqlTest.run(crdtuxp);
+    const reportText = evalTqlTest.formatReport(result);
+
+    // Visible in the UXP Developer Tools console when run in dev/debug mode.
+    console.log(reportText);
+
+    // Also written to disk (direct local access, always available to a
+    // standalone UXPScript) so the result is visible even when nothing is
+    // watching the console - e.g. this script run standalone via
+    // File > Scripts / double-click.
+    try {
+        const reportPath =
+            crdtuxp.getUXPContext().os.homedir() +
+            crdtuxp.path.SEPARATOR +
+            "crdtuxp_evaltql_test_report.txt";
+        const reportHandle = await crdtuxp.fileOpen(reportPath, "w");
+        if (reportHandle !== undefined) {
+            await crdtuxp.fileWrite(reportHandle, reportText);
+            await crdtuxp.fileClose(reportHandle);
+            crdtuxp.logNote(arguments, "Report written to " + reportPath);
+        }
+    }
+    catch (err) {
+        crdtuxp.logError(arguments, "could not write report file: " + err);
+    }
+
+    return reportText;
+}
+
+module.exports.main = main;
+
+return main();
