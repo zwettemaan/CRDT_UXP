@@ -1,9 +1,13 @@
-# Auto detect text files and perform LF normalization
+# Text files use the native line ending of the platform they are checked out on
+# (git normalizes to LF in the repository).
 * text=auto
 
-# These files should have specific line endings
-*.command	text eol=lf
+# Windows scripts are always CRLF, even when checked out on a Mac (they get run
+# from a Windows VM that mounts the Mac file system).
+*.bat	text eol=crlf
+*.cmd	text eol=crlf
+*.ps1	text eol=crlf
+
+# Unix scripts must always be LF.
 *.sh		text eol=lf
-*.bat		text eol=crlf
-*.md 		text eol=crlf
-*.txt 		text eol=crlf
+*.command	text eol=lf
