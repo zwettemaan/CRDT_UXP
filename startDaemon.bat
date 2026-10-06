@@ -4,11 +4,17 @@ SETLOCAL EnableDelayedExpansion
 
 SET PLUGIN_INSTALLER_ROOT=%~dp0
 
-SET SYSTEM_DAEMON=%APPDATA%\net.tightener\SysConfig\PluginInstallerDaemon.exe
+REM App-data folder name: appDataName from the prefs file, else net.tightener
+REM (same rule as Dirs::getAppDataFolderName() in the Tightener source;
+REM [\x22] is a double quote)
+SET "APP_DATA_NAME=net.tightener"
+FOR /F "usebackq delims=" %%A IN (`POWERSHELL -NoProfile -Command "$p = Join-Path $env:APPDATA 'net.tightener.preferences.json'; if (Test-Path -LiteralPath $p) { if ((Get-Content -Raw -LiteralPath $p) -match 'appDataName[\x22]\s*:\s*[\x22]([A-Za-z0-9._-]+)[\x22]') { $Matches[1] } }"`) DO SET "APP_DATA_NAME=%%A"
+
+SET SYSTEM_DAEMON=%APPDATA%\%APP_DATA_NAME%\SysConfig\PluginInstallerDaemon.exe
 
 IF NOT EXIST "%SYSTEM_DAEMON%" (
 
-    SET MACHINE_INFO=%APPDATA%\net.tightener\Licensing\Machine\machineInfo.json
+    SET MACHINE_INFO=%APPDATA%\%APP_DATA_NAME%\Licensing\Machine\machineInfo.json
 
     IF NOT EXIST "%MACHINE_INFO%" (
         ECHO(

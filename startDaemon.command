@@ -46,10 +46,15 @@ else
     PYTHON_FILTER="import sys, json; print(json.load(sys.stdin)['${JSON_ATTRNAME}']);"
 fi
 
-export SYSTEM_DAEMON=~/"Library/Application Support/net.tightener/SysConfig/PluginInstallerDaemon"
+# App-data folder name: appDataName from the prefs file, else net.tightener
+# (same rule as Dirs::getAppDataFolderName() in the Tightener source)
+APP_DATA_NAME=`cat ~/Library/Preferences/net.tightener.preferences.json 2>/dev/null | tr -d '\r\n' | sed -n 's/.*"appDataName"[[:space:]]*:[[:space:]]*"\([A-Za-z0-9._-][A-Za-z0-9._-]*\)".*/\1/p'`
+APP_DATA_NAME=${APP_DATA_NAME:-net.tightener}
+
+export SYSTEM_DAEMON=~/"Library/Application Support/${APP_DATA_NAME}/SysConfig/PluginInstallerDaemon"
 
 if [ ! -f "${SYSTEM_DAEMON}" ]; then
-    export MACHINE_INFO=~/"Library/Application Support/net.tightener/Licensing/Machine/machineInfo.json"
+    export MACHINE_INFO=~/"Library/Application Support/${APP_DATA_NAME}/Licensing/Machine/machineInfo.json"
     export PLUGIN_INSTALLER=`cat "$MACHINE_INFO" | "${PYTHON}" -c "${PYTHON_FILTER}"`
     if [ ! -d "${PLUGIN_INSTALLER}" ]; then
         echo "Cannot access PluginInstaller; make sure to run the PluginInstaller after moving it"
