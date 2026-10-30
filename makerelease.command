@@ -18,9 +18,19 @@ export SCRIPT_DIR=`pwd`/
 
 ./buildDocs.command
 
-sed -E "s/\"version\":\s*\"[^\"]*\"/\"version\": \"${CREATIVEDEVTOOLS_UXP_VERSION}\"/" "${SCRIPT_DIR}${CRDT_UXP_PRODUCT_NAME}/manifest.json" > "${SCRIPT_DIR}${CRDT_UXP_PRODUCT_NAME}/manifest.json.new"
+if [ "${CRDT_UXP_VERSION}" = "" ]; then
+    echo "Cannot make release. No version in ${CRDT_UXP_GIT_ROOT}Version.txt"
+    exit 1
+fi
+
+sed -E "s/\"version\":[[:space:]]*\"[^\"]*\"/\"version\": \"${CRDT_UXP_VERSION}\"/" "${SCRIPT_DIR}${CRDT_UXP_PRODUCT_NAME}/manifest.json" > "${SCRIPT_DIR}${CRDT_UXP_PRODUCT_NAME}/manifest.json.new"
 
 mv "${SCRIPT_DIR}${CRDT_UXP_PRODUCT_NAME}/manifest.json.new" "${SCRIPT_DIR}${CRDT_UXP_PRODUCT_NAME}/manifest.json"
+
+if ! grep -q "\"version\": \"${CRDT_UXP_VERSION}\"" "${SCRIPT_DIR}${CRDT_UXP_PRODUCT_NAME}/manifest.json"; then
+    echo "Cannot make release. Failed to set version ${CRDT_UXP_VERSION} in ${CRDT_UXP_PRODUCT_NAME}/manifest.json"
+    exit 1
+fi
 
 rm -rf ${CRDT_UXP_RELEASE}
 
